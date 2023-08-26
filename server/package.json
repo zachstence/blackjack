@@ -1,0 +1,13 @@
+{
+  "name": "blackjack-server",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon src/index.ts"
+  },
+  "dependencies": {
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}
