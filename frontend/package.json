@@ -29,6 +29,7 @@
   },
   "type": "module",
   "dependencies": {
+    "blackjack-types": "file:../types",
     "socket.io-client": "^4.7.2"
   }
 }
