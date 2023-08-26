@@ -1,2 +1,18 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script lang="ts">
+	import { io, Socket } from 'socket.io-client';
+	import { onMount } from 'svelte';
+
+	const WSS_URL = 'http://localhost:3000';
+
+	let socket: Socket;
+
+	onMount(() => {
+		socket = io(WSS_URL);
+	});
+
+	$: {
+		socket?.on('connect', () => {
+			console.log('connect');
+		});
+	}
+</script>
