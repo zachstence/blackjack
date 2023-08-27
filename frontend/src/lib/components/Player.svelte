@@ -47,3 +47,23 @@
     {/if}
   {/if}
 </div>
+
+<style>
+  dl {
+    display: grid;
+    grid-template-columns: max-content max-content;
+
+    border: 1px solid black;
+
+    @apply p-2 gap-x-4;
+  }
+
+  dt {
+    grid-column: 1;
+    font-weight: bold;
+  }
+
+  dd {
+    grid-column: 2;
+  }
+</style>

@@ -7,7 +7,7 @@
   $: players = Object.values($store.game!.players);
 </script>
 
-<div>
+<div class="flex flex-row gap-2">
   {#each players as player}
     <Player {player} isMe={player.id === playerId} />
   {/each}
