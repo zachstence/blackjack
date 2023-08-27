@@ -1,9 +1,11 @@
 export enum ClientEvent {
-    TestEvent = 'TestEvent',
+    PlayerJoin = 'PlayerJoin',
+    PlaceBet = 'PlaceBet',
 }
 
 type ArgsByClientEvent = {
-    [ClientEvent.TestEvent]: { data: string }
+    [ClientEvent.PlayerJoin]: { name: string }
+    [ClientEvent.PlaceBet]: { amount: number }
 }
 
 export type ClientEventArgs<E extends ClientEvent> = ArgsByClientEvent[E]

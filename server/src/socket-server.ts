@@ -1,13 +1,15 @@
-import { ClientEvent, ClientEventArgs, ServerEvent, ServerEventArgs } from 'blackjack-types';
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { ClientEventHandlers, ClientEventHandler } from './types';
-
 import { Server as HttpServer } from 'http'
+
+import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, ServerEvent, ServerEventArgs } from 'blackjack-types';
+import { ClientEventHandlers, ClientEventHandler } from './types';
 
 export class SocketServer {
   private clientEventHandlers: ClientEventHandlers
 
   private readonly server: SocketIOServer
+
+  private readonly game: IGame
 
   constructor(httpServer: HttpServer) {
     this.server = new SocketIOServer(httpServer, {
@@ -21,24 +23,50 @@ export class SocketServer {
     })
 
     this.clientEventHandlers = {
-      [ClientEvent.TestEvent]: this.handleTestEvent
+      [ClientEvent.PlayerJoin]: this.handlePlayerJoin
+    }
+
+    this.game = {
+      state: GameState.PlacingBets,
+      dealer: { hand: [] },
+      players: {},
+      shoe: [],
     }
   }
 
-  onClientEvent = <E extends ClientEvent>(event: E, args: ClientEventArgs<E>, socket: Socket): void => {
+  private onClientEvent = <E extends ClientEvent>(event: E, args: ClientEventArgs<E>, socket: Socket): void => {
     console.debug(`Received client event ${event}`, { socketId: socket.id, args })
-    this.clientEventHandlers[event](args, socket)
+
+    const handler = this.clientEventHandlers[event]
+    if (typeof handler !== 'undefined') {
+      handler(args, socket)
+    } else {
+      console.error(`No handler registered for ${event}`)
+    }
   }
 
-  emitServerEvent = <E extends ServerEvent>(event: E, args: ServerEventArgs<E>): void => {
+  private emitServerEvent = <E extends ServerEvent>(event: E, args: ServerEventArgs<E>): void => {
     this.server.emit(event, args)
-    console.debug(`Emitted server event ${event}`, { args })
+    console.debug(`Emitted server event: ${event}`, { args })
+  }
+
+  private emitServerEventTo = <E extends ServerEvent>(socket: Socket, event: E, args: ServerEventArgs<E>): void => {
+    socket.emit(event, args)
+    console.debug(`Emitted server event to ${socket.id}: ${event}`, { args })
   }
 
   // ====================
   // Event Handlers
   // ====================
-  private handleTestEvent: ClientEventHandler<ClientEvent.TestEvent> = () => {
-    this.emitServerEvent(ServerEvent.TestEvent, { data: 'server data' })
+  private handlePlayerJoin: ClientEventHandler<ClientEvent.PlayerJoin> = ({ name }, socket) => {
+    const newPlayer: IPlayer = {
+      id: socket.id,
+      name,
+      hand: [],
+      money: 1000,
+    }
+    this.game.players[socket.id] = newPlayer
+
+    this.emitServerEventTo(socket, ServerEvent.JoinSuccess, { game: this.game })
   };
 }
