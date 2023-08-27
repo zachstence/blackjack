@@ -1,7 +1,7 @@
 import { Socket, io } from "socket.io-client";
 import { writable, type Readable } from "svelte/store";
 
-import { ServerEvent, type ServerEventArgs, ClientEvent, type ClientEventArgs, type IGame, GameState } from "blackjack-types";
+import { ServerEvent, type ServerEventArgs, ClientEvent, type ClientEventArgs, type IGame } from "blackjack-types";
 import type { ServerEventHandler, ServerEventHandlers } from "./socket.types";
 
 export class GameStore implements Readable<GameStore> {
@@ -21,7 +21,7 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.JoinSuccess]: this.handleJoinSuccess,
       [ServerEvent.PlayerJoined]: this.handlePlayerJoin,
       [ServerEvent.PlayerBet]: this.handlePlayerBet,
-      [ServerEvent.PlayersPlaying]: this.handlePlayersPlaying,
+      [ServerEvent.GameStateChange]: this.handleGameStateChange,
     }
   }
 
@@ -105,8 +105,8 @@ export class GameStore implements Readable<GameStore> {
     player.bet = args.bet
   }
 
-  private handlePlayersPlaying: ServerEventHandler<ServerEvent.PlayersPlaying> = () => {
+  private handleGameStateChange: ServerEventHandler<ServerEvent.GameStateChange> = args => {
     if (!this._game) return
-    this._game.state = GameState.PlayersPlaying
+    this._game.state = args.gameState
   }
 }

@@ -1,4 +1,4 @@
-import { IGame } from "./game"
+import { GameState, IGame } from "./game"
 import { IPlayer } from "./player"
 
 export enum ServerEvent {
@@ -7,9 +7,9 @@ export enum ServerEvent {
     JoinSuccess = 'JoinSuccess',
     
     // To all players
+    GameStateChange = 'GameStateChange',
     PlayerJoined = 'PlayerJoined',
     PlayerBet = 'PlayerBet',
-    PlayersPlaying = 'PlayersPlaying'
 }
 
 type ArgsByServerEvent = {
@@ -18,13 +18,13 @@ type ArgsByServerEvent = {
     [ServerEvent.JoinSuccess]: { game: IGame }
     
     // To all players
+    [ServerEvent.GameStateChange]: { gameState: GameState }
     [ServerEvent.PlayerJoined]: { player: IPlayer }
     [ServerEvent.PlayerBet]: {
         playerId: string
         bet: number
         money: number
     }
-    [ServerEvent.PlayersPlaying]: {}
 }
 
 export type ServerEventArgs<E extends ServerEvent> = ArgsByServerEvent[E]
