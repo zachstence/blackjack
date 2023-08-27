@@ -1,18 +1,18 @@
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 
 import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, ServerEvent, ServerEventArgs } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 
-export class SocketServer {
+export class GameServer {
   private clientEventHandlers: ClientEventHandlers
 
-  private readonly server: SocketIOServer
+  private readonly server: SocketServer
 
   private readonly game: IGame
 
   constructor(httpServer: HttpServer) {
-    this.server = new SocketIOServer(httpServer, {
+    this.server = new SocketServer(httpServer, {
       cors: {
         origin: '*',
       },

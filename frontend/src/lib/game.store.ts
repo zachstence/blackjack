@@ -4,7 +4,7 @@ import { writable, type Readable } from "svelte/store";
 import { ServerEvent, type ServerEventArgs, ClientEvent, type ClientEventArgs, type IGame } from "blackjack-types";
 import type { ServerEventHandler, ServerEventHandlers } from "./socket.types";
 
-export class SocketStore implements Readable<SocketStore> {
+export class GameStore implements Readable<GameStore> {
   private _store = writable(this)
 
   private socket: Socket

@@ -1,22 +1,22 @@
 <script lang="ts">
   import JoinForm from '$lib/components/JoinForm.svelte';
   import Game from '$lib/components/Game.svelte';
-  import { SocketStore } from '$lib/socket.store';
+  import { GameStore } from '$lib/game.store';
   import { onMount } from 'svelte';
 
-  const socket = new SocketStore();
+  const store = new GameStore();
 
   onMount(() => {
-    socket.connect();
+    store.connect();
   });
 </script>
 
-{#if typeof $socket.game === 'undefined'}
-  <JoinForm onSubmit={socket.join} />
+{#if typeof $store.game === 'undefined'}
+  <JoinForm onSubmit={store.join} />
 {:else}
-  <Game game={$socket.game} playerId={socket.playerId} />
+  <Game game={$store.game} playerId={store.playerId} />
 {/if}
 
 <pre>
-  {JSON.stringify($socket.game, null, 2)}
+  {JSON.stringify($store.game, null, 2)}
 </pre>
