@@ -23,7 +23,8 @@ export class GameServer {
     })
 
     this.clientEventHandlers = {
-      [ClientEvent.PlayerJoin]: this.handlePlayerJoin
+      [ClientEvent.PlayerJoin]: this.handlePlayerJoin,
+      [ClientEvent.PlaceBet]: this.handlePlaceBet,
     }
 
     this.game = {
@@ -70,4 +71,25 @@ export class GameServer {
     this.emitServerEventTo(socket, ServerEvent.JoinSuccess, { game: this.game })
     this.emitServerEvent(ServerEvent.PlayerJoined, { player: newPlayer })
   };
+
+  private handlePlaceBet: ClientEventHandler<ClientEvent.PlaceBet> = ({ amount }, socket) => {
+    const player = this.game.players[socket.id]
+    if (typeof player === 'undefined') {
+      this.emitServerEventTo(socket, ServerEvent.Error, { message: 'You have not joined the game' })
+      return
+    }
+    if (typeof player.bet !== 'undefined') {
+      this.emitServerEventTo(socket,ServerEvent.Error, { message: 'You have already bet'})
+      return
+    }
+
+    player.money -= amount
+    player.bet = amount
+
+    this.emitServerEvent(ServerEvent.PlayerBet, {
+      playerId: player.id,
+      bet: player.bet,
+      money: player.money,
+    })
+  }
 }

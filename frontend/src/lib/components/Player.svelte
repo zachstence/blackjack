@@ -1,8 +1,16 @@
 <script lang="ts">
-  import type { IPlayer } from 'blackjack-types';
+  import { GameState, type IPlayer } from 'blackjack-types';
+  import { getGameStoreContext } from '$lib/game.context';
+  import BetForm from './BetForm.svelte';
 
   export let player: IPlayer;
   export let isMe: boolean;
+
+  const store = getGameStoreContext();
+
+  $: placingBets = $store.game!.state === GameState.PlacingBets;
+  $: playersPlaying = $store.game!.state === GameState.PlayersPlaying;
+  $: hasBet = typeof player.bet !== 'undefined';
 </script>
 
 <div>
@@ -25,11 +33,17 @@
   </dl>
 
   {#if isMe}
-    <div>
-      <button on:click={() => alert('Stand')}>Stand</button>
-      <button on:click={() => alert('Split')}>Split</button>
-      <button on:click={() => alert('Double')}>Double</button>
-      <button on:click={() => alert('Hit')}>Hit</button>
-    </div>
+    {#if placingBets && !hasBet}
+      <BetForm onSubmit={store.bet} maxBet={player.money} />
+    {/if}
+
+    {#if playersPlaying}
+      <div>
+        <button on:click={() => alert('Stand')}>Stand</button>
+        <button on:click={() => alert('Split')}>Split</button>
+        <button on:click={() => alert('Double')}>Double</button>
+        <button on:click={() => alert('Hit')}>Hit</button>
+      </div>
+    {/if}
   {/if}
 </div>

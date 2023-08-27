@@ -20,6 +20,7 @@ export class GameStore implements Readable<GameStore> {
     this.serverEventHandlers = {
       [ServerEvent.JoinSuccess]: this.handleJoinSuccess,
       [ServerEvent.PlayerJoined]: this.handlePlayerJoin,
+      [ServerEvent.PlayerBet]: this.handlePlayerBet,
     }
   }
 
@@ -36,10 +37,15 @@ export class GameStore implements Readable<GameStore> {
     console.debug(`Received server event ${event}`, { args })
 
     const handler = this.serverEventHandlers[event]
-    if (typeof handler !== 'undefined') {
-      handler(args)
-    } else {
+    if (typeof handler === 'undefined') {
       console.error(`No handler registered for ${event}`)
+      return
+    }
+    
+    try {
+      handler(args)
+    } catch (e) {
+      console.error(`Handler for ${event} failed`, e)
     }
 
     this.tick()
@@ -73,6 +79,10 @@ export class GameStore implements Readable<GameStore> {
     this.emitClientEvent(ClientEvent.PlayerJoin, { name })
   }
 
+  bet = (amount: number): void => {
+    this.emitClientEvent(ClientEvent.PlaceBet, { amount })
+  }
+
   // ====================
   // Event Handlers
   // ====================
@@ -83,5 +93,14 @@ export class GameStore implements Readable<GameStore> {
   private handlePlayerJoin: ServerEventHandler<ServerEvent.PlayerJoined> = args => {
     if (!this._game) return
     this._game.players[args.player.id] = args.player
+  }
+
+  private handlePlayerBet: ServerEventHandler<ServerEvent.PlayerBet> = args => {
+    if (!this._game) return
+    const player = this._game.players[args.playerId]
+    if (typeof player === 'undefined') throw new Error(`Player ${args.playerId} not found`)
+
+    player.money = args.money
+    player.bet = args.bet
   }
 }
