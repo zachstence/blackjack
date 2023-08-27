@@ -14,12 +14,13 @@ export class GameStore implements Readable<GameStore> {
   private _game?: IGame
 
   constructor() {
-    this.serverEventHandlers = {
-      [ServerEvent.JoinSuccess]: this.handleJoinSuccess
-    }
-
     this.socket = io('http://localhost:3000', { autoConnect: false })
     this.socket.onAny((event, args) => this.onServerEvent(event, args))
+
+    this.serverEventHandlers = {
+      [ServerEvent.JoinSuccess]: this.handleJoinSuccess,
+      [ServerEvent.PlayerJoined]: this.handlePlayerJoin,
+    }
   }
 
   subscribe: Readable<this>['subscribe'] = (run, invalidate) => {
@@ -77,5 +78,10 @@ export class GameStore implements Readable<GameStore> {
   // ====================
   private handleJoinSuccess: ServerEventHandler<ServerEvent.JoinSuccess> = args => {
     this._game = args.game
+  }
+
+  private handlePlayerJoin: ServerEventHandler<ServerEvent.PlayerJoined> = args => {
+    if (!this._game) return
+    this._game.players[args.player.id] = args.player
   }
 }

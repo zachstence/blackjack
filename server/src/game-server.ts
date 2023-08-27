@@ -68,5 +68,6 @@ export class GameServer {
     this.game.players[socket.id] = newPlayer
 
     this.emitServerEventTo(socket, ServerEvent.JoinSuccess, { game: this.game })
+    this.emitServerEvent(ServerEvent.PlayerJoined, { player: newPlayer })
   };
 }
