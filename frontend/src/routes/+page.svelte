@@ -1,18 +1,13 @@
 <script lang="ts">
-  import { io, Socket } from 'socket.io-client';
+  import { SocketStore } from '$lib/socket.store';
+  import { ClientEvent } from 'blackjack-types';
   import { onMount } from 'svelte';
 
-  const WSS_URL = 'http://localhost:3000';
-
-  let socket: Socket;
+  const socket = new SocketStore();
 
   onMount(() => {
-    socket = io(WSS_URL);
+    socket.connect();
   });
-
-  $: {
-    socket?.on('connect', () => {
-      console.log('connect');
-    });
-  }
 </script>
+
+<button on:click={() => socket.emitClientEvent(ClientEvent.TestEvent, { data: 'client data' })}>Send TestEvent</button>
