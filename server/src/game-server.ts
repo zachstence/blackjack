@@ -91,5 +91,10 @@ export class GameServer {
       bet: player.bet,
       money: player.money,
     })
+
+    const allPlayersHaveBet = Object.values(this.game.players).every(p => typeof p.bet !== 'undefined')
+    if (allPlayersHaveBet) {
+      this.emitServerEvent(ServerEvent.PlayersPlaying, {})
+    }
   }
 }

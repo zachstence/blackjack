@@ -9,6 +9,7 @@ export enum ServerEvent {
     // To all players
     PlayerJoined = 'PlayerJoined',
     PlayerBet = 'PlayerBet',
+    PlayersPlaying = 'PlayersPlaying'
 }
 
 type ArgsByServerEvent = {
@@ -23,6 +24,7 @@ type ArgsByServerEvent = {
         bet: number
         money: number
     }
+    [ServerEvent.PlayersPlaying]: {}
 }
 
 export type ServerEventArgs<E extends ServerEvent> = ArgsByServerEvent[E]
