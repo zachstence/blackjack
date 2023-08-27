@@ -4,7 +4,6 @@ export enum Suit {
     Hearts = 'Hearts',
     Spades = 'Spades',
 }
-export const SUITS: Suit[] = [Suit.Diamonds, Suit.Clubs, Suit.Hearts, Suit.Spades]
 
 export enum Rank {
     Ace = 'Ace',

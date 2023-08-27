@@ -3,6 +3,8 @@ import { Server as HttpServer } from 'http'
 
 import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, ServerEvent, ServerEventArgs } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
+import { createDeck } from './createDeck';
+import { durstenfeldShuffle } from './durstenfeldShuffle';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers
@@ -33,6 +35,8 @@ export class GameServer {
       players: {},
       shoe: [],
     }
+
+    this.resetShoe()
   }
 
   private onClientEvent = <E extends ClientEvent>(event: E, args: ClientEventArgs<E>, socket: Socket): void => {
@@ -54,6 +58,17 @@ export class GameServer {
   private emitServerEventTo = <E extends ServerEvent>(socket: Socket, event: E, args: ServerEventArgs<E>): void => {
     socket.emit(event, args)
     console.debug(`Emitted server event to ${socket.id}: ${event}`, { args })
+  }
+
+  // ====================
+  // Gameplay
+  // ====================
+  resetShoe = (): void => {
+    const numDecks = 6 // TODO control by options in the client
+
+    const decks = Array.from({ length: numDecks }).flatMap(createDeck)
+    durstenfeldShuffle(decks)
+    this.game.shoe = decks
   }
 
   // ====================
