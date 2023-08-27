@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { IPlayer } from 'blackjack-types';
-
+  import { getGameStoreContext } from '$lib/game.context';
   import Player from './Player.svelte';
 
-  export let players: IPlayer[];
-  export let playerId: string;
+  const store = getGameStoreContext();
+  $: playerId = $store.playerId;
+  $: players = Object.values($store.game!.players);
 </script>
 
 <div>

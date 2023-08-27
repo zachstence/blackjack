@@ -1,7 +1,9 @@
 <script lang="ts">
-  import type { IDealer } from 'blackjack-types';
+  import { getGameStoreContext } from '$lib/game.context';
 
-  export let dealer: IDealer;
+  const store = getGameStoreContext();
+
+  $: dealer = $store.game!.dealer;
 </script>
 
 <dl>
