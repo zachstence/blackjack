@@ -3,9 +3,9 @@ import { IDealer } from "./dealer";
 import { IPlayer } from "./player";
 
 export enum GameState {
-    PlacingBets,
-    PlayersPlaying,
-    DealerPlaying,
+    PlacingBets = 'PlacingBets',
+    PlayersPlaying = 'PlayersPlaying',
+    DealerPlaying = 'DealerPlaying',
 }
 
 export interface IGame {

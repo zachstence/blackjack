@@ -60,6 +60,10 @@ export class SocketStore implements Readable<SocketStore> {
   // ====================
   // Gameplay
   // ====================
+  get playerId(): string {
+    return this.socket.id
+  }
+
   get game(): IGame | undefined {
     return this._game
   }

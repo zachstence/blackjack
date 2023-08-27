@@ -1,6 +1,6 @@
 <script lang="ts">
   import JoinForm from '$lib/components/JoinForm.svelte';
-  import Players from '$lib/components/Players.svelte';
+  import Game from '$lib/components/Game.svelte';
   import { SocketStore } from '$lib/socket.store';
   import { onMount } from 'svelte';
 
@@ -14,7 +14,7 @@
 {#if typeof $socket.game === 'undefined'}
   <JoinForm onSubmit={socket.join} />
 {:else}
-  <Players players={Object.values($socket.game.players)} />
+  <Game game={$socket.game} playerId={socket.playerId} />
 {/if}
 
 <pre>
