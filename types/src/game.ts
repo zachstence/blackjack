@@ -6,6 +6,7 @@ export enum GameState {
     PlacingBets = 'PlacingBets',
     PlayersPlaying = 'PlayersPlaying',
     DealerPlaying = 'DealerPlaying',
+    Settling = 'Setting',
 }
 
 export interface IGame {

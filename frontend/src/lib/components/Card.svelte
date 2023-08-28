@@ -35,9 +35,9 @@
 <script lang="ts">
   export let card: ICard | 'hidden';
 
-  const color = card === 'hidden' ? 'black' : SUIT_TO_COLOR[card.suit];
-  const suitChar = card === 'hidden' ? '?' : SUIT_TO_CHAR[card.suit];
-  const rankChar = card === 'hidden' ? '?' : RANK_TO_CHAR[card.rank];
+  $: color = card === 'hidden' ? 'black' : SUIT_TO_COLOR[card.suit];
+  $: suitChar = card === 'hidden' ? '?' : SUIT_TO_CHAR[card.suit];
+  $: rankChar = card === 'hidden' ? '?' : RANK_TO_CHAR[card.rank];
 </script>
 
 <span class="font-bold border border-black p-1" class:text-red={color === 'red'}>

@@ -83,10 +83,20 @@ export class GameServer {
       const allPlayerHandsStandOrBusted = Object.values(this.game.players)
         .every(p => p.hand.state === HandState.Standing || p.hand.state === HandState.Busted)
       if (allPlayerHandsStandOrBusted) {
+        this.emitServerEvent(ServerEvent.RevealDealerHand, { hand: this.game.dealer.hand })
+
+        this.game.state = GameState.DealerPlaying
+        this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
+    
         this.playDealer()
       }
     } else if (this.game.state === GameState.DealerPlaying) {
-      // Settle money after dealer stands or busts
+      const dealerStandOrBust = this.game.dealer.hand.state === HandState.Standing || this.game.dealer.hand.state === HandState.Busted
+      if (dealerStandOrBust) {
+        this.settle()
+      }
+    } else if (this.game.state === GameState.Settling) {
+      // Collect bets for next round after done settling
     }
   }
 
@@ -124,7 +134,9 @@ export class GameServer {
         playerHands[player.id].cards.push(newCard)
         playerHands[player.id].total += RankValue[newCard.rank]
       }
-      dealerHand.cards.push(this.game.shoe.pop()!)
+      const newCard = this.game.shoe.pop()!
+      dealerHand.cards.push(newCard)
+      dealerHand.total += RankValue[newCard.rank]
     }
 
     this.game.dealer.hand = dealerHand
@@ -132,17 +144,44 @@ export class GameServer {
       .forEach(playerId => {
         this.game.players[playerId]!.hand = playerHands[playerId]
       })
+    
+    const dealerHandWithHiddenCard: IHand = {
+      ...dealerHand,
+      cards: [dealerHand.cards[0], 'hidden']
+    }
 
-    dealerHand.cards[1] = 'hidden' as const
-
-    this.emitServerEvent(ServerEvent.Dealt, { dealerHand, playerHands })
+    this.emitServerEvent(ServerEvent.Dealt, {
+      dealerHand: dealerHandWithHiddenCard,
+      playerHands
+    })
 
     this.game.state = GameState.PlayersPlaying
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
   }
 
   private playDealer = (): void => {
+    const dealerHand = this.game.dealer.hand
 
+    if (dealerHand.total > 21) {
+      dealerHand.state = HandState.Busted
+      this.checkState()
+      return
+    }
+
+    if (dealerHand.total >= 17) {
+      this.emitServerEvent(ServerEvent.DealerStand, { handState: HandState.Standing })
+      this.checkState()
+      return
+    }
+
+    const newCard = this.game.shoe.pop()!
+    dealerHand.cards.push(newCard)
+    dealerHand.total += RankValue[newCard.rank]
+    this.playDealer()
+  }
+
+  private settle = (): void => {
+    console.log('TODO settle bets')
   }
 
   // ====================

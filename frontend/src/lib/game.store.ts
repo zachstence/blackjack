@@ -25,6 +25,9 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.Dealt]: this.handleDealt,
       [ServerEvent.PlayerHit]: this.handlePlayerHit,
       [ServerEvent.PlayerStand]: this.handlePlayerStand,
+      [ServerEvent.RevealDealerHand]: this.handleRevealDealerHand,
+      [ServerEvent.DealerHit]: this.handleDealerHit,
+      [ServerEvent.DealerStand]: this.handleDealerStand,
     }
   }
 
@@ -140,5 +143,20 @@ export class GameStore implements Readable<GameStore> {
   private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handState }) => {
     if (!this._game) return
     this._game.players[playerId].hand.state = handState
+  }
+
+  private handleRevealDealerHand: ServerEventHandler<ServerEvent.RevealDealerHand> = ({ hand }) => {
+    if (!this._game) return
+    this._game.dealer.hand = hand
+  }
+
+  private handleDealerHit: ServerEventHandler<ServerEvent.DealerHit> = ({ hand }) => {
+    if (!this._game) return
+    this._game.dealer.hand = hand
+  }
+
+  private handleDealerStand: ServerEventHandler<ServerEvent.DealerStand> = ({ handState }) => {
+    if (!this._game) return
+    this._game.dealer.hand.state = handState
   }
 }
