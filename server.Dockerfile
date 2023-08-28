@@ -7,5 +7,4 @@ WORKDIR /app/server
 
 RUN npm ci --omit dev
 
-EXPOSE 3001
 CMD ["npm", "start"]
