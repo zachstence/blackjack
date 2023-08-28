@@ -40,7 +40,7 @@
   $: rankChar = card === 'hidden' ? '?' : RANK_TO_CHAR[card.rank];
 </script>
 
-<span class="font-bold border border-black p-1" class:text-red={color === 'red'}>
+<span class="font-bold border border-black p-1" class:text-red-500={color === 'red'}>
   <span class="font-mono text-lg leading-none inline-block">{suitChar}</span>
   <span class="font-mono text-lg leading-none inline-block">{rankChar}</span>
 </span>
