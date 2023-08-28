@@ -28,6 +28,8 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.RevealDealerHand]: this.handleRevealDealerHand,
       [ServerEvent.DealerHit]: this.handleDealerHit,
       [ServerEvent.DealerStand]: this.handleDealerStand,
+      [ServerEvent.DealerBust]: this.handleDealerBust,
+      [ServerEvent.Settle]: this.handleSettle,
     }
   }
 
@@ -158,5 +160,22 @@ export class GameStore implements Readable<GameStore> {
   private handleDealerStand: ServerEventHandler<ServerEvent.DealerStand> = ({ handState }) => {
     if (!this._game) return
     this._game.dealer.hand.state = handState
+  }
+
+  private handleDealerBust: ServerEventHandler<ServerEvent.DealerBust> = ({ handState }) => {
+    if (!this._game) return
+    this._game.dealer.hand.state = handState
+  }
+
+  private handleSettle: ServerEventHandler<ServerEvent.Settle> = ({ players }) => {
+    Object.entries(players)
+      .forEach(([playerId, { hand, money, bet }]) => {
+        if (!this._game) return
+        const player = this._game.players[playerId]
+        if (!player) return
+        player.hand = hand
+        player.money = money
+        player.bet = bet
+      })
   }
 }

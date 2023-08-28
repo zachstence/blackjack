@@ -5,7 +5,7 @@ import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, RankValue, Ser
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
-import { HandState, IHand } from 'blackjack-types/src/hand';
+import { HandSettleStatus, HandState, IHand } from 'blackjack-types/src/hand';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers
@@ -164,11 +164,13 @@ export class GameServer {
 
     if (dealerHand.total > 21) {
       dealerHand.state = HandState.Busted
+      this.emitServerEvent(ServerEvent.DealerBust, { handState: HandState.Busted})
       this.checkState()
       return
     }
 
     if (dealerHand.total >= 17) {
+      dealerHand.state = HandState.Standing
       this.emitServerEvent(ServerEvent.DealerStand, { handState: HandState.Standing })
       this.checkState()
       return
@@ -177,11 +179,76 @@ export class GameServer {
     const newCard = this.game.shoe.pop()!
     dealerHand.cards.push(newCard)
     dealerHand.total += RankValue[newCard.rank]
+    this.emitServerEvent(ServerEvent.DealerHit, { hand: dealerHand })
     this.playDealer()
   }
 
   private settle = (): void => {
-    console.log('TODO settle bets')
+    const { dealer } = this.game
+    const dealerTotal = dealer.hand.total
+    const dealerBusted = dealer.hand.state === HandState.Busted
+    const dealerStanding = dealer.hand.state === HandState.Standing
+    const dealerBlackjack = dealerTotal === 21 && dealer.hand.cards.length === 2
+
+    for (const player of Object.values(this.game.players)) {
+      if (player.hand.state === HandState.Hitting) continue
+      if (typeof player.bet === 'undefined') continue
+
+      const playerTotal = player.hand.total
+      const playerBusted = player.hand.state === HandState.Busted
+      const playerStanding = player.hand.state === HandState.Standing
+      const playerBlackjack = playerTotal === 21 && player.hand.cards.length === 2
+
+      const lose =
+        playerBusted                                        // Player automatically loses if they bust
+        || (playerTotal < dealerTotal && dealerStanding)    // Player loses if dealer beats them without busting
+
+      const win =
+        (playerStanding && dealerBusted)                    // Player wins if they stand and dealer busts
+        || (playerTotal > dealerTotal && playerStanding)    // Player wins if they beat dealer without busting
+        || (playerTotal === dealerTotal && playerBlackjack) // Player wins if they tie with dealer but got a blackjack
+
+      // Player pushes when both stand, their totals match, and neither got a blackjack
+      const push =
+        playerStanding && dealerStanding
+        && playerTotal === dealerTotal
+        && !playerBlackjack && !dealerBlackjack
+
+      if (win && playerBlackjack) {
+        player.hand.settleStatus = HandSettleStatus.Blackjack
+        player.hand.winnings = 2.5 * player.bet
+      } else if (win) {
+        player.hand.settleStatus = HandSettleStatus.Win
+        player.hand.winnings = 2 * player.bet
+      } else if (push) {
+        player.hand.settleStatus = HandSettleStatus.Push
+        player.hand.winnings = player.bet
+      } else if (lose) {
+        player.hand.settleStatus = HandSettleStatus.Lose
+        player.hand.winnings = 0
+      } else {
+        throw new Error(`Failed to determine round outcome. dealerCards: ${dealer.hand.cards}, playerCards: ${player.hand.cards}`)
+      }
+
+      player.money += player.hand.winnings
+      player.bet = undefined
+    }
+
+    type SettledPlayers = Record<string, {
+      hand: IHand
+      money: number
+      bet: undefined
+    }>
+    const players = Object.values(this.game.players)
+      .reduce<SettledPlayers>((acc, player) => {
+        acc[player.id] = {
+          hand: player.hand,
+          money: player.money,
+          bet: undefined,
+        }
+        return acc
+      }, {})
+    this.emitServerEvent(ServerEvent.Settle, { players })
   }
 
   // ====================
