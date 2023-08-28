@@ -2,6 +2,7 @@
   import { GameState, type IPlayer } from 'blackjack-types';
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';
+  import Card from './Card.svelte';
 
   export let player: IPlayer;
   export let isMe: boolean;
@@ -20,7 +21,10 @@
 
     <dt>Hand</dt>
     {#if player.hand.length}
-      <dd>{player.hand[0]} {player.hand[1]}</dd>
+      <dd>
+        <Card card={player.hand[0]} />
+        <Card card={player.hand[1]} />
+      </dd>
     {:else}
       <dd>-</dd>
     {/if}

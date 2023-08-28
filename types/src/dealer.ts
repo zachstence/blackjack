@@ -1,5 +1,5 @@
-import { Hand } from "./hand";
+import { ICard } from "./card";
 
 export interface IDealer {
-    hand: Hand
+    hand: [] | [ICard, 'hidden'] | [ICard, ICard]
 }

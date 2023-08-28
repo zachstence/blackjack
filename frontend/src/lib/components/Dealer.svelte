@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getGameStoreContext } from '$lib/game.context';
+  import Card from './Card.svelte';
 
   const store = getGameStoreContext();
 
@@ -12,7 +13,10 @@
 
   <dt>Hand</dt>
   {#if dealer.hand.length}
-    <dd>{dealer.hand[0]} {dealer.hand[1]}</dd>
+    <dd>
+      <Card card={dealer.hand[0]} />
+      <Card card={dealer.hand[1]} />
+    </dd>
   {:else}
     <dd>-</dd>
   {/if}

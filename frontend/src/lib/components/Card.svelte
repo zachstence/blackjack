@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-  import { Rank, Suit } from 'blackjack-types';
+  import { Rank, Suit, type ICard } from 'blackjack-types';
 
   const SUIT_TO_COLOR: Record<Suit, 'black' | 'red'> = {
     [Suit.Diamonds]: 'red',
@@ -33,14 +33,14 @@
 </script>
 
 <script lang="ts">
-  export let suit: Suit;
-  export let rank: Rank;
+  export let card: ICard | 'hidden';
 
-  const color = SUIT_TO_COLOR[suit];
-  const suitChar = SUIT_TO_CHAR[suit];
-  const rankChar = RANK_TO_CHAR[rank];
+  const color = card === 'hidden' ? 'black' : SUIT_TO_COLOR[card.suit];
+  const suitChar = card === 'hidden' ? '?' : SUIT_TO_CHAR[card.suit];
+  const rankChar = card === 'hidden' ? '?' : RANK_TO_CHAR[card.rank];
 </script>
 
-<span class="font-bold tracking-wider border border-black p-1" class:text-red={color === 'red'}
-  >{suitChar}{rankChar}</span
->
+<span class="font-bold border border-black p-1" class:text-red={color === 'red'}>
+  <span class="font-mono text-lg leading-none inline-block">{suitChar}</span>
+  <span class="font-mono text-lg leading-none inline-block">{rankChar}</span>
+</span>

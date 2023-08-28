@@ -1,7 +1,7 @@
 import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 
-import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, ServerEvent, ServerEventArgs } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, GameState, ICard, IGame, IPlayer, ServerEvent, ServerEventArgs } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
@@ -71,6 +71,35 @@ export class GameServer {
     this.game.shoe = decks
   }
 
+  deal = (): ServerEventArgs<ServerEvent.Dealt> => {
+    const dealerHand = []
+    const playerHands = Object.keys(this.game.players)
+      .reduce<Record<string, ICard[]>>((acc, val) => {
+        acc[val] = []
+        return acc
+      }, {})
+
+    for (let i = 0; i < 2; i++) {
+      for (const player of Object.values(this.game.players)) {
+        if (!this.game.shoe.length) {
+          throw new Error('Shoe empty!')
+          // TODO redeal before shoe is empty
+        }
+        playerHands[player.id].push(this.game.shoe.pop()!)
+      }
+      dealerHand.push(this.game.shoe.pop()!)
+    }
+
+    this.game.dealer.hand = dealerHand as [ICard, ICard]
+    Object.keys(this.game.players)
+      .forEach(playerId => this.game.players[playerId]!.hand = playerHands[playerId] as [ICard, ICard])
+
+    return {
+      dealerHand: [dealerHand[0], 'hidden'],
+      playerHands: playerHands as Record<string, [ICard, ICard]>,
+    }
+  }
+
   // ====================
   // Event Handlers
   // ====================
@@ -111,6 +140,8 @@ export class GameServer {
     if (allPlayersHaveBet) {
       this.game.state = GameState.PlayersPlaying
       this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
+      const hands = this.deal()
+      this.emitServerEvent(ServerEvent.Dealt, hands)
     }
   }
 }

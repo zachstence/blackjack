@@ -1,9 +1,9 @@
-import { Hand } from './hand'
+import { ICard } from './card'
 
 export interface IPlayer {
     id: string
     name: string
-    hand: Hand
+    hand: [] | [ICard, ICard]
     money: number
     bet?: number
 }
