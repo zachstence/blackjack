@@ -1,5 +1,6 @@
 import { ICard } from "./card"
 import { GameState, IGame } from "./game"
+import { HandState, IHand } from "./hand"
 import { IPlayer } from "./player"
 
 export enum ServerEvent {
@@ -12,6 +13,8 @@ export enum ServerEvent {
     PlayerJoined = 'PlayerJoined',
     PlayerBet = 'PlayerBet',
     Dealt = 'Dealt',
+    PlayerHit = 'PlayerHit',
+    PlayerStand = 'PlayerStand',
 }
 
 type ArgsByServerEvent = {
@@ -28,8 +31,16 @@ type ArgsByServerEvent = {
         money: number
     }
     [ServerEvent.Dealt]: {
-        dealerHand: [ICard, 'hidden']
-        playerHands: Record<string, [ICard, ICard]>
+        dealerHand: IHand
+        playerHands: Record<string, IHand>
+    }
+    [ServerEvent.PlayerHit]: {
+        playerId: string
+        hand: IHand
+    }
+    [ServerEvent.PlayerStand]: {
+        playerId: string
+        handState: HandState
     }
 }
 

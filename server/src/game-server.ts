@@ -1,10 +1,11 @@
 import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 
-import { ClientEvent, ClientEventArgs, GameState, ICard, IGame, IPlayer, ServerEvent, ServerEventArgs } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, RankValue, ServerEvent, ServerEventArgs } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
+import { HandState, IHand } from 'blackjack-types/src/hand';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers
@@ -27,11 +28,19 @@ export class GameServer {
     this.clientEventHandlers = {
       [ClientEvent.PlayerJoin]: this.handlePlayerJoin,
       [ClientEvent.PlaceBet]: this.handlePlaceBet,
+      [ClientEvent.Hit]: this.handleHit,
+      [ClientEvent.Stand]: this.handleStand,
     }
 
     this.game = {
       state: GameState.PlacingBets,
-      dealer: { hand: [] },
+      dealer: {
+        hand: {
+          state: HandState.Hitting,
+          cards: [],
+          total: 0,
+        },
+      },
       players: {},
       shoe: [],
     }
@@ -63,7 +72,7 @@ export class GameServer {
   // ====================
   // Gameplay
   // ====================
-  resetShoe = (): void => {
+  private resetShoe = (): void => {
     const numDecks = 6 // TODO control by options in the client
 
     const decks = Array.from({ length: numDecks }).flatMap(createDeck)
@@ -71,11 +80,19 @@ export class GameServer {
     this.game.shoe = decks
   }
 
-  deal = (): ServerEventArgs<ServerEvent.Dealt> => {
-    const dealerHand = []
+  private deal = (): void => {
+    const dealerHand: IHand = {
+      state: HandState.Hitting,
+      cards: [],
+      total: 0,
+    }
     const playerHands = Object.keys(this.game.players)
-      .reduce<Record<string, ICard[]>>((acc, val) => {
-        acc[val] = []
+      .reduce<Record<string, IHand>>((acc, val) => {
+        acc[val] = {
+          state: HandState.Hitting,
+          cards: [],
+          total: 0,
+        }
         return acc
       }, {})
 
@@ -85,19 +102,25 @@ export class GameServer {
           throw new Error('Shoe empty!')
           // TODO redeal before shoe is empty
         }
-        playerHands[player.id].push(this.game.shoe.pop()!)
+        const newCard = this.game.shoe.pop()!
+        playerHands[player.id].cards.push(newCard)
+        playerHands[player.id].total += RankValue[newCard.rank]
       }
-      dealerHand.push(this.game.shoe.pop()!)
+      dealerHand.cards.push(this.game.shoe.pop()!)
     }
 
-    this.game.dealer.hand = dealerHand as [ICard, ICard]
+    this.game.dealer.hand = dealerHand
     Object.keys(this.game.players)
-      .forEach(playerId => this.game.players[playerId]!.hand = playerHands[playerId] as [ICard, ICard])
+      .forEach(playerId => {
+        this.game.players[playerId]!.hand = playerHands[playerId]
+      })
 
-    return {
-      dealerHand: [dealerHand[0], 'hidden'],
-      playerHands: playerHands as Record<string, [ICard, ICard]>,
-    }
+    dealerHand.cards[1] = 'hidden' as const
+
+    this.emitServerEvent(ServerEvent.Dealt, { dealerHand, playerHands })
+    
+    this.game.state = GameState.PlayersPlaying
+    this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
   }
 
   // ====================
@@ -107,7 +130,11 @@ export class GameServer {
     const newPlayer: IPlayer = {
       id: socket.id,
       name,
-      hand: [],
+      hand: {
+        state: HandState.Hitting,
+        cards: [],
+        total: 0,
+      },
       money: 1000,
     }
     this.game.players[socket.id] = newPlayer
@@ -138,10 +165,38 @@ export class GameServer {
 
     const allPlayersHaveBet = Object.values(this.game.players).every(p => typeof p.bet !== 'undefined')
     if (allPlayersHaveBet) {
-      this.game.state = GameState.PlayersPlaying
-      this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
-      const hands = this.deal()
-      this.emitServerEvent(ServerEvent.Dealt, hands)
+      this.deal()
     }
+  }
+
+  private handleHit: ClientEventHandler<ClientEvent.Hit> = (_, socket) => {
+    const player = this.game.players[socket.id]
+    if (!player) return
+
+    if (!this.game.shoe.length) throw new Error('Shoe empty!')
+
+    const newCard = this.game.shoe.pop()!
+    player.hand.cards.push(newCard)
+    player.hand.total += RankValue[newCard.rank]
+
+    if (player.hand.total > 21) {
+      player.hand.state = HandState.Busted
+    }
+
+    this.emitServerEvent(ServerEvent.PlayerHit, {
+      playerId: player.id,
+      hand: player.hand,
+    })
+  }
+
+  private handleStand: ClientEventHandler<ClientEvent.Stand> = (_, socket) => {
+    const player = this.game.players[socket.id]
+    if (!player) return
+
+    player.hand.state = HandState.Standing
+    this.emitServerEvent(ServerEvent.PlayerStand, {
+      playerId: player.id,
+      handState: player.hand.state,
+    })
   }
 }

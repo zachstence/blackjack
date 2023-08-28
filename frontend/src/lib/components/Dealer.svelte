@@ -11,11 +11,15 @@
   <dt>Name</dt>
   <dd>Dealer</dd>
 
+  <dt>State</dt>
+  <dd>{dealer.hand.state}</dd>
+
   <dt>Hand</dt>
-  {#if dealer.hand.length}
+  {#if dealer.hand.cards.length}
     <dd>
-      <Card card={dealer.hand[0]} />
-      <Card card={dealer.hand[1]} />
+      {#each dealer.hand.cards as card}
+        <Card {card} />
+      {/each}
     </dd>
   {:else}
     <dd>-</dd>

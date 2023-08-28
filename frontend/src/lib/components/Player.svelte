@@ -3,6 +3,7 @@
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';
   import Card from './Card.svelte';
+  import { HandState } from 'blackjack-types/src/hand';
 
   export let player: IPlayer;
   export let isMe: boolean;
@@ -19,11 +20,15 @@
     <dt>Name</dt>
     <dd>{player.name}</dd>
 
+    <dt>State</dt>
+    <dd>{player.hand.state}</dd>
+
     <dt>Hand</dt>
-    {#if player.hand.length}
+    {#if player.hand.cards.length}
       <dd>
-        <Card card={player.hand[0]} />
-        <Card card={player.hand[1]} />
+        {#each player.hand.cards as card}
+          <Card {card} />
+        {/each}
       </dd>
     {:else}
       <dd>-</dd>
@@ -43,10 +48,8 @@
 
     {#if playersPlaying}
       <div>
-        <button on:click={() => alert('Stand')}>Stand</button>
-        <button on:click={() => alert('Split')}>Split</button>
-        <button on:click={() => alert('Double')}>Double</button>
-        <button on:click={() => alert('Hit')}>Hit</button>
+        <button on:click={store.stand} disabled={player.hand.state !== HandState.Hitting}>Stand</button>
+        <button on:click={store.hit} disabled={player.hand.state !== HandState.Hitting}>Hit</button>
       </div>
     {/if}
   {/if}
