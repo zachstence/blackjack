@@ -5,7 +5,7 @@ COPY ./types /app/types
 
 WORKDIR /app/server
 
-RUN npm ci
+RUN npm ci --omit dev
 
 EXPOSE 3001
 CMD ["npm", "start"]
