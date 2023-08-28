@@ -28,7 +28,7 @@
   {/if}
 
   <dt>Total</dt>
-  <dd>{dealer.hand.total}</dd>
+  <dd>{dealer.hand.total || '-'}</dd>
 </dl>
 
 <style>

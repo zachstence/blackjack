@@ -1,7 +1,7 @@
 import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 
-import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, RankValue, ServerEvent, ServerEventArgs } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, GameState, ICard, IGame, IPlayer, RankValue, ServerEvent, ServerEventArgs } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
@@ -183,7 +183,8 @@ export class GameServer {
     
     const dealerHandWithHiddenCard: IHand = {
       ...dealerHand,
-      cards: [dealerHand.cards[0], 'hidden']
+      cards: [dealerHand.cards[0], 'hidden'],
+      total: RankValue[(dealerHand.cards[0] as ICard).rank],
     }
 
     this.emitServerEvent(ServerEvent.Dealt, {
