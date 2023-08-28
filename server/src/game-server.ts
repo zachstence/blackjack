@@ -72,6 +72,24 @@ export class GameServer {
   // ====================
   // Gameplay
   // ====================
+  private checkState = (): void => {
+    if (this.game.state === GameState.PlacingBets) {
+      const allPlayersHaveBet = Object.values(this.game.players)
+        .every(p => typeof p.bet !== 'undefined')
+      if (allPlayersHaveBet) {
+        this.deal()
+      }
+    } else if (this.game.state === GameState.PlayersPlaying) {
+      const allPlayerHandsStandOrBusted = Object.values(this.game.players)
+        .every(p => p.hand.state === HandState.Standing || p.hand.state === HandState.Busted)
+      if (allPlayerHandsStandOrBusted) {
+        this.playDealer()
+      }
+    } else if (this.game.state === GameState.DealerPlaying) {
+      // Settle money after dealer stands or busts
+    }
+  }
+
   private resetShoe = (): void => {
     const numDecks = 6 // TODO control by options in the client
 
@@ -118,9 +136,13 @@ export class GameServer {
     dealerHand.cards[1] = 'hidden' as const
 
     this.emitServerEvent(ServerEvent.Dealt, { dealerHand, playerHands })
-    
+
     this.game.state = GameState.PlayersPlaying
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
+  }
+
+  private playDealer = (): void => {
+
   }
 
   // ====================
@@ -163,10 +185,7 @@ export class GameServer {
       money: player.money,
     })
 
-    const allPlayersHaveBet = Object.values(this.game.players).every(p => typeof p.bet !== 'undefined')
-    if (allPlayersHaveBet) {
-      this.deal()
-    }
+    this.checkState()
   }
 
   private handleHit: ClientEventHandler<ClientEvent.Hit> = (_, socket) => {
@@ -187,6 +206,8 @@ export class GameServer {
       playerId: player.id,
       hand: player.hand,
     })
+
+    this.checkState()
   }
 
   private handleStand: ClientEventHandler<ClientEvent.Stand> = (_, socket) => {
@@ -198,5 +219,7 @@ export class GameServer {
       playerId: player.id,
       handState: player.hand.state,
     })
+
+    this.checkState()
   }
 }
