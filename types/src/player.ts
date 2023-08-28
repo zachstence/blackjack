@@ -7,4 +7,5 @@ export interface IPlayer {
     money: number
     // TODO move this into IHand for splitting
     bet?: number
+    ready: boolean
 }

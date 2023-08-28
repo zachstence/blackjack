@@ -5,7 +5,7 @@ import { ClientEvent, ClientEventArgs, GameState, IGame, IPlayer, RankValue, Ser
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
-import { HandSettleStatus, HandState, IHand } from 'blackjack-types/src/hand';
+import { EMPTY_HAND, HandSettleStatus, HandState, IHand } from 'blackjack-types/src/hand';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers
@@ -30,6 +30,7 @@ export class GameServer {
       [ClientEvent.PlaceBet]: this.handlePlaceBet,
       [ClientEvent.Hit]: this.handleHit,
       [ClientEvent.Stand]: this.handleStand,
+      [ClientEvent.Ready]: this.handleReady,
     }
 
     this.game = {
@@ -69,11 +70,25 @@ export class GameServer {
     console.debug(`Emitted server event to ${socket.id}: ${event}`, { args })
   }
 
+  private emitReadyPlayers = (): void => {
+    const players = Object.values(this.game.players)
+      .reduce<ServerEventArgs<ServerEvent.ReadyPlayers>['players']>((acc, player) => {
+        acc[player.id] = { ready: player.ready }
+        return acc
+      }, {})
+    this.emitServerEvent(ServerEvent.ReadyPlayers, { players })
+  }
+
   // ====================
   // Gameplay
   // ====================
   private checkState = (): void => {
-    if (this.game.state === GameState.PlacingBets) {
+    if (this.game.state === GameState.PlayersReadying) {
+      const allPlayersReady = Object.values(this.game.players).every(player => player.ready)
+      if (allPlayersReady) {
+        this.collectBets()
+      }
+    } else if (this.game.state === GameState.PlacingBets) {
       const allPlayersHaveBet = Object.values(this.game.players)
         .every(p => typeof p.bet !== 'undefined')
       if (allPlayersHaveBet) {
@@ -93,10 +108,13 @@ export class GameServer {
     } else if (this.game.state === GameState.DealerPlaying) {
       const dealerStandOrBust = this.game.dealer.hand.state === HandState.Standing || this.game.dealer.hand.state === HandState.Busted
       if (dealerStandOrBust) {
+        this.unReadyPlayers()
+
+        this.game.state = GameState.PlayersReadying
+        this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
+
         this.settle()
       }
-    } else if (this.game.state === GameState.Settling) {
-      // Collect bets for next round after done settling
     }
   }
 
@@ -106,6 +124,25 @@ export class GameServer {
     const decks = Array.from({ length: numDecks }).flatMap(createDeck)
     durstenfeldShuffle(decks)
     this.game.shoe = decks
+  }
+
+  private collectBets = (): void => {
+    Object.values(this.game.players).forEach(player => { player.hand = EMPTY_HAND })
+    const players = Object.values(this.game.players)
+      .reduce<ServerEventArgs<ServerEvent.ClearHandsAndBets>['players']>((acc, player) => {
+        acc[player.id] = {
+          hand: EMPTY_HAND,
+          bet: undefined,
+        }
+        return acc
+      }, {})
+    this.emitServerEvent(ServerEvent.ClearHandsAndBets, {
+      dealer: { hand: EMPTY_HAND },
+      players,
+    })
+
+    this.game.state = GameState.PlacingBets
+    this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
   }
 
   private deal = (): void => {
@@ -248,7 +285,14 @@ export class GameServer {
         }
         return acc
       }, {})
-    this.emitServerEvent(ServerEvent.Settle, { players })
+    this.emitServerEvent(ServerEvent.Settled, { players })
+
+    this.checkState()
+  }
+
+  private unReadyPlayers = (): void => {
+    Object.values(this.game.players).forEach(player => player.ready = false)
+    this.emitReadyPlayers()
   }
 
   // ====================
@@ -264,6 +308,7 @@ export class GameServer {
         total: 0,
       },
       money: 1000,
+      ready: true,
     }
     this.game.players[socket.id] = newPlayer
 
@@ -326,6 +371,15 @@ export class GameServer {
       handState: player.hand.state,
     })
 
+    this.checkState()
+  }
+
+  private handleReady: ClientEventHandler<ClientEvent.Ready> = (_, socket) => {
+    const player = this.game.players[socket.id]
+    if (!player) return
+
+    player.ready = true
+    this.emitReadyPlayers()
     this.checkState()
   }
 }

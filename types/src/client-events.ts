@@ -3,6 +3,7 @@ export enum ClientEvent {
     PlaceBet = 'PlaceBet',
     Hit = 'Hit',
     Stand = 'Stand',
+    Ready = 'Ready',
 }
 
 type ArgsByClientEvent = {
@@ -10,6 +11,7 @@ type ArgsByClientEvent = {
     [ClientEvent.PlaceBet]: { amount: number }
     [ClientEvent.Hit]: {}
     [ClientEvent.Stand]: {}
+    [ClientEvent.Ready]: {}
 }
 
 export type ClientEventArgs<E extends ClientEvent> = ArgsByClientEvent[E]

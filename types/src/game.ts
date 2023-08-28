@@ -3,10 +3,10 @@ import { IDealer } from "./dealer";
 import { IPlayer } from "./player";
 
 export enum GameState {
+    PlayersReadying = 'PlayersReadying',
     PlacingBets = 'PlacingBets',
     PlayersPlaying = 'PlayersPlaying',
     DealerPlaying = 'DealerPlaying',
-    Settling = 'Setting',
 }
 
 export interface IGame {

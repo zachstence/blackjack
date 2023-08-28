@@ -29,7 +29,9 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.DealerHit]: this.handleDealerHit,
       [ServerEvent.DealerStand]: this.handleDealerStand,
       [ServerEvent.DealerBust]: this.handleDealerBust,
-      [ServerEvent.Settle]: this.handleSettle,
+      [ServerEvent.Settled]: this.handleSettled,
+      [ServerEvent.ReadyPlayers]: this.handleReadyPlayers,
+      [ServerEvent.ClearHandsAndBets]: this.handleClearHandsAndBets,
     }
   }
 
@@ -100,6 +102,10 @@ export class GameStore implements Readable<GameStore> {
     this.emitClientEvent(ClientEvent.Stand, {})
   }
 
+  ready = (): void => {
+    this.emitClientEvent(ClientEvent.Ready, {})
+  }
+
   // ====================
   // Event Handlers
   // ====================
@@ -167,14 +173,37 @@ export class GameStore implements Readable<GameStore> {
     this._game.dealer.hand.state = handState
   }
 
-  private handleSettle: ServerEventHandler<ServerEvent.Settle> = ({ players }) => {
+  private handleSettled: ServerEventHandler<ServerEvent.Settled> = ({ players }) => {
     Object.entries(players)
-      .forEach(([playerId, { hand, money, bet }]) => {
+      .forEach(([playerId, { hand, money }]) => {
         if (!this._game) return
         const player = this._game.players[playerId]
         if (!player) return
         player.hand = hand
         player.money = money
+      })
+  }
+
+  private handleReadyPlayers: ServerEventHandler<ServerEvent.ReadyPlayers> = ({ players }) => {
+    Object.entries(players)
+      .forEach(([playerId, { ready }]) => {
+        if (!this._game) return
+        const player = this._game.players[playerId]
+        if (!player) return
+        player.ready = ready
+      })
+  }
+
+  private handleClearHandsAndBets: ServerEventHandler<ServerEvent.ClearHandsAndBets> = ({ dealer, players }) => {
+    if (!this._game) return
+    this._game.dealer.hand = dealer.hand
+
+    Object.entries(players)
+      .forEach(([playerId, { hand, bet }]) => {
+        if (!this._game) return
+        const player = this._game.players[playerId]
+        if (!player) return
+        player.hand = hand
         player.bet = bet
       })
   }

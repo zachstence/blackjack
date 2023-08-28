@@ -10,6 +10,7 @@
 
   const store = getGameStoreContext();
 
+  $: readying = $store.game!.state === GameState.PlayersReadying;
   $: placingBets = $store.game!.state === GameState.PlacingBets;
   $: playersPlaying = $store.game!.state === GameState.PlayersPlaying;
   $: hasBet = typeof player.bet !== 'undefined';
@@ -51,6 +52,10 @@
         <button on:click={store.stand} disabled={player.hand.state !== HandState.Hitting}>Stand</button>
         <button on:click={store.hit} disabled={player.hand.state !== HandState.Hitting}>Hit</button>
       </div>
+    {/if}
+
+    {#if readying}
+      <button on:click={store.ready}>Ready</button>
     {/if}
   {/if}
 </div>

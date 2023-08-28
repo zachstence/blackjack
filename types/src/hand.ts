@@ -22,3 +22,11 @@ export interface IHand {
     settleStatus?: HandSettleStatus
     winnings?: number
 }
+
+export const EMPTY_HAND: IHand = {
+    state: HandState.Hitting,
+    cards: [],
+    total: 0,
+    settleStatus: undefined,
+    winnings: undefined,
+}
