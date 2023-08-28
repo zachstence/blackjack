@@ -5,7 +5,7 @@ import { ClientEvent, ClientEventArgs, GameState, ICard, IGame, IPlayer, RankVal
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
-import { EMPTY_HAND, HandSettleStatus, HandState, IHand } from 'blackjack-types/src/hand';
+import { EMPTY_HAND, HandSettleStatus, HandState, IHand } from 'blackjack-types';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers

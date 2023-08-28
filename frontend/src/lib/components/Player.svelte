@@ -3,7 +3,7 @@
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';
   import Card from './Card.svelte';
-  import { HandState } from 'blackjack-types/src/hand';
+  import { HandState } from 'blackjack-types';
 
   export let player: IPlayer;
   export let isMe: boolean;
