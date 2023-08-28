@@ -4,6 +4,8 @@
   import { GameStore } from '$lib/game.store';
   import { onMount } from 'svelte';
   import { setGameStoreContext } from '$lib/game.context';
+  import Card from '$lib/components/Card.svelte';
+  import { Rank, Suit } from 'blackjack-types';
 
   const store = new GameStore();
   setGameStoreContext(store);
@@ -12,6 +14,8 @@
     store.connect();
   });
 </script>
+
+<Card rank={Rank.Ace} suit={Suit.Spades} />
 
 {#if typeof $store.game === 'undefined'}
   <JoinForm onSubmit={store.join} />
