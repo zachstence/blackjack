@@ -150,7 +150,9 @@ export class GameStore implements Readable<GameStore> {
 
   private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handState }) => {
     if (!this._game) return
-    this._game.players[playerId].hand.state = handState
+    const playerHand = this._game.players[playerId].hand
+    if (typeof playerHand === 'undefined') return
+    playerHand.state = handState
   }
 
   private handleRevealDealerHand: ServerEventHandler<ServerEvent.RevealDealerHand> = ({ hand }) => {

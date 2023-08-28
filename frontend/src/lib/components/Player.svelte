@@ -21,11 +21,19 @@
     <dt>Name</dt>
     <dd>{player.name}</dd>
 
+    <dt>Money</dt>
+    <dd>{player.money}</dd>
+
     <dt>State</dt>
-    <dd>{player.hand.state}</dd>
+    <dd>{player.hand?.state ?? '-'}</dd>
+
+    <br />
+
+    <dt>Bet</dt>
+    <dd>{player.bet ?? '-'}</dd>
 
     <dt>Hand</dt>
-    {#if player.hand.cards.length}
+    {#if player.hand?.cards.length}
       <dd>
         {#each player.hand.cards as card}
           <Card {card} />
@@ -35,26 +43,47 @@
       <dd>-</dd>
     {/if}
 
-    <dt>Bet</dt>
-    <dd>{player.bet ?? '-'}</dd>
+    <dt>Total</dt>
+    {#if player.hand}
+      <dd>{player.hand.total}</dd>
+    {:else}
+      <dd>-</dd>
+    {/if}
 
-    <dt>Money</dt>
-    <dd>{player.money}</dd>
+    <br />
+
+    <dt>Outcome</dt>
+    {#if player.hand?.settleStatus}
+      <dd>{player.hand.settleStatus}</dd>
+    {:else}
+      <dd>-</dd>
+    {/if}
+
+    <dt>Winnings</dt>
+    {#if player.hand?.winnings}
+      <dd>{player.hand.winnings}</dd>
+    {:else}
+      <dd>-</dd>
+    {/if}
   </dl>
 
   {#if isMe}
-    {#if placingBets && !hasBet}
-      <BetForm onSubmit={store.bet} maxBet={player.money} />
+    {#if typeof player.hand !== 'undefined'}
+      {#if playersPlaying}
+        <div>
+          <button on:click={store.stand} disabled={player.hand.state !== HandState.Hitting}>Stand</button>
+          <button on:click={store.hit} disabled={player.hand.state !== HandState.Hitting}>Hit</button>
+        </div>
+      {:else if placingBets && !hasBet}
+        <BetForm onSubmit={store.bet} maxBet={player.money} />
+      {/if}
     {/if}
+  {/if}
 
-    {#if playersPlaying}
-      <div>
-        <button on:click={store.stand} disabled={player.hand.state !== HandState.Hitting}>Stand</button>
-        <button on:click={store.hit} disabled={player.hand.state !== HandState.Hitting}>Hit</button>
-      </div>
-    {/if}
-
-    {#if readying}
+  {#if readying}
+    {#if player.ready}
+      ✅
+    {:else if isMe}
       <button on:click={store.ready}>Ready</button>
     {/if}
   {/if}

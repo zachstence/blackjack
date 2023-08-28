@@ -14,6 +14,8 @@
   <dt>State</dt>
   <dd>{dealer.hand.state}</dd>
 
+  <br />
+
   <dt>Hand</dt>
   {#if dealer.hand.cards.length}
     <dd>
@@ -24,6 +26,9 @@
   {:else}
     <dd>-</dd>
   {/if}
+
+  <dt>Total</dt>
+  <dd>{dealer.hand.total}</dd>
 </dl>
 
 <style>

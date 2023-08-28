@@ -34,7 +34,7 @@ export class GameServer {
     }
 
     this.game = {
-      state: GameState.PlacingBets,
+      state: GameState.PlayersReadying,
       dealer: {
         hand: {
           state: HandState.Hitting,
@@ -82,6 +82,10 @@ export class GameServer {
   // ====================
   // Gameplay
   // ====================
+  get playersInRound(): IPlayer[] {
+    return Object.values(this.game.players).filter(player => player.hand)
+  }
+
   private checkState = (): void => {
     if (this.game.state === GameState.PlayersReadying) {
       const allPlayersReady = Object.values(this.game.players).every(player => player.ready)
@@ -89,14 +93,12 @@ export class GameServer {
         this.collectBets()
       }
     } else if (this.game.state === GameState.PlacingBets) {
-      const allPlayersHaveBet = Object.values(this.game.players)
-        .every(p => typeof p.bet !== 'undefined')
+      const allPlayersHaveBet = this.playersInRound.every(p => typeof p.bet !== 'undefined')
       if (allPlayersHaveBet) {
         this.deal()
       }
     } else if (this.game.state === GameState.PlayersPlaying) {
-      const allPlayerHandsStandOrBusted = Object.values(this.game.players)
-        .every(p => p.hand.state === HandState.Standing || p.hand.state === HandState.Busted)
+      const allPlayerHandsStandOrBusted = this.playersInRound.every(p => p.hand!.state === HandState.Standing || p.hand!.state === HandState.Busted)
       if (allPlayerHandsStandOrBusted) {
         this.emitServerEvent(ServerEvent.RevealDealerHand, { hand: this.game.dealer.hand })
 
@@ -151,9 +153,9 @@ export class GameServer {
       cards: [],
       total: 0,
     }
-    const playerHands = Object.keys(this.game.players)
-      .reduce<Record<string, IHand>>((acc, val) => {
-        acc[val] = {
+    const playerHands = this.playersInRound
+      .reduce<Record<string, IHand>>((acc, player) => {
+        acc[player.id] = {
           state: HandState.Hitting,
           cards: [],
           total: 0,
@@ -162,7 +164,7 @@ export class GameServer {
       }, {})
 
     for (let i = 0; i < 2; i++) {
-      for (const player of Object.values(this.game.players)) {
+      for (const player of this.playersInRound) {
         if (!this.game.shoe.length) {
           throw new Error('Shoe empty!')
           // TODO redeal before shoe is empty
@@ -177,10 +179,7 @@ export class GameServer {
     }
 
     this.game.dealer.hand = dealerHand
-    Object.keys(this.game.players)
-      .forEach(playerId => {
-        this.game.players[playerId]!.hand = playerHands[playerId]
-      })
+    this.playersInRound.forEach(player => { player.hand = playerHands[player.id] })
     
     const dealerHandWithHiddenCard: IHand = {
       ...dealerHand,
@@ -227,7 +226,8 @@ export class GameServer {
     const dealerStanding = dealer.hand.state === HandState.Standing
     const dealerBlackjack = dealerTotal === 21 && dealer.hand.cards.length === 2
 
-    for (const player of Object.values(this.game.players)) {
+    for (const player of this.playersInRound) {
+      if (typeof player.hand === 'undefined') continue
       if (player.hand.state === HandState.Hitting) continue
       if (typeof player.bet === 'undefined') continue
 
@@ -276,10 +276,10 @@ export class GameServer {
       money: number
       bet: undefined
     }>
-    const players = Object.values(this.game.players)
+    const players = this.playersInRound
       .reduce<SettledPlayers>((acc, player) => {
         acc[player.id] = {
-          hand: player.hand,
+          hand: player.hand!,
           money: player.money,
           bet: undefined,
         }
@@ -302,13 +302,9 @@ export class GameServer {
     const newPlayer: IPlayer = {
       id: socket.id,
       name,
-      hand: {
-        state: HandState.Hitting,
-        cards: [],
-        total: 0,
-      },
+      hand: undefined,
       money: 1000,
-      ready: true,
+      ready: false,
     }
     this.game.players[socket.id] = newPlayer
 
@@ -342,6 +338,7 @@ export class GameServer {
   private handleHit: ClientEventHandler<ClientEvent.Hit> = (_, socket) => {
     const player = this.game.players[socket.id]
     if (!player) return
+    if (!player.hand) return
 
     if (!this.game.shoe.length) throw new Error('Shoe empty!')
 
@@ -364,6 +361,7 @@ export class GameServer {
   private handleStand: ClientEventHandler<ClientEvent.Stand> = (_, socket) => {
     const player = this.game.players[socket.id]
     if (!player) return
+    if (!player.hand) return
 
     player.hand.state = HandState.Standing
     this.emitServerEvent(ServerEvent.PlayerStand, {
