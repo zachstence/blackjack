@@ -14,7 +14,7 @@ export class GameStore implements Readable<GameStore> {
   private _game?: IGame
 
   constructor() {
-    this.socket = io('http://localhost:3000', { autoConnect: false })
+    this.socket = io('http://localhost:3001', { autoConnect: false })
     this.socket.onAny((event, args) => this.onServerEvent(event, args))
 
     this.serverEventHandlers = {

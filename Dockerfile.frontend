@@ -1,0 +1,12 @@
+FROM node:18-alpine
+
+COPY ./frontend /app/frontend
+COPY ./types /app/types
+
+WORKDIR /app/frontend
+
+RUN npm ci
+RUN npm run build
+
+EXPOSE 3000
+CMD ["node", "./build"]

@@ -3,7 +3,7 @@ import http from 'http';
 
 import { GameServer } from './game-server';
 
-const PORT = 3000;
+const PORT = 3001;
 
 const app = express();
 const httpServer = http.createServer(app);
