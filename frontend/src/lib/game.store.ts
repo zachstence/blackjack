@@ -20,7 +20,8 @@ export class GameStore implements Readable<GameStore> {
 
     this.serverEventHandlers = {
       [ServerEvent.JoinSuccess]: this.handleJoinSuccess,
-      [ServerEvent.PlayerJoined]: this.handlePlayerJoin,
+      [ServerEvent.PlayerJoined]: this.handlePlayerJoined,
+      [ServerEvent.PlayerLeft]: this.handlePlayerLeft,
       [ServerEvent.PlayerBet]: this.handlePlayerBet,
       [ServerEvent.GameStateChange]: this.handleGameStateChange,
       [ServerEvent.Dealt]: this.handleDealt,
@@ -114,9 +115,14 @@ export class GameStore implements Readable<GameStore> {
     this._game = args.game
   }
 
-  private handlePlayerJoin: ServerEventHandler<ServerEvent.PlayerJoined> = args => {
+  private handlePlayerJoined: ServerEventHandler<ServerEvent.PlayerJoined> = args => {
     if (!this._game) return
     this._game.players[args.player.id] = args.player
+  }
+
+  private handlePlayerLeft: ServerEventHandler<ServerEvent.PlayerLeft> = args => {
+    if (!this._game) return
+    delete this._game.players[args.playerId]
   }
 
   private handlePlayerBet: ServerEventHandler<ServerEvent.PlayerBet> = args => {

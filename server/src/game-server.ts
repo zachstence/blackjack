@@ -23,6 +23,8 @@ export class GameServer {
 
     this.server.on('connection', socket => {
       socket.onAny((event, args) => this.onClientEvent(event, args, socket))
+
+      socket.on('disconnect', () => this.onSocketDisconnect(socket))
     })
 
     this.clientEventHandlers = {
@@ -77,6 +79,12 @@ export class GameServer {
         return acc
       }, {})
     this.emitServerEvent(ServerEvent.ReadyPlayers, { players })
+  }
+
+  private onSocketDisconnect = (socket: Socket): void => {
+    const playerId = socket.id
+    delete this.game.players[playerId]
+    this.emitServerEvent(ServerEvent.PlayerLeft, { playerId })
   }
 
   // ====================
