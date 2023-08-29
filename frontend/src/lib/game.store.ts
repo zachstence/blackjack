@@ -1,6 +1,6 @@
 import { Socket, io } from "socket.io-client";
 import { writable, type Readable } from "svelte/store";
-import { PUBLIC_SOCKET_SERVER_URL } from '$env/static/public'
+import { PUBLIC_SOCKET_SERVER_URL } from '$env/dynamic/public'
 
 import { ServerEvent, type ServerEventArgs, ClientEvent, type ClientEventArgs, type IGame } from "blackjack-types";
 import type { ServerEventHandler, ServerEventHandlers } from "./socket.types";
