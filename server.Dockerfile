@@ -5,6 +5,6 @@ COPY ./types /app/types
 
 WORKDIR /app/server
 
-RUN npm ci --omit dev
+RUN npm ci
 
 CMD ["npm", "start"]
