@@ -1,6 +1,6 @@
 import { Socket, io } from "socket.io-client";
 import { writable, type Readable } from "svelte/store";
-import { PUBLIC_SOCKET_SERVER_URL } from '$env/dynamic/public'
+import { env } from '$env/dynamic/public'
 
 import { ServerEvent, type ServerEventArgs, ClientEvent, type ClientEventArgs, type IGame } from "blackjack-types";
 import type { ServerEventHandler, ServerEventHandlers } from "./socket.types";
@@ -15,7 +15,7 @@ export class GameStore implements Readable<GameStore> {
   private _game?: IGame
 
   constructor() {
-    this.socket = io(PUBLIC_SOCKET_SERVER_URL, { autoConnect: false })
+    this.socket = io(env.PUBLIC_SOCKET_SERVER_URL, { autoConnect: false })
     this.socket.onAny((event, args) => this.onServerEvent(event, args))
 
     this.serverEventHandlers = {
