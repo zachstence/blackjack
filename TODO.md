@@ -1,5 +1,7 @@
-- Let a player place a cut card (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
-- Reset the shoe with 20% left (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
+- Ace should be 1/11
+- Split
+- Double
+- Admin tools (kick player, change money, )
 - Have connection quality indicator, ping time
 - Timeout for users to bet between rounds, automatically start
 - timeout for user to hit or stand
@@ -15,10 +17,12 @@
 - rooms
   - public room joinable by anybody
   - private room joinable by link/code
-  - max players
-  - all config options customizable per room
-  - min bet
-  - max bet
-  - hint (whether allowed is configurable by room)
-  - coach mode, say if move was correct after you make it
-  - card counting helper
+- max players
+- all config options customizable per room
+- min bet
+- max bet
+- hint (whether allowed is configurable by room)
+- coach mode, say if move was correct after you make it
+- card counting helper
+- Let a player place a cut card (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
+- Reset the shoe with 20% left (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
