@@ -3,6 +3,7 @@ export enum ClientEvent {
     Ready = 'Ready',
     PlaceBet = 'PlaceBet',
     Hit = 'Hit',
+    Double = 'Double',
     Stand = 'Stand',
 }
 
@@ -11,6 +12,7 @@ type ArgsByClientEvent = {
     [ClientEvent.Ready]: {}
     [ClientEvent.PlaceBet]: { amount: number }
     [ClientEvent.Hit]: {}
+    [ClientEvent.Double]: {}
     [ClientEvent.Stand]: {}
 }
 

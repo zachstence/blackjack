@@ -14,6 +14,9 @@
   $: placingBets = $store.game!.state === GameState.PlacingBets;
   $: playersPlaying = $store.game!.state === GameState.PlayersPlaying;
   $: hasBet = typeof player.hand?.bet !== 'undefined';
+  $: canHit = player.hand?.state === HandState.Hitting;
+  $: canDouble = canHit && player.hand?.cards.length === 2;
+  $: canStand = player.hand?.state === HandState.Hitting;
 </script>
 
 <div>
@@ -80,8 +83,9 @@
     {#if typeof player.hand !== 'undefined'}
       {#if playersPlaying}
         <div>
-          <button on:click={store.stand} disabled={player.hand.state !== HandState.Hitting}>Stand</button>
-          <button on:click={store.hit} disabled={player.hand.state !== HandState.Hitting}>Hit</button>
+          <button on:click={store.stand} disabled={!canStand}>Stand</button>
+          <button on:click={store.hit} disabled={!canHit}>Hit</button>
+          <button on:click={store.double} disabled={!canDouble}>Double</button>
         </div>
       {:else if placingBets && !hasBet}
         <BetForm onSubmit={store.bet} maxBet={player.money} />

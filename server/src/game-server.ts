@@ -32,6 +32,7 @@ export class GameServer {
       [ClientEvent.Ready]: this.handleReady,
       [ClientEvent.PlaceBet]: this.handlePlaceBet,
       [ClientEvent.Hit]: this.handleHit,
+      [ClientEvent.Double]: this.handleDouble,
       [ClientEvent.Stand]: this.handleStand,
     }
 
@@ -394,6 +395,9 @@ export class GameServer {
     const player = this.game.players[socket.id]
     if (!player) return
     if (!player.hand) return
+    if (player.hand.hasDoubled) {
+      throw new Error(`Player ${player.id} has already doubled and cannot hit again`)
+    }
 
     this.dealCardToHand(player.hand)
     const playerHandTotal = this.getBestHandTotal(player.hand)
@@ -403,6 +407,43 @@ export class GameServer {
     }
 
     this.emitServerEvent(ServerEvent.PlayerHit, {
+      playerId: player.id,
+      hand: player.hand,
+    })
+
+    this.checkState()
+  }
+
+  private handleDouble: ClientEventHandler<ClientEvent.Double> = (_, socket) => {
+    const player = this.game.players[socket.id]
+    if (!player) return
+    if (!player.hand) return
+
+    if (typeof player.hand.bet === 'undefined') {
+      throw new Error(`Player ${player.id} is doubling without a bet`)
+    }
+
+    if (player.hand.cards.length !== 2) {
+      throw new Error(`Player ${player.id} is doubling with ${player.hand.cards.length} cards`)
+    }
+    
+    // Double current bet
+    const currentBet = player.hand.bet!
+    player.money -= currentBet
+    player.hand.bet! += currentBet
+    player.hand.hasDoubled = true
+
+    this.dealCardToHand(player.hand)
+    const playerHandTotal = this.getBestHandTotal(player.hand)
+
+    if (playerHandTotal > 21) {
+      player.hand.state = HandState.Busted
+    } else {
+      // Player must stand after doubling
+      player.hand.state = HandState.Standing
+    }
+
+    this.emitServerEvent(ServerEvent.PlayerDoubled, {
       playerId: player.id,
       hand: player.hand,
     })

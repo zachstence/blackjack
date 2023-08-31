@@ -21,6 +21,7 @@ export interface IHand {
     cards: MaybeHiddenCard[]
     total: IValue
     bet?: number
+    hasDoubled?: boolean
     settleStatus?: HandSettleStatus
     winnings?: number
 }
@@ -30,6 +31,4 @@ export const EMPTY_HAND = (bet?: number): IHand => ({
     cards: [],
     total: { hard: 0 },
     bet,
-    settleStatus: undefined,
-    winnings: undefined,
 })

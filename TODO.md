@@ -1,5 +1,4 @@
 # Gameplay
-- Double
 - Split
 - Surrender (before and after dealer reveal)
 - Insurance
@@ -15,6 +14,12 @@
   - allow coach mode
 - vs mode playing against other players
 - levelling and get coins
+
+
+# Technical
+- Change `ServerEvent.ReadyPlayers` to `ServerEvent.ReadyPlayer`, only include info about the one player that changed ready status
+- Error handling, don't crash server on errors
+- Server should tell client what actions are possible, don't put Blackjack game logic in client
 
 
 # QOL
