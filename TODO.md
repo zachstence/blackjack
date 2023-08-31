@@ -1,7 +1,13 @@
+# Gameplay
 - Ace should be 1/11
 - Split
 - Double
+- Dealer doesn't hit if all players bust
+- Dealer doesn't hit if all players get blackjack
+
+# QOL
 - Admin tools (kick player, change money, )
+- Auto stand on 21
 - Have connection quality indicator, ping time
 - Timeout for users to bet between rounds, automatically start
 - timeout for user to hit or stand

@@ -1,3 +1,5 @@
+import { IValue } from "./value"
+
 export enum Suit {
     Diamonds = 'Diamonds',
     Clubs = 'Clubs',
@@ -21,20 +23,20 @@ export enum Rank {
     King = 'King',
 }
 
-export const RankValue: Record<Rank, number> = {
-    [Rank.Ace]: 11,
-    [Rank.Two]: 2,
-    [Rank.Three]: 3,
-    [Rank.Four]: 4,
-    [Rank.Five]: 5,
-    [Rank.Six]: 6,
-    [Rank.Seven]: 7,
-    [Rank.Eight]: 8,
-    [Rank.Nine]: 9,
-    [Rank.Ten]: 10,
-    [Rank.Jack]: 10,
-    [Rank.Queen]: 10,
-    [Rank.King]: 10,
+export const RankValue: Record<Rank, IValue> = {
+    [Rank.Ace]: { hard: 1, soft: 11 },
+    [Rank.Two]: { hard: 2 },
+    [Rank.Three]: { hard: 3 },
+    [Rank.Four]: { hard: 4 },
+    [Rank.Five]: { hard: 5 },
+    [Rank.Six]: { hard: 6 },
+    [Rank.Seven]: { hard: 7 },
+    [Rank.Eight]: { hard: 8 },
+    [Rank.Nine]: { hard: 9 },
+    [Rank.Ten]: { hard: 10 },
+    [Rank.Jack]: { hard: 10 },
+    [Rank.Queen]: { hard: 10 },
+    [Rank.King]: { hard: 10 },
 }
 
 export interface ICard {

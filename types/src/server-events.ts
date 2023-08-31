@@ -73,10 +73,10 @@ type ArgsByServerEvent = {
     }
     [ServerEvent.ClearHandsAndBets]: {
         dealer: {
-            hand: typeof EMPTY_HAND
+            hand: IHand
         }
         players: Record<string, {
-            hand: typeof EMPTY_HAND
+            hand: IHand
             bet: undefined
         }>
     }

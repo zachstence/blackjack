@@ -44,7 +44,16 @@
     {/if}
 
     <dt>Total</dt>
-    <dd>{player.hand?.total || '-'}</dd>
+    {#if player.hand?.total}
+      <dd>
+        {player.hand.total.hard}
+        {#if player.hand.total.soft}
+          {' '}/ {player.hand.total.soft}
+        {/if}
+      </dd>
+    {:else}
+      <dd>-</dd>
+    {/if}
 
     <br />
 

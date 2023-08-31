@@ -1,7 +1,7 @@
 import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 
-import { ClientEvent, ClientEventArgs, GameState, ICard, IGame, IPlayer, RankValue, ServerEvent, ServerEventArgs } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, GameState, ICard, IGame, IPlayer, IValue, RankValue, ServerEvent, ServerEventArgs } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
@@ -37,13 +37,7 @@ export class GameServer {
 
     this.game = {
       state: GameState.PlayersReadying,
-      dealer: {
-        hand: {
-          state: HandState.Hitting,
-          cards: [],
-          total: 0,
-        },
-      },
+      dealer: { hand: EMPTY_HAND() },
       players: {},
       shoe: [],
     }
@@ -137,17 +131,17 @@ export class GameServer {
   }
 
   private collectBets = (): void => {
-    Object.values(this.game.players).forEach(player => { player.hand = EMPTY_HAND })
+    Object.values(this.game.players).forEach(player => { player.hand = EMPTY_HAND() })
     const players = Object.values(this.game.players)
       .reduce<ServerEventArgs<ServerEvent.ClearHandsAndBets>['players']>((acc, player) => {
         acc[player.id] = {
-          hand: EMPTY_HAND,
+          hand: EMPTY_HAND(),
           bet: undefined,
         }
         return acc
       }, {})
     this.emitServerEvent(ServerEvent.ClearHandsAndBets, {
-      dealer: { hand: EMPTY_HAND },
+      dealer: { hand: EMPTY_HAND() },
       players,
     })
 
@@ -156,34 +150,20 @@ export class GameServer {
   }
 
   private deal = (): void => {
-    const dealerHand: IHand = {
-      state: HandState.Hitting,
-      cards: [],
-      total: 0,
-    }
+    const dealerHand = EMPTY_HAND()
     const playerHands = this.playersInRound
       .reduce<Record<string, IHand>>((acc, player) => {
-        acc[player.id] = {
-          state: HandState.Hitting,
-          cards: [],
-          total: 0,
-        }
+        acc[player.id] = EMPTY_HAND()
         return acc
       }, {})
 
     for (let i = 0; i < 2; i++) {
       for (const player of this.playersInRound) {
-        if (!this.game.shoe.length) {
-          throw new Error('Shoe empty!')
-          // TODO redeal before shoe is empty
-        }
-        const newCard = this.game.shoe.pop()!
-        playerHands[player.id].cards.push(newCard)
-        playerHands[player.id].total += RankValue[newCard.rank]
+        console.log('\n===\nDealing to', player.id)
+        this.dealCardToHand(playerHands[player.id])
       }
-      const newCard = this.game.shoe.pop()!
-      dealerHand.cards.push(newCard)
-      dealerHand.total += RankValue[newCard.rank]
+      console.log('\n===\nDealing to dealer')
+      this.dealCardToHand(dealerHand)
     }
 
     this.game.dealer.hand = dealerHand
@@ -206,31 +186,92 @@ export class GameServer {
 
   private playDealer = (): void => {
     const dealerHand = this.game.dealer.hand
+    const dealerHandTotal = this.getBestHandTotal(dealerHand)
 
-    if (dealerHand.total > 21) {
+    if (dealerHandTotal > 21) {
       dealerHand.state = HandState.Busted
       this.emitServerEvent(ServerEvent.DealerBust, { handState: HandState.Busted})
       this.checkState()
       return
     }
 
-    if (dealerHand.total >= 17) {
+    if (dealerHandTotal >= 17) {
       dealerHand.state = HandState.Standing
       this.emitServerEvent(ServerEvent.DealerStand, { handState: HandState.Standing })
       this.checkState()
       return
     }
 
-    const newCard = this.game.shoe.pop()!
-    dealerHand.cards.push(newCard)
-    dealerHand.total += RankValue[newCard.rank]
+    this.dealCardToHand(dealerHand)
+
     this.emitServerEvent(ServerEvent.DealerHit, { hand: dealerHand })
     this.playDealer()
   }
 
+  private getBestHandTotal = (hand: IHand): number => {
+    const { total: { hard, soft } } = hand
+    if (typeof soft === 'undefined') return hard
+    if (soft <= 21) return soft
+    return hard
+  }
+
+  dealCardToHand = (hand: IHand): void => {
+    console.group('dealCardToHand')
+    const handTotals = [hand.total.hard, hand.total.soft].filter(x => typeof x !== 'undefined') as number[]
+    console.log('handTotals', handTotals)
+
+    if (this.game.shoe.length === 0) {
+      throw new Error('Shoe empty!')
+    }
+    const card = this.game.shoe.pop()!
+    console.log('card', card)
+    const cardValue = RankValue[card.rank]
+    const cardValues = [cardValue.hard, cardValue.soft].filter(x => typeof x !== 'undefined') as number[]
+    console.log('cardValues', cardValues)
+    
+    const allPossibleHandValues = handTotals.reduce<number[]>((acc, handTotal) => {
+        cardValues.forEach(cardVal => {
+            acc.push(handTotal + cardVal)
+        })
+        return acc
+    }, [])
+    console.log('allPossibleHandValues', allPossibleHandValues)
+
+    // Sort in order of best hand totals
+    allPossibleHandValues.sort((a, b) => {
+      if (a > 21 && b <= 21) return 1
+      if (b > 21 && a <= 21) return -1
+      if (a > 21 && b > 21) return a - b
+      return a - b
+    })
+
+    let handTotal: IValue
+    if (allPossibleHandValues.length === 0) {
+      // Should not be possible
+      throw new Error(`Failed to deal ${card} to hand ${hand.cards}, no possible values found`)
+    } else if (allPossibleHandValues.length === 1) {
+      handTotal = {
+        hard: allPossibleHandValues[0]!,
+      }
+    } else {
+      let soft: number | undefined = allPossibleHandValues[1]!
+      if (soft > 21) soft = undefined
+      handTotal = {
+        soft,
+        hard: allPossibleHandValues[0],
+      }
+    }
+    console.log('new handTotal', handTotal)
+
+    hand.cards.push(card)
+    hand.total = handTotal
+
+    console.groupEnd()
+  }
+
   private settle = (): void => {
     const { dealer } = this.game
-    const dealerTotal = dealer.hand.total
+    const dealerTotal = this.getBestHandTotal(dealer.hand)
     const dealerBusted = dealer.hand.state === HandState.Busted
     const dealerStanding = dealer.hand.state === HandState.Standing
     const dealerBlackjack = dealerTotal === 21 && dealer.hand.cards.length === 2
@@ -240,7 +281,7 @@ export class GameServer {
       if (player.hand.state === HandState.Hitting) continue
       if (typeof player.bet === 'undefined') continue
 
-      const playerTotal = player.hand.total
+      const playerTotal = this.getBestHandTotal(player.hand)
       const playerBusted = player.hand.state === HandState.Busted
       const playerStanding = player.hand.state === HandState.Standing
       const playerBlackjack = playerTotal === 21 && player.hand.cards.length === 2
@@ -349,13 +390,10 @@ export class GameServer {
     if (!player) return
     if (!player.hand) return
 
-    if (!this.game.shoe.length) throw new Error('Shoe empty!')
+    this.dealCardToHand(player.hand)
+    const playerHandTotal = this.getBestHandTotal(player.hand)
 
-    const newCard = this.game.shoe.pop()!
-    player.hand.cards.push(newCard)
-    player.hand.total += RankValue[newCard.rank]
-
-    if (player.hand.total > 21) {
+    if (playerHandTotal > 21) {
       player.hand.state = HandState.Busted
     }
 

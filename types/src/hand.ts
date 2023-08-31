@@ -1,4 +1,5 @@
 import { ICard } from "./card";
+import { IValue } from "./value";
 
 export enum HandState {
     Hitting = 'Hitting',
@@ -18,15 +19,15 @@ export enum HandSettleStatus {
 export interface IHand {
     state: HandState
     cards: MaybeHiddenCard[]
-    total: number
+    total: IValue
     settleStatus?: HandSettleStatus
     winnings?: number
 }
 
-export const EMPTY_HAND: IHand = {
+export const EMPTY_HAND = (): IHand => ({
     state: HandState.Hitting,
     cards: [],
-    total: 0,
+    total: { hard: 0 },
     settleStatus: undefined,
     winnings: undefined,
-}
+})
