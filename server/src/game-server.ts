@@ -287,13 +287,14 @@ export class GameServer {
       const playerBlackjack = playerTotal === 21 && player.hand.cards.length === 2
 
       const lose =
-        playerBusted                                        // Player automatically loses if they bust
-        || (playerTotal < dealerTotal && dealerStanding)    // Player loses if dealer beats them without busting
+        playerBusted                                                            // Player automatically loses if they bust
+        || (playerTotal < dealerTotal && dealerStanding)                        // Player loses if dealer beats them without busting
+        || (playerTotal === dealerTotal && dealerBlackjack && !playerBlackjack) // Player loses if they get 21 but dealer gets blackjack
 
       const win =
-        (playerStanding && dealerBusted)                    // Player wins if they stand and dealer busts
-        || (playerTotal > dealerTotal && playerStanding)    // Player wins if they beat dealer without busting
-        || (playerTotal === dealerTotal && playerBlackjack) // Player wins if they tie with dealer but got a blackjack
+        (playerStanding && dealerBusted)                                        // Player wins if they stand and dealer busts
+        || (playerTotal > dealerTotal && playerStanding)                        // Player wins if they beat dealer without busting
+        || (playerTotal === dealerTotal && playerBlackjack && !dealerBlackjack) // Player wins if they tie with dealer but got a blackjack
 
       // Player pushes when both stand, their totals match, and neither got a blackjack
       const push =
