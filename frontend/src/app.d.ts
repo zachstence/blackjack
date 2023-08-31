@@ -9,4 +9,8 @@ declare global {
   }
 }
 
+declare global {
+  export const PACKAGE_JSON: { version: string }
+}
+
 export {};

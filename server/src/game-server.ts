@@ -6,8 +6,11 @@ import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
 import { EMPTY_HAND, HandSettleStatus, HandState, IHand } from 'blackjack-types';
+import { loadVersion } from './loadVersion';
 
 export class GameServer {
+  private VERSION?: string;
+
   private clientEventHandlers: ClientEventHandlers
 
   private readonly server: SocketServer
@@ -15,6 +18,8 @@ export class GameServer {
   private readonly game: IGame
 
   constructor(httpServer: HttpServer) {
+    loadVersion().then(version => this.VERSION = version)
+
     this.server = new SocketServer(httpServer, {
       cors: {
         origin: '*',
@@ -28,6 +33,7 @@ export class GameServer {
     })
 
     this.clientEventHandlers = {
+      [ClientEvent.GetServerVersion]: this.handleGetServerVersion,
       [ClientEvent.PlayerJoin]: this.handlePlayerJoin,
       [ClientEvent.PlaceBet]: this.handlePlaceBet,
       [ClientEvent.Hit]: this.handleHit,
@@ -348,6 +354,10 @@ export class GameServer {
   // ====================
   // Event Handlers
   // ====================
+  private handleGetServerVersion: ClientEventHandler<ClientEvent.GetServerVersion> = (_, socket) => {
+    this.emitServerEventTo(socket, ServerEvent.ServerVersion, { version: this.VERSION })
+  }
+
   private handlePlayerJoin: ClientEventHandler<ClientEvent.PlayerJoin> = ({ name }, socket) => {
     const newPlayer: IPlayer = {
       id: socket.id,

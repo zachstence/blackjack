@@ -1,4 +1,5 @@
 export enum ClientEvent {
+    GetServerVersion = 'GetServerVersion',
     PlayerJoin = 'PlayerJoin',
     PlaceBet = 'PlaceBet',
     Hit = 'Hit',
@@ -7,6 +8,7 @@ export enum ClientEvent {
 }
 
 type ArgsByClientEvent = {
+    [ClientEvent.GetServerVersion]: {}
     [ClientEvent.PlayerJoin]: { name: string }
     [ClientEvent.PlaceBet]: { amount: number }
     [ClientEvent.Hit]: {}

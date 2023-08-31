@@ -8,6 +8,7 @@ export enum ServerEvent {
     JoinSuccess = 'JoinSuccess',
     
     // To all players
+    ServerVersion = 'ServerVersion',
     GameStateChange = 'GameStateChange',
     PlayerJoined = 'PlayerJoined',
     PlayerLeft = 'PlayerLeft',
@@ -28,6 +29,7 @@ type ArgsByServerEvent = {
     // To a specific player
     [ServerEvent.Error]: { message?: string }
     [ServerEvent.JoinSuccess]: { game: IGame }
+    [ServerEvent.ServerVersion]: { version?: string }
     
     // To all players
     [ServerEvent.GameStateChange]: { gameState: GameState }

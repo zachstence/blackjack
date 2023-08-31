@@ -14,11 +14,18 @@ export class GameStore implements Readable<GameStore> {
 
   private _game?: IGame
 
+  private _serverVersion?: string
+
+  get serverVersion(): string | undefined {
+    return this._serverVersion
+  }
+
   constructor() {
     this.socket = io(env.PUBLIC_SOCKET_SERVER_URL, { autoConnect: false })
     this.socket.onAny((event, args) => this.onServerEvent(event, args))
 
     this.serverEventHandlers = {
+      [ServerEvent.ServerVersion]: this.handleServerVersion,
       [ServerEvent.JoinSuccess]: this.handleJoinSuccess,
       [ServerEvent.PlayerJoined]: this.handlePlayerJoined,
       [ServerEvent.PlayerLeft]: this.handlePlayerLeft,
@@ -44,6 +51,11 @@ export class GameStore implements Readable<GameStore> {
   connect = (): void => {
     if (this.socket.connected) return
     this.socket.connect()
+  }
+
+  getServerVersion = (): void => {
+    console.log('getServerVersion')
+    this.emitClientEvent(ClientEvent.GetServerVersion, {})
   }
 
   private onServerEvent = <E extends ServerEvent>(event: E, args: ServerEventArgs<E>): void => {
@@ -75,7 +87,7 @@ export class GameStore implements Readable<GameStore> {
   /** Notify store subscribers of new values */
   private tick = (): void => {
     this._store.set(this);
-  };  
+  }
 
   // ====================
   // Gameplay
@@ -111,6 +123,10 @@ export class GameStore implements Readable<GameStore> {
   // ====================
   // Event Handlers
   // ====================
+  private handleServerVersion: ServerEventHandler<ServerEvent.ServerVersion> = ({ version }) => {
+    this._serverVersion = version
+  }
+
   private handleJoinSuccess: ServerEventHandler<ServerEvent.JoinSuccess> = args => {
     this._game = args.game
   }
