@@ -9,18 +9,22 @@ export enum ServerEvent {
     
     // To all players
     GameStateChange = 'GameStateChange',
+    ReadyPlayers = 'ReadyPlayers',
+
     PlayerJoined = 'PlayerJoined',
     PlayerLeft = 'PlayerLeft',
     PlayerBet = 'PlayerBet',
-    Dealt = 'Dealt',
     PlayerHit = 'PlayerHit',
     PlayerStand = 'PlayerStand',
+
+    Dealt = 'Dealt',
+
     RevealDealerHand = 'RevealDealerHand',
     DealerHit = 'DealerHit',
     DealerStand = 'DealerStand',
     DealerBust = 'DealerBust',
+
     Settled = 'Settled',
-    ReadyPlayers = 'ReadyPlayers',
     ClearHands = 'ClearHands',
 }
 
@@ -31,16 +35,16 @@ type ArgsByServerEvent = {
     
     // To all players
     [ServerEvent.GameStateChange]: { gameState: GameState }
+    [ServerEvent.ReadyPlayers]: {
+        players: Record<string, { ready: boolean }>
+    }
+
     [ServerEvent.PlayerJoined]: { player: IPlayer }
     [ServerEvent.PlayerLeft]: { playerId: string }
     [ServerEvent.PlayerBet]: {
         playerId: string
         bet: number
         money: number
-    }
-    [ServerEvent.Dealt]: {
-        dealerHand: IHand
-        playerHands: Record<string, IHand>
     }
     [ServerEvent.PlayerHit]: {
         playerId: string
@@ -50,6 +54,12 @@ type ArgsByServerEvent = {
         playerId: string
         handState: HandState.Standing
     }
+
+    [ServerEvent.Dealt]: {
+        dealerHand: IHand
+        playerHands: Record<string, IHand>
+    }
+
     [ServerEvent.RevealDealerHand]: {
         hand: IHand
     }
@@ -62,14 +72,12 @@ type ArgsByServerEvent = {
     [ServerEvent.DealerBust]: {
         handState: HandState.Busted
     }
+
     [ServerEvent.Settled]: {
         players: Record<string, {
             hand: IHand
             money: number
         }>
-    }
-    [ServerEvent.ReadyPlayers]: {
-        players: Record<string, { ready: boolean }>
     }
     [ServerEvent.ClearHands]: {
         dealer: {

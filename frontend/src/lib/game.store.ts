@@ -20,19 +20,24 @@ export class GameStore implements Readable<GameStore> {
 
     this.serverEventHandlers = {
       [ServerEvent.JoinSuccess]: this.handleJoinSuccess,
+      
+      [ServerEvent.GameStateChange]: this.handleGameStateChange,
+      [ServerEvent.ReadyPlayers]: this.handleReadyPlayers,
+
       [ServerEvent.PlayerJoined]: this.handlePlayerJoined,
       [ServerEvent.PlayerLeft]: this.handlePlayerLeft,
       [ServerEvent.PlayerBet]: this.handlePlayerBet,
-      [ServerEvent.GameStateChange]: this.handleGameStateChange,
-      [ServerEvent.Dealt]: this.handleDealt,
       [ServerEvent.PlayerHit]: this.handlePlayerHit,
       [ServerEvent.PlayerStand]: this.handlePlayerStand,
+
+      [ServerEvent.Dealt]: this.handleDealt,
+
       [ServerEvent.RevealDealerHand]: this.handleRevealDealerHand,
       [ServerEvent.DealerHit]: this.handleDealerHit,
       [ServerEvent.DealerStand]: this.handleDealerStand,
       [ServerEvent.DealerBust]: this.handleDealerBust,
+
       [ServerEvent.Settled]: this.handleSettled,
-      [ServerEvent.ReadyPlayers]: this.handleReadyPlayers,
       [ServerEvent.ClearHands]: this.handleClearHands,
     }
   }
@@ -92,6 +97,10 @@ export class GameStore implements Readable<GameStore> {
     this.emitClientEvent(ClientEvent.PlayerJoin, { name })
   }
 
+  ready = (): void => {
+    this.emitClientEvent(ClientEvent.Ready, {})
+  }
+
   bet = (amount: number): void => {
     this.emitClientEvent(ClientEvent.PlaceBet, { amount })
   }
@@ -104,15 +113,26 @@ export class GameStore implements Readable<GameStore> {
     this.emitClientEvent(ClientEvent.Stand, {})
   }
 
-  ready = (): void => {
-    this.emitClientEvent(ClientEvent.Ready, {})
-  }
-
   // ====================
   // Event Handlers
   // ====================
   private handleJoinSuccess: ServerEventHandler<ServerEvent.JoinSuccess> = args => {
     this._game = args.game
+  }
+
+  private handleGameStateChange: ServerEventHandler<ServerEvent.GameStateChange> = args => {
+    if (!this._game) return
+    this._game.state = args.gameState
+  }
+
+  private handleReadyPlayers: ServerEventHandler<ServerEvent.ReadyPlayers> = ({ players }) => {
+    Object.entries(players)
+      .forEach(([playerId, { ready }]) => {
+        if (!this._game) return
+        const player = this._game.players[playerId]
+        if (!player) return
+        player.ready = ready
+      })
   }
 
   private handlePlayerJoined: ServerEventHandler<ServerEvent.PlayerJoined> = args => {
@@ -135,9 +155,16 @@ export class GameStore implements Readable<GameStore> {
     player.hand.bet = args.bet
   }
 
-  private handleGameStateChange: ServerEventHandler<ServerEvent.GameStateChange> = args => {
+  private handlePlayerHit: ServerEventHandler<ServerEvent.PlayerHit> = ({ playerId, hand }) => {
     if (!this._game) return
-    this._game.state = args.gameState
+    this._game.players[playerId].hand = hand
+  }
+
+  private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handState }) => {
+    if (!this._game) return
+    const playerHand = this._game.players[playerId].hand
+    if (typeof playerHand === 'undefined') return
+    playerHand.state = handState
   }
 
   private handleDealt: ServerEventHandler<ServerEvent.Dealt> = args => {
@@ -149,18 +176,6 @@ export class GameStore implements Readable<GameStore> {
       const player = this._game.players[playerId]
       player.hand = args.playerHands[playerId]
     })
-  }
-
-  private handlePlayerHit: ServerEventHandler<ServerEvent.PlayerHit> = ({ playerId, hand }) => {
-    if (!this._game) return
-    this._game.players[playerId].hand = hand
-  }
-
-  private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handState }) => {
-    if (!this._game) return
-    const playerHand = this._game.players[playerId].hand
-    if (typeof playerHand === 'undefined') return
-    playerHand.state = handState
   }
 
   private handleRevealDealerHand: ServerEventHandler<ServerEvent.RevealDealerHand> = ({ hand }) => {
@@ -191,16 +206,6 @@ export class GameStore implements Readable<GameStore> {
         if (!player) return
         player.hand = hand
         player.money = money
-      })
-  }
-
-  private handleReadyPlayers: ServerEventHandler<ServerEvent.ReadyPlayers> = ({ players }) => {
-    Object.entries(players)
-      .forEach(([playerId, { ready }]) => {
-        if (!this._game) return
-        const player = this._game.players[playerId]
-        if (!player) return
-        player.ready = ready
       })
   }
 

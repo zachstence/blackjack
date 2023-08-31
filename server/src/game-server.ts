@@ -29,10 +29,10 @@ export class GameServer {
 
     this.clientEventHandlers = {
       [ClientEvent.PlayerJoin]: this.handlePlayerJoin,
+      [ClientEvent.Ready]: this.handleReady,
       [ClientEvent.PlaceBet]: this.handlePlaceBet,
       [ClientEvent.Hit]: this.handleHit,
       [ClientEvent.Stand]: this.handleStand,
-      [ClientEvent.Ready]: this.handleReady,
     }
 
     this.game = {
