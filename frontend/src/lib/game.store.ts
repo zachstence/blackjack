@@ -33,7 +33,7 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.DealerBust]: this.handleDealerBust,
       [ServerEvent.Settled]: this.handleSettled,
       [ServerEvent.ReadyPlayers]: this.handleReadyPlayers,
-      [ServerEvent.ClearHandsAndBets]: this.handleClearHandsAndBets,
+      [ServerEvent.ClearHands]: this.handleClearHands,
     }
   }
 
@@ -129,9 +129,10 @@ export class GameStore implements Readable<GameStore> {
     if (!this._game) return
     const player = this._game.players[args.playerId]
     if (typeof player === 'undefined') throw new Error(`Player ${args.playerId} not found`)
+    if (typeof player.hand === 'undefined') throw new Error(`Player ${args.playerId} hand not found`)
 
     player.money = args.money
-    player.bet = args.bet
+    player.hand.bet = args.bet
   }
 
   private handleGameStateChange: ServerEventHandler<ServerEvent.GameStateChange> = args => {
@@ -203,17 +204,16 @@ export class GameStore implements Readable<GameStore> {
       })
   }
 
-  private handleClearHandsAndBets: ServerEventHandler<ServerEvent.ClearHandsAndBets> = ({ dealer, players }) => {
+  private handleClearHands: ServerEventHandler<ServerEvent.ClearHands> = ({ dealer, players }) => {
     if (!this._game) return
     this._game.dealer.hand = dealer.hand
 
     Object.entries(players)
-      .forEach(([playerId, { hand, bet }]) => {
+      .forEach(([playerId, { hand }]) => {
         if (!this._game) return
         const player = this._game.players[playerId]
         if (!player) return
         player.hand = hand
-        player.bet = bet
       })
   }
 }

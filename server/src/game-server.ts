@@ -95,7 +95,7 @@ export class GameServer {
         this.collectBets()
       }
     } else if (this.game.state === GameState.PlacingBets) {
-      const allPlayersHaveBet = this.playersInRound.every(p => typeof p.bet !== 'undefined')
+      const allPlayersHaveBet = this.playersInRound.every(p => typeof p.hand?.bet !== 'undefined')
       if (allPlayersHaveBet) {
         this.deal()
       }
@@ -133,14 +133,13 @@ export class GameServer {
   private collectBets = (): void => {
     Object.values(this.game.players).forEach(player => { player.hand = EMPTY_HAND() })
     const players = Object.values(this.game.players)
-      .reduce<ServerEventArgs<ServerEvent.ClearHandsAndBets>['players']>((acc, player) => {
+      .reduce<ServerEventArgs<ServerEvent.ClearHands>['players']>((acc, player) => {
         acc[player.id] = {
           hand: EMPTY_HAND(),
-          bet: undefined,
         }
         return acc
       }, {})
-    this.emitServerEvent(ServerEvent.ClearHandsAndBets, {
+    this.emitServerEvent(ServerEvent.ClearHands, {
       dealer: { hand: EMPTY_HAND() },
       players,
     })
@@ -152,8 +151,9 @@ export class GameServer {
   private deal = (): void => {
     const dealerHand = EMPTY_HAND()
     const playerHands = this.playersInRound
+      .filter(player => typeof player.hand?.bet !== 'undefined')
       .reduce<Record<string, IHand>>((acc, player) => {
-        acc[player.id] = EMPTY_HAND()
+        acc[player.id] = EMPTY_HAND(player.hand!.bet)
         return acc
       }, {})
 
@@ -215,7 +215,7 @@ export class GameServer {
     return hard
   }
 
-  dealCardToHand = (hand: IHand): void => {
+  private dealCardToHand = (hand: IHand): void => {
     console.group('dealCardToHand')
     const handTotals = [hand.total.hard, hand.total.soft].filter(x => typeof x !== 'undefined') as number[]
     console.log('handTotals', handTotals)
@@ -279,8 +279,9 @@ export class GameServer {
     for (const player of this.playersInRound) {
       if (typeof player.hand === 'undefined') continue
       if (player.hand.state === HandState.Hitting) continue
-      if (typeof player.bet === 'undefined') continue
+      if (typeof player.hand.bet === 'undefined') continue
 
+      const playerBet = player.hand.bet
       const playerTotal = this.getBestHandTotal(player.hand)
       const playerBusted = player.hand.state === HandState.Busted
       const playerStanding = player.hand.state === HandState.Standing
@@ -304,13 +305,13 @@ export class GameServer {
 
       if (win && playerBlackjack) {
         player.hand.settleStatus = HandSettleStatus.Blackjack
-        player.hand.winnings = 2.5 * player.bet
+        player.hand.winnings = 2.5 * playerBet
       } else if (win) {
         player.hand.settleStatus = HandSettleStatus.Win
-        player.hand.winnings = 2 * player.bet
+        player.hand.winnings = 2 * playerBet
       } else if (push) {
         player.hand.settleStatus = HandSettleStatus.Push
-        player.hand.winnings = player.bet
+        player.hand.winnings = playerBet
       } else if (lose) {
         player.hand.settleStatus = HandSettleStatus.Lose
         player.hand.winnings = 0
@@ -319,20 +320,17 @@ export class GameServer {
       }
 
       player.money += player.hand.winnings
-      player.bet = undefined
     }
 
     type SettledPlayers = Record<string, {
       hand: IHand
       money: number
-      bet: undefined
     }>
     const players = this.playersInRound
       .reduce<SettledPlayers>((acc, player) => {
         acc[player.id] = {
           hand: player.hand!,
           money: player.money,
-          bet: undefined,
         }
         return acc
       }, {})
@@ -369,17 +367,23 @@ export class GameServer {
       this.emitServerEventTo(socket, ServerEvent.Error, { message: 'You have not joined the game' })
       return
     }
-    if (typeof player.bet !== 'undefined') {
+    if (typeof player.hand === 'undefined') {
+      this.emitServerEventTo(socket, ServerEvent.Error, { message: 'You aren\'t playing' })
+      return
+    }
+    if (typeof player.hand.bet !== 'undefined') {
       this.emitServerEventTo(socket,ServerEvent.Error, { message: 'You have already bet'})
       return
     }
 
     player.money -= amount
-    player.bet = amount
+    player.hand.bet = amount
+
+    console.log('handlePlaceBet', JSON.stringify(player, null, 2))
 
     this.emitServerEvent(ServerEvent.PlayerBet, {
       playerId: player.id,
-      bet: player.bet,
+      bet: player.hand.bet,
       money: player.money,
     })
 

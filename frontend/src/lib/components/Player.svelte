@@ -13,7 +13,7 @@
   $: readying = $store.game!.state === GameState.PlayersReadying;
   $: placingBets = $store.game!.state === GameState.PlacingBets;
   $: playersPlaying = $store.game!.state === GameState.PlayersPlaying;
-  $: hasBet = typeof player.bet !== 'undefined';
+  $: hasBet = typeof player.hand?.bet !== 'undefined';
 </script>
 
 <div>
@@ -30,7 +30,11 @@
     <br />
 
     <dt>Bet</dt>
-    <dd>{player.bet ?? '-'}</dd>
+    {#if typeof player.hand?.bet !== 'undefined'}
+      <dd>{player.hand.bet}</dd>
+    {:else}
+      <dd>-</dd>
+    {/if}
 
     <dt>Hand</dt>
     {#if player.hand?.cards.length}
@@ -92,6 +96,8 @@
       <button on:click={store.ready}>Ready</button>
     {/if}
   {/if}
+
+  <pre>{JSON.stringify(player, null, 2)}</pre>
 </div>
 
 <style>

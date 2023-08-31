@@ -20,14 +20,16 @@ export interface IHand {
     state: HandState
     cards: MaybeHiddenCard[]
     total: IValue
+    bet?: number
     settleStatus?: HandSettleStatus
     winnings?: number
 }
 
-export const EMPTY_HAND = (): IHand => ({
+export const EMPTY_HAND = (bet?: number): IHand => ({
     state: HandState.Hitting,
     cards: [],
     total: { hard: 0 },
+    bet,
     settleStatus: undefined,
     winnings: undefined,
 })

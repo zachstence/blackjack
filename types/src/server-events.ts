@@ -21,7 +21,7 @@ export enum ServerEvent {
     DealerBust = 'DealerBust',
     Settled = 'Settled',
     ReadyPlayers = 'ReadyPlayers',
-    ClearHandsAndBets = 'ClearHandsAndBets',
+    ClearHands = 'ClearHands',
 }
 
 type ArgsByServerEvent = {
@@ -71,13 +71,12 @@ type ArgsByServerEvent = {
     [ServerEvent.ReadyPlayers]: {
         players: Record<string, { ready: boolean }>
     }
-    [ServerEvent.ClearHandsAndBets]: {
+    [ServerEvent.ClearHands]: {
         dealer: {
             hand: IHand
         }
         players: Record<string, {
             hand: IHand
-            bet: undefined
         }>
     }
 }
