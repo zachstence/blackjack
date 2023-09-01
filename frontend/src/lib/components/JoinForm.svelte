@@ -5,10 +5,6 @@
 </script>
 
 <form on:submit={() => onSubmit(name)}>
-  <label>
-    Name
-    <input type="text" bind:value={name} />
-  </label>
-
+  <input type="text" bind:value={name} placeholder="Name" aria-label="Name" />
   <button type="submit">Join</button>
 </form>

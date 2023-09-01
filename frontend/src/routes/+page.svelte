@@ -14,7 +14,10 @@
 </script>
 
 {#if typeof $store.game === 'undefined'}
-  <JoinForm onSubmit={store.join} />
+  <div class="w-screen h-screen flex flex-col items-center justify-center gap-8">
+    <h1><pre>blackjack.stence.dev</pre></h1>
+    <JoinForm onSubmit={store.join} />
+  </div>
 {:else}
   <Game />
 {/if}
