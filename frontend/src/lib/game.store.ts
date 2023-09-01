@@ -102,20 +102,20 @@ export class GameStore implements Readable<GameStore> {
     this.emitClientEvent(ClientEvent.Ready, {})
   }
 
-  bet = (amount: number): void => {
-    this.emitClientEvent(ClientEvent.PlaceBet, { amount })
+  bet = (handId: string, amount: number): void => {
+    this.emitClientEvent(ClientEvent.PlaceBet, { handId, amount })
   }
 
-  hit = (): void => {
-    this.emitClientEvent(ClientEvent.Hit, {})
+  hit = (handId: string): void => {
+    this.emitClientEvent(ClientEvent.Hit, { handId })
   }
 
-  double = (): void => {
-    this.emitClientEvent(ClientEvent.Double, {})
+  double = (handId: string): void => {
+    this.emitClientEvent(ClientEvent.Double, { handId })
   }
 
-  stand = (): void => {
-    this.emitClientEvent(ClientEvent.Stand, {})
+  stand = (handId: string): void => {
+    this.emitClientEvent(ClientEvent.Stand, { handId })
   }
 
   // ====================
@@ -126,109 +126,127 @@ export class GameStore implements Readable<GameStore> {
   }
 
   private handleGameStateChange: ServerEventHandler<ServerEvent.GameStateChange> = args => {
-    if (!this._game) return
+    if (typeof this._game === 'undefined') return
     this._game.state = args.gameState
   }
 
   private handleReadyPlayers: ServerEventHandler<ServerEvent.ReadyPlayers> = ({ players }) => {
     Object.entries(players)
       .forEach(([playerId, { ready }]) => {
-        if (!this._game) return
+        if (typeof this._game === 'undefined') return
         const player = this._game.players[playerId]
-        if (!player) return
+        if (typeof player === 'undefined') return
         player.ready = ready
       })
   }
 
   private handlePlayerJoined: ServerEventHandler<ServerEvent.PlayerJoined> = args => {
-    if (!this._game) return
+    if (typeof this._game === 'undefined') return
     this._game.players[args.player.id] = args.player
   }
 
   private handlePlayerLeft: ServerEventHandler<ServerEvent.PlayerLeft> = args => {
-    if (!this._game) return
+    if (typeof this._game === 'undefined') return
     delete this._game.players[args.playerId]
   }
 
-  private handlePlayerBet: ServerEventHandler<ServerEvent.PlayerBet> = args => {
-    if (!this._game) return
-    const player = this._game.players[args.playerId]
-    if (typeof player === 'undefined') throw new Error(`Player ${args.playerId} not found`)
-    if (typeof player.hand === 'undefined') throw new Error(`Player ${args.playerId} hand not found`)
+  private handlePlayerBet: ServerEventHandler<ServerEvent.PlayerBet> = ({ playerId, handId, money, bet }) => {
+    if (typeof this._game === 'undefined') return
+    const player = this._game.players[playerId]
+    if (typeof player === 'undefined') return
+    const hand = player.hands[handId]
+    if (typeof hand === 'undefined') return
 
-    player.money = args.money
-    player.hand.bet = args.bet
+    player.money = money
+    hand.bet = bet
   }
 
-  private handlePlayerHit: ServerEventHandler<ServerEvent.PlayerHit> = ({ playerId, hand }) => {
-    if (!this._game) return
-    this._game.players[playerId].hand = hand
+  private handlePlayerHit: ServerEventHandler<ServerEvent.PlayerHit> = ({ playerId, handId, hand }) => {
+    if (typeof this._game === 'undefined') return
+    const player = this._game.players[playerId]
+    if (typeof player === 'undefined') return
+
+    player.hands[handId] = hand
   }
 
-  private handlePlayerDoubled: ServerEventHandler<ServerEvent.PlayerDoubled> = ({ playerId, hand }) => {
-    if (!this._game) return
-    this._game.players[playerId].hand = hand
+  private handlePlayerDoubled: ServerEventHandler<ServerEvent.PlayerDoubled> = ({ playerId, handId, hand }) => {
+    if (typeof this._game === 'undefined') return
+    const player = this._game.players[playerId]
+    if (typeof player === 'undefined') return
+    
+    player.hands[handId] = hand
   }
 
-  private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handState }) => {
-    if (!this._game) return
-    const playerHand = this._game.players[playerId].hand
-    if (typeof playerHand === 'undefined') return
-    playerHand.state = handState
+  private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handId, handState }) => {
+    if (typeof this._game === 'undefined') return
+    const player = this._game.players[playerId]
+    if (typeof player === 'undefined') return
+    const hand = player.hands[handId]
+    if (typeof hand === 'undefined') return
+
+    hand.state = handState
   }
 
-  private handleDealt: ServerEventHandler<ServerEvent.Dealt> = args => {
-    if (!this._game) return
-    this._game.dealer.hand = args.dealerHand
+  private handleDealt: ServerEventHandler<ServerEvent.Dealt> = ({ dealerHand, handsByPlayerId }) => {
+    if (typeof this._game === 'undefined') return
+    this._game.dealer.hand = dealerHand
 
-    Object.keys(args.playerHands).forEach(playerId => {
-      if (!this._game) return
+    Object.entries(handsByPlayerId).forEach(([playerId, hand]) => {
+      if (typeof this._game === 'undefined') return
       const player = this._game.players[playerId]
-      player.hand = args.playerHands[playerId]
+      player.hands[hand.id] = hand
     })
   }
 
   private handleRevealDealerHand: ServerEventHandler<ServerEvent.RevealDealerHand> = ({ hand }) => {
-    if (!this._game) return
+    if (typeof this._game === 'undefined') return
     this._game.dealer.hand = hand
   }
 
   private handleDealerHit: ServerEventHandler<ServerEvent.DealerHit> = ({ hand }) => {
-    if (!this._game) return
+    if (typeof this._game === 'undefined') return
     this._game.dealer.hand = hand
   }
 
   private handleDealerStand: ServerEventHandler<ServerEvent.DealerStand> = ({ handState }) => {
-    if (!this._game) return
+    if (typeof this._game === 'undefined') return
     this._game.dealer.hand.state = handState
   }
 
   private handleDealerBust: ServerEventHandler<ServerEvent.DealerBust> = ({ handState }) => {
-    if (!this._game) return
+    if (typeof this._game === 'undefined') return
     this._game.dealer.hand.state = handState
   }
 
-  private handleSettled: ServerEventHandler<ServerEvent.Settled> = ({ players }) => {
-    Object.entries(players)
-      .forEach(([playerId, { hand, money }]) => {
-        if (!this._game) return
-        const player = this._game.players[playerId]
-        if (!player) return
-        player.hand = hand
-        player.money = money
+  private handleSettled: ServerEventHandler<ServerEvent.Settled> = ({ settledHandsByPlayer }) => {
+    Object.entries(settledHandsByPlayer).forEach(([playerId, { settledHands, money }]) => {
+      if (typeof this._game === 'undefined') return
+      const player = this._game.players[playerId]
+      if (typeof player === 'undefined') return
+
+      player.money = money
+
+      Object.entries(settledHands).forEach(([handId, settledHand]) => {
+        const hand = player.hands[handId]
+        if (typeof hand === 'undefined') return
+
+        hand.settleStatus = settledHand.settleStatus
+        hand.winnings = settledHand.winnings
       })
+
+    })
   }
 
-  private handleClearHands: ServerEventHandler<ServerEvent.ClearHands> = ({ dealer, players }) => {
-    if (!this._game) return
-    this._game.dealer.hand = dealer.hand
+  private handleClearHands: ServerEventHandler<ServerEvent.ClearHands> = ({ dealerHand, handsByPlayerId }) => {
+    if (typeof this._game === 'undefined') return
+    this._game.dealer.hand = dealerHand
 
-    Object.entries(players)
-      .forEach(([playerId, { hand }]) => {
-        if (!this._game) return
-        const player = this._game.players[playerId]
-        if (!player) return
-        player.hand = hand
-      })
+    Object.entries(handsByPlayerId).forEach(([playerId, { hands }]) => {
+      if (typeof this._game === 'undefined') return
+      const player = this._game.players[playerId]
+      if (typeof player === 'undefined') return
+
+      player.hands = hands
+    })
   }
 }

@@ -18,3 +18,5 @@
 {:else}
   <Game />
 {/if}
+
+<!-- <pre>{JSON.stringify($store.game, null, 2)}</pre> -->

@@ -2,10 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  font-size: 20px;
+}
+
 input {
   @apply bg-gray-50 border border-black py-1 px-2;
 }
 
 button {
   @apply bg-gray-300 border border-black rounded-sm shadow-sm py-1 px-2 !important;
+}
+
+button:disabled {
+  @apply cursor-not-allowed text-gray-400;
+}
+
+dl {
+  grid-template-columns: max-content 1fr;
+  @apply p-2 border border-black rounded-md grid gap-x-4;
+}
+
+dt {
+  grid-column: 1;
+  @apply flex flex-row items-center justify-start font-bold;
+}
+
+dd {
+  grid-column: 2;
+  @apply flex flex-row items-center justify-end;
 }

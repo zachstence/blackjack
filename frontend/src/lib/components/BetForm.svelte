@@ -1,11 +1,11 @@
 <script lang="ts">
   export let onSubmit: (amount: number) => void;
-  export let maxBet: number;
+  export let maxBet: number | undefined = undefined;
 
   let bet = 10;
 
   const increment = (amount: number): void => {
-    bet = Math.min(maxBet, bet + amount);
+    bet = Math.min(maxBet ?? Infinity, bet + amount);
   };
 
   const decrement = (amount: number): void => {
@@ -14,13 +14,13 @@
 </script>
 
 <form on:submit={() => onSubmit(bet)}>
-  <div>
-    <button type="button" on:click={() => decrement(100)}>-100</button>
-    <button type="button" on:click={() => decrement(10)}>-10</button>
-    {bet}
-    <button type="button" on:click={() => increment(10)}>+10</button>
-    <button type="button" on:click={() => increment(100)}>+100</button>
+  <div class="flex flex-row items-center gap-1">
+    <button type="button" class="flex-1" on:click={() => decrement(100)}><pre>-100</pre></button>
+    <button type="button" class="flex-1" on:click={() => decrement(10)}><pre>-10</pre></button>
+    <span class="flex-1 text-center px-2"><pre>{bet}</pre></span>
+    <button type="button" class="flex-1" on:click={() => increment(10)}><pre>+10</pre></button>
+    <button type="button" class="flex-1" on:click={() => increment(100)}><pre>+100</pre></button>
   </div>
 
-  <button type="submit">Bet</button>
+  <button type="submit" class="w-full mt-1">Bet</button>
 </form>

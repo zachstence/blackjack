@@ -1,5 +1,5 @@
 import { GameState, IGame } from "./game"
-import { EMPTY_HAND, HandState, IHand } from "./hand"
+import { HandSettleStatus, HandState, IHand } from "./hand"
 import { IPlayer } from "./player"
 
 export enum ServerEvent {
@@ -37,32 +37,40 @@ type ArgsByServerEvent = {
     // To all players
     [ServerEvent.GameStateChange]: { gameState: GameState }
     [ServerEvent.ReadyPlayers]: {
-        players: Record<string, { ready: boolean }>
+        players: {
+            [playerId: string]: {
+                ready: boolean
+            }
+        }
     }
 
     [ServerEvent.PlayerJoined]: { player: IPlayer }
     [ServerEvent.PlayerLeft]: { playerId: string }
     [ServerEvent.PlayerBet]: {
         playerId: string
-        bet: number
         money: number
+        handId: string
+        bet: number
     }
     [ServerEvent.PlayerHit]: {
         playerId: string
+        handId: string
         hand: IHand
     }
     [ServerEvent.PlayerDoubled]: {
         playerId: string
+        handId: string
         hand: IHand
     }
     [ServerEvent.PlayerStand]: {
         playerId: string
+        handId: string
         handState: HandState.Standing
     }
 
     [ServerEvent.Dealt]: {
         dealerHand: IHand
-        playerHands: Record<string, IHand>
+        handsByPlayerId: Record<string, IHand>
     }
 
     [ServerEvent.RevealDealerHand]: {
@@ -79,18 +87,27 @@ type ArgsByServerEvent = {
     }
 
     [ServerEvent.Settled]: {
-        players: Record<string, {
-            hand: IHand
-            money: number
-        }>
+        settledHandsByPlayer: {
+            [playerId: string]: {
+                settledHands: {
+                    [handId: string]: {
+                        settleStatus: HandSettleStatus
+                        winnings: number
+                    }
+                }
+                money: number
+            }
+        }
     }
     [ServerEvent.ClearHands]: {
-        dealer: {
-            hand: IHand
+        dealerHand: IHand
+        handsByPlayerId: {
+            [playerId: string]: {
+                hands: {
+                    [handId: string]: IHand
+                }
+            }
         }
-        players: Record<string, {
-            hand: IHand
-        }>
     }
 }
 

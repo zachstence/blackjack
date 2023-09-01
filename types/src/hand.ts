@@ -17,6 +17,7 @@ export enum HandSettleStatus {
 }
 
 export interface IHand {
+    id: string
     state: HandState
     cards: MaybeHiddenCard[]
     total: IValue
@@ -26,7 +27,8 @@ export interface IHand {
     winnings?: number
 }
 
-export const EMPTY_HAND = (bet?: number): IHand => ({
+export const EMPTY_HAND = (id: string, bet?: number): IHand => ({
+    id,
     state: HandState.Hitting,
     cards: [],
     total: { hard: 0 },

@@ -17,9 +17,11 @@
 
 
 # Technical
-- Change `ServerEvent.ReadyPlayers` to `ServerEvent.ReadyPlayer`, only include info about the one player that changed ready status
 - Error handling, don't crash server on errors
 - Server should tell client what actions are possible, don't put Blackjack game logic in client
+- Make events less specific
+  - i.e. instead of PlayerStand, do PlayerHandUpdate with only handState sent
+  - Works for other fields too
 
 
 # QOL

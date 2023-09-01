@@ -3,7 +3,7 @@ import { IHand } from './hand'
 export interface IPlayer {
     id: string
     name: string
-    hand?: IHand
+    hands: Record<string, IHand>
     money: number
     ready: boolean
 }
