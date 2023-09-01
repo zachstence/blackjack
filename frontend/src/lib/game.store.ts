@@ -29,6 +29,7 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.PlayerBet]: this.handlePlayerBet,
       [ServerEvent.PlayerHit]: this.handlePlayerHit,
       [ServerEvent.PlayerDoubled]: this.handlePlayerDoubled,
+      [ServerEvent.PlayerSplit]: this.handlePlayerSplit,
       [ServerEvent.PlayerStand]: this.handlePlayerStand,
 
       [ServerEvent.Dealt]: this.handleDealt,
@@ -114,6 +115,10 @@ export class GameStore implements Readable<GameStore> {
     this.emitClientEvent(ClientEvent.Double, { handId })
   }
 
+  split = (handId: string): void => {
+    this.emitClientEvent(ClientEvent.Split, { handId })
+  }
+
   stand = (handId: string): void => {
     this.emitClientEvent(ClientEvent.Stand, { handId })
   }
@@ -176,6 +181,15 @@ export class GameStore implements Readable<GameStore> {
     
     player.money = money
     player.hands[handId] = hand
+  }
+
+  private handlePlayerSplit: ServerEventHandler<ServerEvent.PlayerSplit> = ({ playerId, money, hands }) => {
+    if (typeof this._game === 'undefined') return
+    const player = this._game.players[playerId]
+    if (typeof player === 'undefined') return
+    
+    player.money = money
+    player.hands = hands
   }
 
   private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handId, handState }) => {

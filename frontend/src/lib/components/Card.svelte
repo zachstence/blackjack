@@ -33,6 +33,9 @@
 </script>
 
 <script lang="ts">
+  let clazz: string = '';
+  export { clazz as class };
+
   export let card: ICard | 'hidden';
 
   $: color = card === 'hidden' ? 'black' : SUIT_TO_COLOR[card.suit];
@@ -40,7 +43,7 @@
   $: rankChar = card === 'hidden' ? '?' : RANK_TO_CHAR[card.rank];
 </script>
 
-<span class="h-full font-bold border border-black p-1" class:text-red-500={color === 'red'}>
+<span class:text-red-500={color === 'red'} class="h-full font-bold border border-black p-1 {clazz}">
   <span class="font-mono text-lg leading-none inline-block">{suitChar}</span>
   <span class="font-mono text-lg leading-none inline-block">{rankChar}</span>
 </span>

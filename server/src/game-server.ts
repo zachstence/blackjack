@@ -35,6 +35,7 @@ export class GameServer {
       [ClientEvent.PlaceBet]: this.handlePlaceBet,
       [ClientEvent.Hit]: this.handleHit,
       [ClientEvent.Double]: this.handleDouble,
+      [ClientEvent.Split]: this.handleSplit,
       [ClientEvent.Stand]: this.handleStand,
     }
 
@@ -255,17 +256,26 @@ export class GameServer {
     return hard
   }
 
-  private dealCardToHand = (hand: IHand): void => {
+  /**
+   * Deals a card to a hand. If no card specified, one is pulled from the deck.
+   */
+  private dealCardToHand = (hand: IHand, card?: ICard): void => {
     console.group('dealCardToHand')
     const handTotals = [hand.total.hard, hand.total.soft].filter(x => typeof x !== 'undefined') as number[]
     console.log('handTotals', handTotals)
 
-    if (this.game.shoe.length === 0) {
-      throw new Error('Shoe empty!')
+    let _card: ICard
+    if (card) {
+      _card = card
+    } else {
+      if (this.game.shoe.length === 0) {
+        throw new Error('Shoe empty!')
+      }
+      _card = this.game.shoe.pop()!
     }
-    const card = this.game.shoe.pop()!
-    console.log('card', card)
-    const cardValue = RankValue[card.rank]
+
+    console.log('card', _card)
+    const cardValue = RankValue[_card.rank]
     const cardValues = [cardValue.hard, cardValue.soft].filter(x => typeof x !== 'undefined') as number[]
     console.log('cardValues', cardValues)
     
@@ -303,7 +313,7 @@ export class GameServer {
     }
     console.log('new handTotal', handTotal)
 
-    hand.cards.push(card)
+    hand.cards.push(_card)
     hand.total = handTotal
 
     console.groupEnd()
@@ -540,6 +550,62 @@ export class GameServer {
     })
 
     this.checkGameState()
+  }
+
+  private handleSplit: ClientEventHandler<ClientEvent.Split> = ({ handId }, socket) => {
+    const player = this.game.players[socket.id]
+    if (!player) return
+    const hand = player.hands[handId]
+    if (!hand) return
+
+    if (typeof hand.bet === 'undefined') {
+      throw new Error(`Player ${player.id} is splitting without a bet`)
+    }
+
+    if (hand.cards.length !== 2) {
+      throw new Error(`Player ${player.id} cannot split hand ${handId} because it does not contain exactly 2 cards`)
+    }
+
+    if (hand.state !== HandState.Hitting) {
+      throw new Error(`Player ${player.id} cannot split hand ${hand}`)
+    }
+
+    const originalBet = hand.bet
+    const originalCards = [...hand.cards]
+    delete player.hands[handId]
+
+    const [card1, card2] = originalCards as [ICard, ICard]
+
+    const newHand1 = EMPTY_HAND(nanoid(), originalBet)
+    this.dealCardToHand(newHand1, card1)
+    this.dealCardToHand(newHand1)
+
+    const newHand2 = EMPTY_HAND(nanoid(), originalBet)
+    this.dealCardToHand(newHand2, card2)
+    this.dealCardToHand(newHand2)
+
+    player.hands[newHand1.id] = newHand1
+    player.hands[newHand2.id] = newHand2
+    
+    player.money -= originalBet
+
+    this.emitServerEvent(ServerEvent.PlayerSplit, {
+      playerId: player.id,
+      money: player.money,
+      hands: player.hands,
+    })
+
+    this.emitServerEvent(ServerEvent.PlayerHit, {
+      playerId: player.id,
+      handId: newHand1.id,
+      hand: newHand1,
+    })
+
+    this.emitServerEvent(ServerEvent.PlayerHit, {
+      playerId: player.id,
+      handId: newHand2.id,
+      hand: newHand2,
+    })
   }
 
   private handleStand: ClientEventHandler<ClientEvent.Stand> = ({ handId }, socket) => {

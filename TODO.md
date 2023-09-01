@@ -1,5 +1,4 @@
 # Gameplay
-- Split
 - Surrender (before and after dealer reveal)
 - Insurance
 - Dealer doesn't hit if all players bust

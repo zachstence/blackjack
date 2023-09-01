@@ -16,6 +16,7 @@ export enum ServerEvent {
     PlayerBet = 'PlayerBet',
     PlayerHit = 'PlayerHit',
     PlayerDoubled = 'PlayerDoubled',
+    PlayerSplit = 'PlayerSplit',
     PlayerStand = 'PlayerStand',
 
     Dealt = 'Dealt',
@@ -59,8 +60,16 @@ type ArgsByServerEvent = {
     }
     [ServerEvent.PlayerDoubled]: {
         playerId: string
+        money: number
         handId: string
         hand: IHand
+    }
+    [ServerEvent.PlayerSplit]: {
+        playerId: string
+        money: number
+        hands: {
+            [handId: string]: IHand
+        }
     }
     [ServerEvent.PlayerStand]: {
         playerId: string
