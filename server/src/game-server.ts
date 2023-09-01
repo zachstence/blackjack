@@ -519,7 +519,7 @@ export class GameServer {
     // Double current bet
     const currentBet = hand.bet!
     player.money -= currentBet
-    hand.bet! += currentBet
+    hand.bet += currentBet
     hand.hasDoubled = true
 
     this.dealCardToHand(hand)
@@ -534,6 +534,7 @@ export class GameServer {
 
     this.emitServerEvent(ServerEvent.PlayerDoubled, {
       playerId: player.id,
+      money: player.money,
       handId,
       hand,
     })

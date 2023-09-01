@@ -169,11 +169,12 @@ export class GameStore implements Readable<GameStore> {
     player.hands[handId] = hand
   }
 
-  private handlePlayerDoubled: ServerEventHandler<ServerEvent.PlayerDoubled> = ({ playerId, handId, hand }) => {
+  private handlePlayerDoubled: ServerEventHandler<ServerEvent.PlayerDoubled> = ({ playerId, money, handId, hand }) => {
     if (typeof this._game === 'undefined') return
     const player = this._game.players[playerId]
     if (typeof player === 'undefined') return
     
+    player.money = money
     player.hands[handId] = hand
   }
 
