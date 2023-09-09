@@ -6,6 +6,9 @@ export enum ClientEvent {
     Double = 'Double',
     Split = 'Split',
     Stand = 'Stand',
+
+    // Admin
+    Reset = 'Reset',
 }
 
 type ArgsByClientEvent = {
@@ -16,6 +19,8 @@ type ArgsByClientEvent = {
     [ClientEvent.Double]: { handId: string }
     [ClientEvent.Split]: { handId: string }
     [ClientEvent.Stand]: { handId: string }
+
+    [ClientEvent.Reset]: {}
 }
 
 export type ClientEventArgs<E extends ClientEvent> = ArgsByClientEvent[E]

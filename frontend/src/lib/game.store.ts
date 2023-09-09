@@ -41,6 +41,8 @@ export class GameStore implements Readable<GameStore> {
 
       [ServerEvent.Settled]: this.handleSettled,
       [ServerEvent.ClearHands]: this.handleClearHands,
+
+      [ServerEvent.Reset]: this.handleReset
     }
   }
 
@@ -95,6 +97,10 @@ export class GameStore implements Readable<GameStore> {
     return this._game
   }
 
+  reset = (): void => {
+    this.emitClientEvent(ClientEvent.Reset, {})
+  }
+
   join = (name: string): void => {
     this.emitClientEvent(ClientEvent.PlayerJoin, { name })
   }
@@ -126,6 +132,10 @@ export class GameStore implements Readable<GameStore> {
   // ====================
   // Event Handlers
   // ====================
+  private handleReset: ServerEventHandler<ServerEvent.Reset> = () => {
+    this._game = undefined
+  }
+
   private handleJoinSuccess: ServerEventHandler<ServerEvent.JoinSuccess> = args => {
     this._game = args.game
   }

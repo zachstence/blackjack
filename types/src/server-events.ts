@@ -8,6 +8,7 @@ export enum ServerEvent {
     JoinSuccess = 'JoinSuccess',
     
     // To all players
+    Reset = 'Reset',
     GameStateChange = 'GameStateChange',
     ReadyPlayers = 'ReadyPlayers',
 
@@ -36,6 +37,7 @@ type ArgsByServerEvent = {
     [ServerEvent.JoinSuccess]: { game: IGame }
     
     // To all players
+    [ServerEvent.Reset]: {}
     [ServerEvent.GameStateChange]: { gameState: GameState }
     [ServerEvent.ReadyPlayers]: {
         players: {

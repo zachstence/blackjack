@@ -14,7 +14,7 @@ export class GameServer {
 
   private readonly server: SocketServer
 
-  private readonly game: IGame
+  private game: IGame
 
   constructor(httpServer: HttpServer) {
     this.server = new SocketServer(httpServer, {
@@ -37,6 +37,7 @@ export class GameServer {
       [ClientEvent.Double]: this.handleDouble,
       [ClientEvent.Split]: this.handleSplit,
       [ClientEvent.Stand]: this.handleStand,
+      [ClientEvent.Reset]: this.handleReset,
     }
 
     this.game = {
@@ -47,6 +48,19 @@ export class GameServer {
     }
 
     this.resetShoe()
+  }
+
+  private reset = (): void => {
+    this.game = {
+      state: GameState.PlayersReadying,
+      dealer: { hand: EMPTY_HAND(DEALER_HAND_ID) },
+      players: {},
+      shoe: [],
+    }
+
+    this.resetShoe()
+
+    this.emitServerEvent(ServerEvent.Reset, {})
   }
 
   private onClientEvent = <E extends ClientEvent>(event: E, args: ClientEventArgs<E>, socket: Socket): void => {
@@ -631,5 +645,12 @@ export class GameServer {
     player.ready = true
     this.emitReadyPlayers()
     this.checkGameState()
+  }
+
+  private handleReset: ClientEventHandler<ClientEvent.Reset> = () => {
+    console.log('\n\n==============================\n')
+    console.log('RESET')
+    console.log('\n==============================\n\n')
+    this.reset()
   }
 }
