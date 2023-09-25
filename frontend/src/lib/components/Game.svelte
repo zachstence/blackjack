@@ -9,6 +9,8 @@
 
   $: me = players[myPlayerId];
   $: others = Object.values(players).filter(({ id }) => id !== myPlayerId);
+
+  const debug = new URLSearchParams(window.location.search).has('debug');
 </script>
 
 <div class="flex flex-col items-center gap-6 p-4">
@@ -29,6 +31,10 @@
       </div>
     {/if}
   </div>
+
+  {#if debug}
+    <pre>{JSON.stringify($store.game, ['state', 'shoe'], 2)}</pre>
+  {/if}
 </div>
 
 <style>

@@ -6,6 +6,9 @@ export enum ClientEvent {
     Double = 'Double',
     Split = 'Split',
     Stand = 'Stand',
+    
+    BuyInsurance = 'BuyInsurance',
+    DeclineInsurance = 'DeclineInsurance',
 
     // Admin
     Reset = 'Reset',
@@ -19,6 +22,9 @@ type ArgsByClientEvent = {
     [ClientEvent.Double]: { handId: string }
     [ClientEvent.Split]: { handId: string }
     [ClientEvent.Stand]: { handId: string }
+
+    [ClientEvent.BuyInsurance]: {}
+    [ClientEvent.DeclineInsurance]: {}
 
     [ClientEvent.Reset]: {}
 }

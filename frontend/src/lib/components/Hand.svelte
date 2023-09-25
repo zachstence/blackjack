@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { HandState, type IHand, type ICard, RankValue } from 'blackjack-types';
+  import { HandState, type IHand, type ICard, RankValue, Rank } from 'blackjack-types';
 
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';

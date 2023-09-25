@@ -1,6 +1,5 @@
 # Gameplay
 - Surrender (before and after dealer reveal)
-- Insurance
 - Dealer doesn't hit if all players bust
 - Dealer doesn't hit if all players get blackjack
 - Reset the shoe with 20% left (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)

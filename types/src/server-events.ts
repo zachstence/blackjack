@@ -1,5 +1,6 @@
 import { GameState, IGame } from "./game"
 import { HandSettleStatus, HandState, IHand } from "./hand"
+import { IInsurance } from "./insurance"
 import { IPlayer } from "./player"
 
 export enum ServerEvent {
@@ -19,6 +20,9 @@ export enum ServerEvent {
     PlayerDoubled = 'PlayerDoubled',
     PlayerSplit = 'PlayerSplit',
     PlayerStand = 'PlayerStand',
+
+    UpdatePlayerInsurance = 'UpdatePlayerInsurance',
+    PlayerLostInsurance = 'PlayerLostInsurance',
 
     Dealt = 'Dealt',
 
@@ -77,6 +81,16 @@ type ArgsByServerEvent = {
         playerId: string
         handId: string
         handState: HandState.Standing
+    }
+
+    [ServerEvent.UpdatePlayerInsurance]: {
+        playerId: string
+        insurance: IInsurance
+        playerMoney?: number
+    }
+    [ServerEvent.PlayerLostInsurance]: {
+        playerId: string
+        insurance: undefined
     }
 
     [ServerEvent.Dealt]: {
