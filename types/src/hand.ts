@@ -19,7 +19,7 @@ export interface IPlayerHand {
     id: string
     state: HandState
     cards: ICard[]
-    total: IValue
+    value: IValue
     bet?: number
     hasDoubled?: boolean
     settleStatus?: HandSettleStatus
@@ -31,7 +31,7 @@ export const EMPTY_PLAYER_HAND = (id: string, bet?: number): IPlayerHand => ({
     id,
     state: HandState.Hitting,
     cards: [],
-    total: { hard: 0 },
+    value: { hard: 0 },
     bet,
 })
 
@@ -41,14 +41,14 @@ export interface IDealerHand {
     type: 'dealer'
     state: HandState
     cards: MaybeHiddenCard[]
-    total: IValue
+    value: IValue
 }
 
 export const EMPTY_DEALER_HAND = (): IDealerHand => ({
     type: 'dealer',
     state: HandState.Hitting,
     cards: [],
-    total: { hard: 0 },
+    value: { hard: 0 },
 })
 
 export type IHand = IPlayerHand | IDealerHand

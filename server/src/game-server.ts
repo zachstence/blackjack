@@ -258,7 +258,7 @@ export class GameServer {
     const dealerHandWithHiddenCard: IDealerHand = {
       ...dealerHand,
       cards: [dealerHand.cards[0], 'hidden'],
-      total: RankValue[(dealerHand.cards[0] as ICard).rank],
+      value: RankValue[(dealerHand.cards[0] as ICard).rank],
     }
 
     const handsByPlayerId = this.playersInRound.reduce<Record<string, IPlayerHand>>((acc, player) => {
@@ -284,8 +284,8 @@ export class GameServer {
 
   private settleInsurance = (): void => {
     console.log('settleInsurance')
-    const dealerTotal = this.getBestHandTotal(this.game.dealer.hand)
-    const dealerBlackjack = dealerTotal === 21
+    const dealerValue = this.getBestHandValue(this.game.dealer.hand)
+    const dealerBlackjack = dealerValue === 21
 
     if (dealerBlackjack) {
       // If dealer has blackjack, players that insured win their insurance bet 2:1
@@ -333,30 +333,30 @@ export class GameServer {
     }
 
     const dealerHand = this.game.dealer.hand
-    const dealerHandTotal = this.getBestHandTotal(dealerHand)
+    const dealerHandValue = this.getBestHandValue(dealerHand)
 
     console.debug('playDealer', {
       cards: dealerHand.cards.map(card => card === 'hidden' ? card : card.rank),
-      dealerHandTotal,
+      dealerHandValue,
     })
 
-    if (dealerHandTotal > 21) {
-      console.debug('dealer busted at', dealerHandTotal)
+    if (dealerHandValue > 21) {
+      console.debug('dealer busted at', dealerHandValue)
       dealerHand.state = HandState.Busted
       this.emitServerEvent(ServerEvent.DealerBust, { handState: HandState.Busted})
       this.checkGameState()
       return
     }
 
-    if (dealerHandTotal >= 17) {
-      console.debug('dealer standing at', dealerHandTotal)
+    if (dealerHandValue >= 17) {
+      console.debug('dealer standing at', dealerHandValue)
       dealerHand.state = HandState.Standing
       this.emitServerEvent(ServerEvent.DealerStand, { handState: HandState.Standing })
       this.checkGameState()
       return
     }
 
-    console.debug('dealer hitting at', dealerHandTotal)
+    console.debug('dealer hitting at', dealerHandValue)
     this.dealCardToHand(dealerHand)
     this.emitServerEvent(ServerEvent.DealerHit, { hand: dealerHand })
 
@@ -364,8 +364,8 @@ export class GameServer {
     this.playDealer()
   }
 
-  private getBestHandTotal = (hand: IPlayerHand | IDealerHand): number => {
-    const { total: { hard, soft } } = hand
+  private getBestHandValue = (hand: IPlayerHand | IDealerHand): number => {
+    const { value: { hard, soft } } = hand
     if (typeof soft === 'undefined') return hard
     if (soft <= 21) return soft
     return hard
@@ -376,8 +376,8 @@ export class GameServer {
    */
   private dealCardToHand = (hand: IPlayerHand | IDealerHand, card?: ICard): void => {
     console.group('dealCardToHand')
-    const handTotals = [hand.total.hard, hand.total.soft].filter(x => typeof x !== 'undefined') as number[]
-    console.log('handTotals', handTotals)
+    const handValues = [hand.value.hard, hand.value.soft].filter(x => typeof x !== 'undefined') as number[]
+    console.log('handValues', handValues)
 
     let _card: ICard
     if (card) {
@@ -394,15 +394,15 @@ export class GameServer {
     const cardValues = [cardValue.hard, cardValue.soft].filter(x => typeof x !== 'undefined') as number[]
     console.log('cardValues', cardValues)
     
-    const allPossibleHandValues = handTotals.reduce<number[]>((acc, handTotal) => {
+    const allPossibleHandValues = handValues.reduce<number[]>((acc, handValue) => {
         cardValues.forEach(cardVal => {
-            acc.push(handTotal + cardVal)
+            acc.push(handValue + cardVal)
         })
         return acc
     }, [])
     console.log('allPossibleHandValues', allPossibleHandValues)
 
-    // Sort in order of best hand totals
+    // Sort in order of best hand values
     allPossibleHandValues.sort((a, b) => {
       if (a > 21 && b <= 21) return 1
       if (b > 21 && a <= 21) return -1
@@ -410,36 +410,36 @@ export class GameServer {
       return a - b
     })
 
-    let handTotal: IValue
+    let handValue: IValue
     if (allPossibleHandValues.length === 0) {
       // Should not be possible
       throw new Error(`Failed to deal ${card} to hand ${hand.cards}, no possible values found`)
     } else if (allPossibleHandValues.length === 1) {
-      handTotal = {
+      handValue = {
         hard: allPossibleHandValues[0]!,
       }
     } else {
       let soft: number | undefined = allPossibleHandValues[1]!
       if (soft > 21) soft = undefined
-      handTotal = {
+      handValue = {
         soft,
         hard: allPossibleHandValues[0],
       }
     }
-    console.log('new handTotal', handTotal)
+    console.log('new handValue', handValue)
 
     hand.cards.push(_card)
-    hand.total = handTotal
+    hand.value = handValue
 
     console.groupEnd()
   }
 
   private settle = (): void => {
     const { dealer } = this.game
-    const dealerTotal = this.getBestHandTotal(dealer.hand)
+    const dealerValue = this.getBestHandValue(dealer.hand)
     const dealerBusted = dealer.hand.state === HandState.Busted
     const dealerStanding = dealer.hand.state === HandState.Standing
-    const dealerBlackjack = dealerTotal === 21 && dealer.hand.cards.length === 2
+    const dealerBlackjack = dealerValue === 21 && dealer.hand.cards.length === 2
 
     type HandsWithPlayerId = { hand: IPlayerHand; playerId: string }[]
     const handsWithPlayerId: HandsWithPlayerId = this.playersInRound
@@ -459,25 +459,25 @@ export class GameServer {
       }
 
       const handBet = hand.bet
-      const handTotal = this.getBestHandTotal(hand)
+      const handValue = this.getBestHandValue(hand)
       const handBusted = hand.state === HandState.Busted
       const handStanding = hand.state === HandState.Standing
-      const handBlackjack = handTotal === 21 && hand.cards.length === 2
+      const handBlackjack = handValue === 21 && hand.cards.length === 2
 
       const lose =
         handBusted                                                            // Player automatically loses if they bust
-        || (handTotal < dealerTotal && dealerStanding)                        // Player loses if dealer beats them without busting
-        || (handTotal === dealerTotal && dealerBlackjack && !handBlackjack) // Player loses if they get 21 but dealer gets blackjack
+        || (handValue < dealerValue && dealerStanding)                        // Player loses if dealer beats them without busting
+        || (handValue === dealerValue && dealerBlackjack && !handBlackjack) // Player loses if they get 21 but dealer gets blackjack
 
       const win =
         (handStanding && dealerBusted)                                        // Player wins if they stand and dealer busts
-        || (handTotal > dealerTotal && handStanding)                        // Player wins if they beat dealer without busting
-        || (handTotal === dealerTotal && handBlackjack && !dealerBlackjack) // Player wins if they tie with dealer but got a blackjack
+        || (handValue > dealerValue && handStanding)                        // Player wins if they beat dealer without busting
+        || (handValue === dealerValue && handBlackjack && !dealerBlackjack) // Player wins if they tie with dealer but got a blackjack
 
-      // Player pushes when both stand, their totals match, and neither got a blackjack
+      // Player pushes when both stand, their values match, and neither got a blackjack
       const push =
         handStanding && dealerStanding
-        && handTotal === dealerTotal
+        && handValue === dealerValue
         && !handBlackjack && !dealerBlackjack
 
       if (win && handBlackjack) {
@@ -612,9 +612,9 @@ export class GameServer {
     }
 
     this.dealCardToHand(hand)
-    const playerHandTotal = this.getBestHandTotal(hand)
+    const playerHandValue = this.getBestHandValue(hand)
 
-    if (playerHandTotal > 21) {
+    if (playerHandValue > 21) {
       hand.state = HandState.Busted
     }
 
@@ -648,9 +648,9 @@ export class GameServer {
     hand.hasDoubled = true
 
     this.dealCardToHand(hand)
-    const playerHandTotal = this.getBestHandTotal(hand)
+    const playerHandValue = this.getBestHandValue(hand)
 
-    if (playerHandTotal > 21) {
+    if (playerHandValue > 21) {
       hand.state = HandState.Busted
     } else {
       // Player must stand after doubling

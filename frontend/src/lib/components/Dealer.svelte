@@ -29,12 +29,12 @@
       <dd>-</dd>
     {/if}
 
-    <dt>Total</dt>
-    {#if dealer.hand?.total}
+    <dt>Value</dt>
+    {#if dealer.hand?.value}
       <dd>
-        {dealer.hand.total.hard}
-        {#if dealer.hand.total.soft}
-          {' '}/ {dealer.hand.total.soft}
+        {dealer.hand.value.hard}
+        {#if dealer.hand.value.soft}
+          {' '}/ {dealer.hand.value.soft}
         {/if}
       </dd>
     {:else}

@@ -50,12 +50,12 @@
       <dd>-</dd>
     {/if}
 
-    <dt>Total</dt>
-    {#if hand.total}
+    <dt>Value</dt>
+    {#if hand.value}
       <dd>
-        {hand.total.hard}
-        {#if hand.total.soft}
-          {' '}/ {hand.total.soft}
+        {hand.value.hard}
+        {#if hand.value.soft}
+          {' '}/ {hand.value.soft}
         {/if}
       </dd>
     {:else}
