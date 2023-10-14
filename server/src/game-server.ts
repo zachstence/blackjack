@@ -538,7 +538,10 @@ export class GameServer {
     const handsByPlayerId = this.allPlayers.reduce<HandsByPlayerId>((acc, player) => {
       // Give each player 1 empty hand
       const handId = nanoid()
-      const hand = EMPTY_PLAYER_HAND(handId)
+      const hand = {
+        ...EMPTY_PLAYER_HAND(handId),
+        actions: [HandAction.Bet],
+      }
       const hands = { [hand.id]: hand }
       
       // Set game state

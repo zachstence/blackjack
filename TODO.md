@@ -16,7 +16,7 @@
 
 # Technical
 - Error handling, don't crash server on errors
-- Bet and Insure should be HandActions
+- Insure should be HandAction
 - Don't pay 3:2 for blackjack on a split hand
 - Make events less specific
   - i.e. instead of PlayerStand, do PlayerHandUpdate with only handState sent

@@ -14,10 +14,10 @@
 
   const store = getGameStoreContext();
 
-  $: betting = $store.game!.state === GameState.PlacingBets;
   $: playing = $store.game!.state === GameState.PlayersPlaying;
   $: hasBet = typeof hand.bet !== 'undefined';
 
+  $: canBet = hand.actions.includes(HandAction.Bet);
   $: canStand = hand.actions.includes(HandAction.Stand);
   $: canHit = hand.actions.includes(HandAction.Hit);
   $: canDouble = hand.actions.includes(HandAction.Double);
@@ -83,7 +83,7 @@
         <button class="flex-1" on:click={() => store.double(hand.id)} disabled={!canDouble}>Double</button>
         <button class="flex-1" on:click={() => store.split(hand.id)} disabled={!canSplit}>Split</button>
       </div>
-    {:else if betting}
+    {:else if canBet}
       <BetForm onSubmit={(amount) => store.bet(hand.id, amount)} {maxBet} />
     {/if}
   {/if}

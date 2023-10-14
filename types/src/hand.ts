@@ -8,6 +8,7 @@ export enum HandState {
 }
 
 export enum HandAction {
+    Bet = 'Bet',
     Stand = 'Stand',
     Hit = 'Hit',
     Double = 'Double',
