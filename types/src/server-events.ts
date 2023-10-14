@@ -80,7 +80,7 @@ type ArgsByServerEvent = {
     [ServerEvent.PlayerStand]: {
         playerId: string
         handId: string
-        handState: HandState.Standing
+        hand: IPlayerHand
     }
 
     [ServerEvent.UpdatePlayerInsurance]: {

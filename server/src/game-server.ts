@@ -2,7 +2,7 @@ import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 import { nanoid } from 'nanoid';
 
-import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, IBoughtInsurance, ICard, IDealerHand, IDeclinedInsurance, IGame, IPlayer, IPlayerBoughtInsurance, IValue, Rank, RankValue, ServerEvent, ServerEventArgs, Suit, isPlayerInsured } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, HandAction, IBoughtInsurance, ICard, IDealerHand, IDeclinedInsurance, IGame, IPlayer, IPlayerBoughtInsurance, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isPlayerInsured } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
@@ -212,25 +212,27 @@ export class GameServer {
     const decks = Array.from({ length: numDecks }).flatMap(createDeck)
     durstenfeldShuffle(decks)
 
-    decks.push({
-      rank: Rank.Ten,
-      suit: Suit.Clubs,
-    })
+    /** Insurance testing cards */
+    // decks.push({
+    //   rank: Rank.Ten,
+    //   suit: Suit.Clubs,
+    // })
 
-    decks.push({
-      rank: Rank.Two,
-      suit: Suit.Spades,
-    })
+    // decks.push({
+    //   rank: Rank.Two,
+    //   suit: Suit.Spades,
+    // })
 
-    decks.push({
-      rank: Rank.Ace,
-      suit: Suit.Hearts,
-    })
+    // decks.push({
+    //   rank: Rank.Ace,
+    //   suit: Suit.Hearts,
+    // })
     
-    decks.push({
-      rank: Rank.Two,
-      suit: Suit.Diamonds,
-    })
+    // decks.push({
+    //   rank: Rank.Two,
+    //   suit: Suit.Diamonds,
+    // })
+    /** ======================= */
 
     this.game.shoe = decks
   }
@@ -284,7 +286,7 @@ export class GameServer {
 
   private settleInsurance = (): void => {
     console.log('settleInsurance')
-    const dealerValue = this.getBestHandValue(this.game.dealer.hand)
+    const dealerValue = this.getBestValue(this.game.dealer.hand.value)
     const dealerBlackjack = dealerValue === 21
 
     if (dealerBlackjack) {
@@ -297,11 +299,12 @@ export class GameServer {
       // Players immediately stand
       for (const player of this.playersInRound) {
         const handId = Object.keys(player.hands)[0]
-        player.hands[handId].state = HandState.Standing
+        const hand = player.hands[handId]
+        hand.state = HandState.Standing
         this.emitServerEvent(ServerEvent.PlayerStand, {
           playerId: player.id,
           handId,
-          handState: HandState.Standing,
+          hand,
         })
       }
     } else {
@@ -333,7 +336,7 @@ export class GameServer {
     }
 
     const dealerHand = this.game.dealer.hand
-    const dealerHandValue = this.getBestHandValue(dealerHand)
+    const dealerHandValue = this.getBestValue(dealerHand.value)
 
     console.debug('playDealer', {
       cards: dealerHand.cards.map(card => card === 'hidden' ? card : card.rank),
@@ -364,8 +367,7 @@ export class GameServer {
     this.playDealer()
   }
 
-  private getBestHandValue = (hand: IPlayerHand | IDealerHand): number => {
-    const { value: { hard, soft } } = hand
+  private getBestValue = ({ hard, soft }: IValue): number => {
     if (typeof soft === 'undefined') return hard
     if (soft <= 21) return soft
     return hard
@@ -375,10 +377,6 @@ export class GameServer {
    * Deals a card to a hand. If no card specified, one is pulled from the deck.
    */
   private dealCardToHand = (hand: IPlayerHand | IDealerHand, card?: ICard): void => {
-    console.group('dealCardToHand')
-    const handValues = [hand.value.hard, hand.value.soft].filter(x => typeof x !== 'undefined') as number[]
-    console.log('handValues', handValues)
-
     let _card: ICard
     if (card) {
       _card = card
@@ -389,54 +387,66 @@ export class GameServer {
       _card = this.game.shoe.pop()!
     }
 
-    console.log('card', _card)
-    const cardValue = RankValue[_card.rank]
-    const cardValues = [cardValue.hard, cardValue.soft].filter(x => typeof x !== 'undefined') as number[]
-    console.log('cardValues', cardValues)
-    
-    const allPossibleHandValues = handValues.reduce<number[]>((acc, handValue) => {
-        cardValues.forEach(cardVal => {
-            acc.push(handValue + cardVal)
-        })
-        return acc
-    }, [])
-    console.log('allPossibleHandValues', allPossibleHandValues)
-
-    // Sort in order of best hand values
-    allPossibleHandValues.sort((a, b) => {
-      if (a > 21 && b <= 21) return 1
-      if (b > 21 && a <= 21) return -1
-      if (a > 21 && b > 21) return a - b
-      return a - b
-    })
-
-    let handValue: IValue
-    if (allPossibleHandValues.length === 0) {
-      // Should not be possible
-      throw new Error(`Failed to deal ${card} to hand ${hand.cards}, no possible values found`)
-    } else if (allPossibleHandValues.length === 1) {
-      handValue = {
-        hard: allPossibleHandValues[0]!,
-      }
-    } else {
-      let soft: number | undefined = allPossibleHandValues[1]!
-      if (soft > 21) soft = undefined
-      handValue = {
-        soft,
-        hard: allPossibleHandValues[0],
-      }
-    }
-    console.log('new handValue', handValue)
-
     hand.cards.push(_card)
-    hand.value = handValue
+    hand.value = this.getCardsTotalValue(hand.cards)
+    hand.state = this.getHandStateByValue(hand.value)
+    
+    if (hand.type === 'player') {
+      hand.actions = this.getHandActionsByStateAndCards(hand.state, hand.cards)
+    }
 
     console.groupEnd()
   }
 
+  private getCardsTotalValue = (cards: MaybeHiddenCard[]): IValue => {
+    let soft = 0
+    let hard = 0
+
+    cards.forEach(card => {
+      if (card === 'hidden') return
+
+      const cardValue = RankValue[card.rank]
+      if (typeof cardValue.soft !== 'undefined') {
+        soft += cardValue.soft
+      } else {
+        soft += cardValue.hard
+      }
+
+      hard += cardValue.hard
+    })
+
+    if (soft !== hard && soft <= 21) {
+      return { soft, hard }
+    }
+    return { hard }
+  }
+
+  private getHandStateByValue = (value: IValue): HandState => {
+    const bestValue = this.getBestValue(value)
+    if (bestValue === 21) return HandState.Standing
+    if (bestValue > 21) return HandState.Busted
+    return HandState.Hitting
+  }
+  
+  private getHandActionsByStateAndCards = (state: HandState, cards: ICard[]): HandAction[] => {
+    if (state !== HandState.Hitting) return []
+    
+    const actions: HandAction[] = [HandAction.Stand, HandAction.Hit]
+    if (cards.length === 2) {
+      actions.push(HandAction.Double)
+
+      const cardsAreSameRank = cards[0].rank === cards[1].rank
+      if (cardsAreSameRank) {
+        actions.push(HandAction.Split)
+      }
+    }
+
+    return actions
+  }
+
   private settle = (): void => {
     const { dealer } = this.game
-    const dealerValue = this.getBestHandValue(dealer.hand)
+    const dealerValue = this.getBestValue(dealer.hand.value)
     const dealerBusted = dealer.hand.state === HandState.Busted
     const dealerStanding = dealer.hand.state === HandState.Standing
     const dealerBlackjack = dealerValue === 21 && dealer.hand.cards.length === 2
@@ -459,7 +469,7 @@ export class GameServer {
       }
 
       const handBet = hand.bet
-      const handValue = this.getBestHandValue(hand)
+      const handValue = this.getBestValue(hand.value)
       const handBusted = hand.state === HandState.Busted
       const handStanding = hand.state === HandState.Standing
       const handBlackjack = handValue === 21 && hand.cards.length === 2
@@ -607,16 +617,13 @@ export class GameServer {
     if (!player) return
     const hand = player.hands[handId]
     if (!hand) return
-    if (hand.hasDoubled) {
-      throw new Error(`Player ${player.id} has already doubled and cannot hit again`)
+
+    const canHit = hand.actions.includes(HandAction.Hit)
+    if (!canHit) {
+      throw new Error(`Player ${player.id} cannot hit hand ${hand.id}`)
     }
 
     this.dealCardToHand(hand)
-    const playerHandValue = this.getBestHandValue(hand)
-
-    if (playerHandValue > 21) {
-      hand.state = HandState.Busted
-    }
 
     this.emitServerEvent(ServerEvent.PlayerHit, {
       playerId: player.id,
@@ -633,6 +640,11 @@ export class GameServer {
     const hand = player.hands[handId]
     if (!hand) return
 
+    const canDouble = hand.actions.includes(HandAction.Double)
+    if (!canDouble) {
+      throw new Error(`Player ${player.id} cannot double hand ${hand.id}`)
+    }
+
     if (typeof hand.bet === 'undefined') {
       throw new Error(`Player ${player.id} is doubling without a bet`)
     }
@@ -645,15 +657,11 @@ export class GameServer {
     const currentBet = hand.bet!
     player.money -= currentBet
     hand.bet += currentBet
-    hand.hasDoubled = true
 
     this.dealCardToHand(hand)
-    const playerHandValue = this.getBestHandValue(hand)
 
-    if (playerHandValue > 21) {
-      hand.state = HandState.Busted
-    } else {
-      // Player must stand after doubling
+    // Hand cannot hit any more after doubling
+    if (hand.state === HandState.Hitting) {
       hand.state = HandState.Standing
     }
 
@@ -672,6 +680,11 @@ export class GameServer {
     if (!player) return
     const hand = player.hands[handId]
     if (!hand) return
+
+    const canSplit = hand.actions.includes(HandAction.Split)
+    if (!canSplit) {
+      throw new Error(`Player ${player.id} cannot split hand ${hand.id}`)
+    }
 
     if (typeof hand.bet === 'undefined') {
       throw new Error(`Player ${player.id} is splitting without a bet`)
@@ -729,11 +742,16 @@ export class GameServer {
     const hand = player.hands[handId]
     if (!hand) return
 
+    const canStand = hand.actions.includes(HandAction.Stand)
+    if (!canStand) {
+      throw new Error(`Player ${player.id} cannot stand hand ${hand.id}`)
+    }
+
     hand.state = HandState.Standing
     this.emitServerEvent(ServerEvent.PlayerStand, {
       playerId: player.id,
       handId,
-      handState: hand.state,
+      hand,
     })
 
     this.checkGameState()

@@ -16,7 +16,8 @@
 
 # Technical
 - Error handling, don't crash server on errors
-- Server should tell client what actions are possible, don't put Blackjack game logic in client
+- Bet and Insure should be HandActions
+- Don't pay 3:2 for blackjack on a split hand
 - Make events less specific
   - i.e. instead of PlayerStand, do PlayerHandUpdate with only handState sent
   - Works for other fields too
@@ -24,7 +25,6 @@
 
 # QOL
 - Admin tools (kick player, change money)
-- Auto stand on 21
 - Have connection quality indicator, ping time
 - Timeout for users to bet between rounds, automatically start without them
 - Timeout for user to hit or stand, kick if they don't act in time

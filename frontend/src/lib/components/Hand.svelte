@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { HandState, type IPlayerHand, type ICard, RankValue } from 'blackjack-types';
+  import { type IPlayerHand, HandAction, GameState } from 'blackjack-types';
 
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';
@@ -14,13 +14,14 @@
 
   const store = getGameStoreContext();
 
+  $: betting = $store.game!.state === GameState.PlacingBets;
+  $: playing = $store.game!.state === GameState.PlayersPlaying;
   $: hasBet = typeof hand.bet !== 'undefined';
 
-  // TODO server should provide available actions on IPlayerHand
-  $: canStand = hand.state === HandState.Hitting;
-  $: canHit = hand.state === HandState.Hitting;
-  $: canDouble = canHit && hand.cards.length === 2;
-  $: canSplit = canDouble && RankValue[(hand.cards[0] as ICard).rank] === RankValue[(hand.cards[1] as ICard).rank];
+  $: canStand = hand.actions.includes(HandAction.Stand);
+  $: canHit = hand.actions.includes(HandAction.Hit);
+  $: canDouble = hand.actions.includes(HandAction.Double);
+  $: canSplit = hand.actions.includes(HandAction.Split);
 
   console.log({ canStand, canHit, canDouble, canSplit });
 </script>
@@ -75,14 +76,14 @@
   </dl>
 
   {#if showActions}
-    {#if hasBet}
+    {#if playing && hasBet}
       <div class="flex flex-row gap-1">
         <button class="flex-1" on:click={() => store.stand(hand.id)} disabled={!canStand}>Stand</button>
         <button class="flex-1" on:click={() => store.hit(hand.id)} disabled={!canHit}>Hit</button>
         <button class="flex-1" on:click={() => store.double(hand.id)} disabled={!canDouble}>Double</button>
         <button class="flex-1" on:click={() => store.split(hand.id)} disabled={!canSplit}>Split</button>
       </div>
-    {:else}
+    {:else if betting}
       <BetForm onSubmit={(amount) => store.bet(hand.id, amount)} {maxBet} />
     {/if}
   {/if}

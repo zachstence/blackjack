@@ -7,6 +7,13 @@ export enum HandState {
     Busted = 'Busted',
 }
 
+export enum HandAction {
+    Stand = 'Stand',
+    Hit = 'Hit',
+    Double = 'Double',
+    Split = 'Split',
+}
+
 export enum HandSettleStatus {
     Blackjack = 'Blackjack',
     Win = 'Win',
@@ -21,7 +28,7 @@ export interface IPlayerHand {
     cards: ICard[]
     value: IValue
     bet?: number
-    hasDoubled?: boolean
+    actions: HandAction[]
     settleStatus?: HandSettleStatus
     winnings?: number
 }
@@ -33,6 +40,7 @@ export const EMPTY_PLAYER_HAND = (id: string, bet?: number): IPlayerHand => ({
     cards: [],
     value: { hard: 0 },
     bet,
+    actions: [],
 })
 
 export type MaybeHiddenCard = ICard | 'hidden'

@@ -212,14 +212,12 @@ export class GameStore implements Readable<GameStore> {
     player.hands = hands
   }
 
-  private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handId, handState }) => {
+  private handlePlayerStand: ServerEventHandler<ServerEvent.PlayerStand> = ({ playerId, handId, hand }) => {
     if (typeof this._game === 'undefined') return
     const player = this._game.players[playerId]
     if (typeof player === 'undefined') return
-    const hand = player.hands[handId]
-    if (typeof hand === 'undefined') return
-
-    hand.state = handState
+    
+    player.hands[handId] = hand
   }
 
   private handleDealt: ServerEventHandler<ServerEvent.Dealt> = ({ dealerHand, handsByPlayerId }) => {
