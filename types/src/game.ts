@@ -5,7 +5,6 @@ import { IPlayer } from "./player";
 export enum GameState {
     PlayersReadying = 'PlayersReadying',
     PlacingBets = 'PlacingBets',
-    Dealt = 'Dealt',
     Insuring = 'Insuring',
     PlayersPlaying = 'PlayersPlaying',
     DealerPlaying = 'DealerPlaying',

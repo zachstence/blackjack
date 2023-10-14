@@ -190,11 +190,6 @@ export class GameServer {
       return
     }
 
-    if (this.game.state === GameState.Dealt && this.shouldOfferInsurance) {
-      this.offerInsurance()
-      return
-    }
-
     if (this.game.state === GameState.Insuring && this.playersInRoundHaveBoughtOrDeclinedInsurance) {
       this.settleInsurance()
       return
@@ -278,15 +273,14 @@ export class GameServer {
       handsByPlayerId,
     })
 
-    this.game.state = GameState.Dealt
+    if (this.shouldOfferInsurance) {
+      this.game.state = GameState.Insuring
+    } else {
+      this.game.state = GameState.PlayersPlaying
+    }
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
 
     this.checkGameState()
-  }
-
-  private offerInsurance = (): void => {
-    this.game.state = GameState.Insuring
-    this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
   }
 
   private settleInsurance = (): void => {
