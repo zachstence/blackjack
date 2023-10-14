@@ -1,10 +1,10 @@
-import { IHand } from './hand'
+import { IPlayerHand } from './hand'
 import { IBoughtInsurance, IDeclinedInsurance, IInsurance, isBoughtInsurance, isDeclinedInsurance } from './insurance'
 
 export interface IPlayer {
     id: string
     name: string
-    hands: Record<string, IHand>
+    hands: Record<string, IPlayerHand>
     money: number
     ready: boolean
     insurance?: IInsurance

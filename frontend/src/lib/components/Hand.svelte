@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { HandState, type IHand, type ICard, RankValue, Rank } from 'blackjack-types';
+  import { HandState, type IPlayerHand, type ICard, RankValue } from 'blackjack-types';
 
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';
@@ -8,7 +8,7 @@
   let clazz: string = '';
   export { clazz as class };
 
-  export let hand: IHand;
+  export let hand: IPlayerHand;
   export let showActions: boolean = false;
   export let maxBet: number | undefined = undefined;
 
@@ -16,15 +16,11 @@
 
   $: hasBet = typeof hand.bet !== 'undefined';
 
-  // TODO server should provide available actions on IHand
+  // TODO server should provide available actions on IPlayerHand
   $: canStand = hand.state === HandState.Hitting;
   $: canHit = hand.state === HandState.Hitting;
   $: canDouble = canHit && hand.cards.length === 2;
-  $: hasHiddenCards = hand.cards.some((card) => card === 'hidden');
-  $: canSplit =
-    canDouble &&
-    !hasHiddenCards &&
-    RankValue[(hand.cards[0] as ICard).rank] === RankValue[(hand.cards[1] as ICard).rank];
+  $: canSplit = canDouble && RankValue[(hand.cards[0] as ICard).rank] === RankValue[(hand.cards[1] as ICard).rank];
 
   console.log({ canStand, canHit, canDouble, canSplit });
 </script>

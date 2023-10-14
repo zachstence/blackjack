@@ -7,8 +7,6 @@ export enum HandState {
     Busted = 'Busted',
 }
 
-export type MaybeHiddenCard = ICard | 'hidden'
-
 export enum HandSettleStatus {
     Blackjack = 'Blackjack',
     Win = 'Win',
@@ -16,10 +14,11 @@ export enum HandSettleStatus {
     Lose = 'Lose',
 }
 
-export interface IHand {
+export interface IPlayerHand {
+    type: 'player'
     id: string
     state: HandState
-    cards: MaybeHiddenCard[]
+    cards: ICard[]
     total: IValue
     bet?: number
     hasDoubled?: boolean
@@ -27,10 +26,29 @@ export interface IHand {
     winnings?: number
 }
 
-export const EMPTY_HAND = (id: string, bet?: number): IHand => ({
+export const EMPTY_PLAYER_HAND = (id: string, bet?: number): IPlayerHand => ({
+    type: 'player',
     id,
     state: HandState.Hitting,
     cards: [],
     total: { hard: 0 },
     bet,
 })
+
+export type MaybeHiddenCard = ICard | 'hidden'
+
+export interface IDealerHand {
+    type: 'dealer'
+    state: HandState
+    cards: MaybeHiddenCard[]
+    total: IValue
+}
+
+export const EMPTY_DEALER_HAND = (): IDealerHand => ({
+    type: 'dealer',
+    state: HandState.Hitting,
+    cards: [],
+    total: { hard: 0 },
+})
+
+export type IHand = IPlayerHand | IDealerHand

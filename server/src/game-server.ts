@@ -2,12 +2,11 @@ import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 import { nanoid } from 'nanoid';
 
-import { ClientEvent, ClientEventArgs, GameState, IBoughtInsurance, ICard, IDeclinedInsurance, IGame, IPlayer, IPlayerBoughtInsurance, IValue, Rank, RankValue, ServerEvent, ServerEventArgs, Suit, isPlayerInsured } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, IBoughtInsurance, ICard, IDealerHand, IDeclinedInsurance, IGame, IPlayer, IPlayerBoughtInsurance, IValue, Rank, RankValue, ServerEvent, ServerEventArgs, Suit, isPlayerInsured } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
-import { EMPTY_HAND, HandSettleStatus, HandState, IHand } from 'blackjack-types';
-import { DEALER_HAND_ID } from './constants';
+import { EMPTY_PLAYER_HAND, HandSettleStatus, HandState, IPlayerHand } from 'blackjack-types';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers
@@ -46,7 +45,7 @@ export class GameServer {
 
     this.game = {
       state: GameState.PlayersReadying,
-      dealer: { hand: EMPTY_HAND(DEALER_HAND_ID) },
+      dealer: { hand: EMPTY_DEALER_HAND() },
       players: {},
       shoe: [],
     }
@@ -57,7 +56,7 @@ export class GameServer {
   private reset = (): void => {
     this.game = {
       state: GameState.PlayersReadying,
-      dealer: { hand: EMPTY_HAND(DEALER_HAND_ID) },
+      dealer: { hand: EMPTY_DEALER_HAND() },
       players: {},
       shoe: [],
     }
@@ -256,13 +255,13 @@ export class GameServer {
       this.dealCardToHand(dealerHand)
     }
     
-    const dealerHandWithHiddenCard: IHand = {
+    const dealerHandWithHiddenCard: IDealerHand = {
       ...dealerHand,
       cards: [dealerHand.cards[0], 'hidden'],
       total: RankValue[(dealerHand.cards[0] as ICard).rank],
     }
 
-    const handsByPlayerId = this.playersInRound.reduce<Record<string, IHand>>((acc, player) => {
+    const handsByPlayerId = this.playersInRound.reduce<Record<string, IPlayerHand>>((acc, player) => {
       const playerHand = Object.values(player.hands)[0]!
       acc[player.id] = playerHand
       return acc
@@ -365,7 +364,7 @@ export class GameServer {
     this.playDealer()
   }
 
-  private getBestHandTotal = (hand: IHand): number => {
+  private getBestHandTotal = (hand: IPlayerHand | IDealerHand): number => {
     const { total: { hard, soft } } = hand
     if (typeof soft === 'undefined') return hard
     if (soft <= 21) return soft
@@ -375,7 +374,7 @@ export class GameServer {
   /**
    * Deals a card to a hand. If no card specified, one is pulled from the deck.
    */
-  private dealCardToHand = (hand: IHand, card?: ICard): void => {
+  private dealCardToHand = (hand: IPlayerHand | IDealerHand, card?: ICard): void => {
     console.group('dealCardToHand')
     const handTotals = [hand.total.hard, hand.total.soft].filter(x => typeof x !== 'undefined') as number[]
     console.log('handTotals', handTotals)
@@ -442,7 +441,7 @@ export class GameServer {
     const dealerStanding = dealer.hand.state === HandState.Standing
     const dealerBlackjack = dealerTotal === 21 && dealer.hand.cards.length === 2
 
-    type HandsWithPlayerId = { hand: IHand; playerId: string }[]
+    type HandsWithPlayerId = { hand: IPlayerHand; playerId: string }[]
     const handsWithPlayerId: HandsWithPlayerId = this.playersInRound
       .flatMap(player => 
         Object.values(player.hands)
@@ -523,13 +522,13 @@ export class GameServer {
   }
 
   private clearHands = (): void => {
-    this.game.dealer.hand = EMPTY_HAND(DEALER_HAND_ID)
+    this.game.dealer.hand = EMPTY_DEALER_HAND()
 
     type HandsByPlayerId = ServerEventArgs<ServerEvent.ClearHands>['handsByPlayerId']
     const handsByPlayerId = this.allPlayers.reduce<HandsByPlayerId>((acc, player) => {
       // Give each player 1 empty hand
       const handId = nanoid()
-      const hand = EMPTY_HAND(handId)
+      const hand = EMPTY_PLAYER_HAND(handId)
       const hands = { [hand.id]: hand }
       
       // Set game state
@@ -692,11 +691,11 @@ export class GameServer {
 
     const [card1, card2] = originalCards as [ICard, ICard]
 
-    const newHand1 = EMPTY_HAND(nanoid(), originalBet)
+    const newHand1 = EMPTY_PLAYER_HAND(nanoid(), originalBet)
     this.dealCardToHand(newHand1, card1)
     this.dealCardToHand(newHand1)
 
-    const newHand2 = EMPTY_HAND(nanoid(), originalBet)
+    const newHand2 = EMPTY_PLAYER_HAND(nanoid(), originalBet)
     this.dealCardToHand(newHand2, card2)
     this.dealCardToHand(newHand2)
 

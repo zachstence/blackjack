@@ -1,5 +1,5 @@
 import { GameState, IGame } from "./game"
-import { HandSettleStatus, HandState, IHand } from "./hand"
+import { HandSettleStatus, HandState, IDealerHand, IPlayerHand } from "./hand"
 import { IInsurance } from "./insurance"
 import { IPlayer } from "./player"
 
@@ -62,19 +62,19 @@ type ArgsByServerEvent = {
     [ServerEvent.PlayerHit]: {
         playerId: string
         handId: string
-        hand: IHand
+        hand: IPlayerHand
     }
     [ServerEvent.PlayerDoubled]: {
         playerId: string
         money: number
         handId: string
-        hand: IHand
+        hand: IPlayerHand
     }
     [ServerEvent.PlayerSplit]: {
         playerId: string
         money: number
         hands: {
-            [handId: string]: IHand
+            [handId: string]: IPlayerHand
         }
     }
     [ServerEvent.PlayerStand]: {
@@ -94,15 +94,15 @@ type ArgsByServerEvent = {
     }
 
     [ServerEvent.Dealt]: {
-        dealerHand: IHand
-        handsByPlayerId: Record<string, IHand>
+        dealerHand: IDealerHand
+        handsByPlayerId: Record<string, IPlayerHand>
     }
 
     [ServerEvent.RevealDealerHand]: {
-        hand: IHand
+        hand: IDealerHand
     }
     [ServerEvent.DealerHit]: {
-        hand: IHand
+        hand: IDealerHand
     }
     [ServerEvent.DealerStand]: {
         handState: HandState.Standing
@@ -125,11 +125,11 @@ type ArgsByServerEvent = {
         }
     }
     [ServerEvent.ClearHands]: {
-        dealerHand: IHand
+        dealerHand: IDealerHand
         handsByPlayerId: {
             [playerId: string]: {
                 hands: {
-                    [handId: string]: IHand
+                    [handId: string]: IPlayerHand
                 }
             }
         }

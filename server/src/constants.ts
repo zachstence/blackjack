@@ -1,1 +1,0 @@
-export const DEALER_HAND_ID = 'dealer-hand-id'
