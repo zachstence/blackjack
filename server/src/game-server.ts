@@ -2,7 +2,7 @@ import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 import { nanoid } from 'nanoid';
 
-import { ClientEvent, ClientEventArgs, GameState, HandAction, IBoughtInsurance, ICard, DealerHand, IDeclinedInsurance, IGame, IPlayer, IInsuredPlayerHand, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isHandInsured, InsuranceSettleStatus } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, GameState, HandAction, IBoughtInsurance, ICard, DealerHand, IDeclinedInsurance, IGame, IPlayer, IInsuredPlayerHand, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isHandInsured, InsuranceSettleStatus, IDealerHand } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
@@ -120,7 +120,7 @@ export class GameServer {
   get insuredHandsByPlayer(): { [playerId: string]: IInsuredPlayerHand[] } {
     return this.playersInRound.reduce<{ [playerId: string]: IInsuredPlayerHand[] }>((acc, player) => {
       const playerHands = Object.values(player.hands)
-      const insuredHands = playerHands.filter(isHandInsured)
+      const insuredHands = playerHands.map(hand => hand.serialize()).filter(isHandInsured)
       acc[player.id] = insuredHands
       return acc
     }, {})
@@ -163,10 +163,6 @@ export class GameServer {
     }
 
     const dealerUpCard = this.game.dealer.hand.cards[0]
-    if (dealerUpCard === 'hidden') {
-      throw new Error('Dealer up card is hidden when determining if insurance should be offered')
-    }
-
     return dealerUpCard.rank === Rank.Ace
   }
 
@@ -220,28 +216,6 @@ export class GameServer {
     const decks = Array.from({ length: numDecks }).flatMap(createDeck)
     durstenfeldShuffle(decks)
 
-    /** Insurance testing cards */
-    // decks.push({
-    //   rank: Rank.Nine,
-    //   suit: Suit.Clubs,
-    // })
-
-    // decks.push({
-    //   rank: Rank.Two,
-    //   suit: Suit.Spades,
-    // })
-
-    // decks.push({
-    //   rank: Rank.Ace,
-    //   suit: Suit.Hearts,
-    // })
-    
-    // decks.push({
-    //   rank: Rank.Two,
-    //   suit: Suit.Diamonds,
-    // })
-    /** ======================= */
-
     this.game.shoe = decks
   }
 
@@ -265,11 +239,7 @@ export class GameServer {
       this.dealCardToHand(dealerHand)
     }
     
-    const dealerHandWithHiddenCard: DealerHand = {
-      ...dealerHand,
-      cards: [dealerHand.cards[0], 'hidden'],
-      value: RankValue[(dealerHand.cards[0] as ICard).rank],
-    }
+    const dealerHandWithHiddenCard: IDealerHand = this.game.dealer.hand.serialize({ revealed: false })
 
     const handsByPlayerId = this.playersInRound.reduce<Record<string, PlayerHand>>((acc, player) => {
       const playerHand = Object.values(player.hands)[0]!
@@ -373,16 +343,11 @@ export class GameServer {
     if (this.game.state !== GameState.DealerPlaying) {
       this.game.state = GameState.DealerPlaying
       this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
-      this.emitServerEvent(ServerEvent.RevealDealerHand, { hand: this.game.dealer.hand })
+      this.emitServerEvent(ServerEvent.RevealDealerHand, { hand: this.game.dealer.hand.serialize({ revealed: true }) })
     }
 
     const dealerHand = this.game.dealer.hand
     const dealerHandValue = this.getBestValue(dealerHand.value)
-
-    console.debug('playDealer', {
-      cards: dealerHand.cards.map(card => card === 'hidden' ? card : card.rank),
-      dealerHandValue,
-    })
 
     if (dealerHandValue > 21) {
       console.debug('dealer busted at', dealerHandValue)
@@ -409,7 +374,7 @@ export class GameServer {
   }
 
   private getBestValue = ({ hard, soft }: IValue): number => {
-    if (typeof soft === 'undefined') return hard
+    if (soft === null) return hard
     if (soft <= 21) return soft
     return hard
   }
@@ -447,7 +412,7 @@ export class GameServer {
       if (card === 'hidden') return
 
       const cardValue = RankValue[card.rank]
-      if (typeof cardValue.soft !== 'undefined') {
+      if (cardValue.soft !== null) {
         soft += cardValue.soft
       } else {
         soft += cardValue.hard
@@ -459,7 +424,7 @@ export class GameServer {
     if (soft !== hard && soft <= 21) {
       return { soft, hard }
     }
-    return { hard }
+    return { hard, soft: null }
   }
 
   private getHandStateByValue = (value: IValue): HandState => {
@@ -584,10 +549,8 @@ export class GameServer {
     const handsByPlayerId = this.allPlayers.reduce<HandsByPlayerId>((acc, player) => {
       // Give each player 1 empty hand
       const handId = nanoid()
-      const hand = {
-        ...new PlayerHand(handId, true),
-        actions: [HandAction.Bet],
-      }
+      const hand = new PlayerHand(handId, true)
+      hand.actions = [HandAction.Bet]
       const hands = { [hand.id]: hand }
       
       // Set game state
@@ -857,7 +820,7 @@ export class GameServer {
 
     const insurance: IDeclinedInsurance = {
       boughtInsurance: false,
-      bet: undefined,
+      bet: null,
     }
 
     hand.insurance = insurance

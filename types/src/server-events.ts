@@ -1,5 +1,5 @@
 import { GameState, IGame } from "./game"
-import { HandSettleStatus, HandState, DealerHand, PlayerHand } from "./hand"
+import { HandSettleStatus, HandState, IDealerHand, IPlayerHand } from "./hand"
 import { IInsurance } from "./insurance"
 import { IPlayer } from "./player"
 
@@ -63,31 +63,31 @@ type ArgsByServerEvent = {
     [ServerEvent.PlayerHit]: {
         playerId: string
         handId: string
-        hand: PlayerHand
+        hand: IPlayerHand
     }
     [ServerEvent.PlayerDoubled]: {
         playerId: string
         money: number
         handId: string
-        hand: PlayerHand
+        hand: IPlayerHand
     }
     [ServerEvent.PlayerSplit]: {
         playerId: string
         money: number
         hands: {
-            [handId: string]: PlayerHand
+            [handId: string]: IPlayerHand
         }
     }
     [ServerEvent.PlayerStand]: {
         playerId: string
         handId: string
-        hand: PlayerHand
+        hand: IPlayerHand
     }
 
     [ServerEvent.UpdateHand]: {
         playerId: string
         handId: string
-        hand: PlayerHand
+        hand: IPlayerHand
     }
     [ServerEvent.UpdateHandInsurance]: {
         playerId: string
@@ -102,15 +102,15 @@ type ArgsByServerEvent = {
     }
 
     [ServerEvent.Dealt]: {
-        dealerHand: DealerHand
-        handsByPlayerId: Record<string, PlayerHand>
+        dealerHand: IDealerHand
+        handsByPlayerId: Record<string, IPlayerHand>
     }
 
     [ServerEvent.RevealDealerHand]: {
-        hand: DealerHand
+        hand: IDealerHand
     }
     [ServerEvent.DealerHit]: {
-        hand: DealerHand
+        hand: IDealerHand
     }
     [ServerEvent.DealerStand]: {
         handState: HandState.Standing
@@ -133,11 +133,11 @@ type ArgsByServerEvent = {
         }
     }
     [ServerEvent.ClearHands]: {
-        dealerHand: DealerHand
+        dealerHand: IDealerHand
         handsByPlayerId: {
             [playerId: string]: {
                 hands: {
-                    [handId: string]: PlayerHand
+                    [handId: string]: IPlayerHand
                 }
             }
         }

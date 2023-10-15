@@ -1,4 +1,4 @@
-export interface IValue {
+export type IValue = {
     hard: number
-    soft?: number
+    soft: number | null
 }

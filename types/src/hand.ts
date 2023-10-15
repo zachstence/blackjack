@@ -1,5 +1,6 @@
-import { ICard } from "./card";
+import { ICard, RankValue } from "./card";
 import { IBoughtInsurance, IInsurance, isBoughtInsurance } from "./insurance";
+import { Serializable } from "./serializable";
 import { IValue } from "./value";
 
 export enum HandState {
@@ -24,7 +25,7 @@ export enum HandSettleStatus {
     Lose = 'Lose',
 }
 
-interface IPlayerHand {
+export type IPlayerHand = {
     type: 'player'
     id: string
     isRootHand: boolean
@@ -45,7 +46,7 @@ export type IInsuredPlayerHand = IPlayerHand & { insurance: IBoughtInsurance }
 
 export const isHandInsured = (hand: IPlayerHand): hand is IInsuredPlayerHand => typeof hand.insurance !== 'undefined' && isBoughtInsurance(hand.insurance)
 
-export class PlayerHand implements IPlayerHand {
+export class PlayerHand implements Serializable<IPlayerHand> {
     readonly type = 'player'
 
     cards: ICard[] = []
@@ -54,7 +55,7 @@ export class PlayerHand implements IPlayerHand {
     
     insurance?: IInsurance
     
-    value: IValue = { hard: 0 }
+    value: IValue = { hard: 0, soft: null }
     
     state: HandState = HandState.Hitting
 
@@ -65,18 +66,66 @@ export class PlayerHand implements IPlayerHand {
     winnings?: number;
 
     constructor(readonly id: string, readonly isRootHand: boolean) {}
+
+    serialize(): IPlayerHand {
+        return {
+            type: this.type,
+            id: this.id,
+            isRootHand: this.isRootHand,
+            cards: this.cards,
+            bet: this.bet,
+            insurance: this.insurance,
+            value: this.value,
+            state: this.state,
+            actions: this.actions,
+            settleStatus: this.settleStatus,
+            winnings: this.winnings,
+        }
+    }
 }
 
 export type MaybeHiddenCard = ICard | 'hidden'
 
-export class DealerHand {
+export type IDealerHand = {
+    type: 'dealer'
+    state: HandState
+    cards: MaybeHiddenCard[]
+    value: IValue
+}
+
+type DealerHandSerializeOpts = {
+    revealed?: boolean
+}
+
+export class DealerHand implements Serializable<IDealerHand> {
     readonly type = "dealer"
 
     state: HandState = HandState.Hitting;
 
-    cards: MaybeHiddenCard[] = [];
+    cards: ICard[] = [];
 
-    value: IValue = { hard: 0 };
+    value: IValue = { hard: 0, soft: null };
+
+    serialize(opts: DealerHandSerializeOpts = {}): IDealerHand {
+        let cards: MaybeHiddenCard[]
+        let value: IValue
+
+        if (!opts.revealed && this.cards.length) {
+            const [firstCard, ...rest] = this.cards
+            cards = [firstCard, ...rest.map(() => 'hidden' as const)]
+            value = RankValue[firstCard.rank]
+        } else {
+            cards = this.cards
+            value = this.value
+        }
+
+        return {
+            type: this.type,
+            state: this.state,
+            cards,
+            value,
+        }
+    }
 }
 
 export type IHand = PlayerHand | DealerHand

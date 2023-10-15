@@ -3,16 +3,16 @@ export enum InsuranceSettleStatus {
     Lose = 'Lose',
 }
 
-export interface IBoughtInsurance {
+export type IBoughtInsurance = {
     boughtInsurance: true
     bet: number
     settleStatus?: InsuranceSettleStatus
     winnings?: number
 }
 
-export interface IDeclinedInsurance {
+export type IDeclinedInsurance = {
     boughtInsurance: false
-    bet: undefined
+    bet: null
 }
 
 export type IInsurance = IBoughtInsurance | IDeclinedInsurance

@@ -25,21 +25,21 @@ export enum Rank {
 
 export const RankValue: Record<Rank, IValue> = {
     [Rank.Ace]: { hard: 1, soft: 11 },
-    [Rank.Two]: { hard: 2 },
-    [Rank.Three]: { hard: 3 },
-    [Rank.Four]: { hard: 4 },
-    [Rank.Five]: { hard: 5 },
-    [Rank.Six]: { hard: 6 },
-    [Rank.Seven]: { hard: 7 },
-    [Rank.Eight]: { hard: 8 },
-    [Rank.Nine]: { hard: 9 },
-    [Rank.Ten]: { hard: 10 },
-    [Rank.Jack]: { hard: 10 },
-    [Rank.Queen]: { hard: 10 },
-    [Rank.King]: { hard: 10 },
+    [Rank.Two]: { hard: 2, soft: null },
+    [Rank.Three]: { hard: 3, soft: null},
+    [Rank.Four]: { hard: 4, soft: null},
+    [Rank.Five]: { hard: 5, soft: null},
+    [Rank.Six]: { hard: 6, soft: null},
+    [Rank.Seven]: { hard: 7, soft: null},
+    [Rank.Eight]: { hard: 8, soft: null},
+    [Rank.Nine]: { hard: 9, soft: null},
+    [Rank.Ten]: { hard: 10, soft: null },
+    [Rank.Jack]: { hard: 10, soft: null },
+    [Rank.Queen]: { hard: 10, soft: null },
+    [Rank.King]: { hard: 10, soft: null },
 }
 
-export interface ICard {
+export type ICard = {
     suit: Suit
     rank: Rank
 }
