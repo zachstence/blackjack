@@ -1,5 +1,7 @@
 export enum ClientEvent {
     PlayerJoin = 'PlayerJoin',
+    Leave = 'Leave',
+
     Ready = 'Ready',
     PlaceBet = 'PlaceBet',
     Hit = 'Hit',
@@ -16,6 +18,8 @@ export enum ClientEvent {
 
 type ArgsByClientEvent = {
     [ClientEvent.PlayerJoin]: { name: string }
+    [ClientEvent.Leave]: {}
+
     [ClientEvent.Ready]: {}
     [ClientEvent.PlaceBet]: { handId: string; amount: number }
     [ClientEvent.Hit]: { handId: string }
