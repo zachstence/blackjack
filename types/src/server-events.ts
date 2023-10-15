@@ -21,8 +21,9 @@ export enum ServerEvent {
     PlayerSplit = 'PlayerSplit',
     PlayerStand = 'PlayerStand',
 
-    UpdatePlayerInsurance = 'UpdatePlayerInsurance',
-    PlayerLostInsurance = 'PlayerLostInsurance',
+    UpdateHand = 'UpdateHand',
+    UpdateHandInsurance = 'UpdateHandInsurance',
+    HandLostInsurance = 'HandLostInsurance',
 
     Dealt = 'Dealt',
 
@@ -83,13 +84,20 @@ type ArgsByServerEvent = {
         hand: IPlayerHand
     }
 
-    [ServerEvent.UpdatePlayerInsurance]: {
+    [ServerEvent.UpdateHand]: {
         playerId: string
+        handId: string
+        hand: IPlayerHand
+    }
+    [ServerEvent.UpdateHandInsurance]: {
+        playerId: string
+        handId: string
         insurance: IInsurance
         playerMoney?: number
     }
-    [ServerEvent.PlayerLostInsurance]: {
+    [ServerEvent.HandLostInsurance]: {
         playerId: string
+        handId: string
         insurance: undefined
     }
 

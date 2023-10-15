@@ -32,7 +32,8 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.PlayerSplit]: this.handlePlayerSplit,
       [ServerEvent.PlayerStand]: this.handlePlayerStand,
       
-      [ServerEvent.UpdatePlayerInsurance]: this.handleUpdatePlayerInsurance,
+      [ServerEvent.UpdateHand]: this.handleUpdateHand,
+      [ServerEvent.UpdateHandInsurance]: this.handleUpdateHandInsurance,
 
       [ServerEvent.Dealt]: this.handleDealt,
 
@@ -131,12 +132,12 @@ export class GameStore implements Readable<GameStore> {
     this.emitClientEvent(ClientEvent.Stand, { handId })
   }
 
-  buyInsurance = (): void => {
-    this.emitClientEvent(ClientEvent.BuyInsurance, {})
+  buyInsurance = (handId: string): void => {
+    this.emitClientEvent(ClientEvent.BuyInsurance, { handId })
   }
 
-  declineInsurance = (): void => {
-    this.emitClientEvent(ClientEvent.DeclineInsurance, {})
+  declineInsurance = (handId: string): void => {
+    this.emitClientEvent(ClientEvent.DeclineInsurance, { handId })
   }
 
   // ====================
@@ -283,12 +284,23 @@ export class GameStore implements Readable<GameStore> {
     })
   }
 
-  private handleUpdatePlayerInsurance: ServerEventHandler<ServerEvent.UpdatePlayerInsurance> = ({ playerId, insurance, playerMoney }) => {
+  private handleUpdateHand: ServerEventHandler<ServerEvent.UpdateHand> = ({ playerId, handId, hand }) => {
     if (typeof this._game === 'undefined') return
     const player = this._game.players[playerId]
     if (typeof player === 'undefined') return
 
-    player.insurance = insurance
+    player.hands[handId] = hand
+  }
+
+  private handleUpdateHandInsurance: ServerEventHandler<ServerEvent.UpdateHandInsurance> = ({ playerId, handId, insurance, playerMoney }) => {
+    if (typeof this._game === 'undefined') return
+    const player = this._game.players[playerId]
+    if (typeof player === 'undefined') return
+    const hand = player.hands[handId]
+    if (typeof hand === 'undefined') return
+
+    hand.insurance = insurance
+
     if (typeof playerMoney !== 'undefined') {
       player.money = playerMoney
     }

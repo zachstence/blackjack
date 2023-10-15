@@ -1,7 +1,13 @@
+export enum InsuranceSettleStatus {
+    Win = 'Win',
+    Lose = 'Lose',
+}
+
 export interface IBoughtInsurance {
     boughtInsurance: true
     bet: number
-    won?: boolean
+    settleStatus?: InsuranceSettleStatus
+    winnings?: number
 }
 
 export interface IDeclinedInsurance {

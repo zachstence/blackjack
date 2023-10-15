@@ -15,8 +15,8 @@
 
 
 # Technical
+- Refactor to OOP instead of Functional, there's a ton of computed state that would be more ergonomic in class getters
 - Error handling, don't crash server on errors
-- Insure should be HandAction
 - Don't pay 3:2 for blackjack on a split hand
 - Make events less specific
   - i.e. instead of PlayerStand, do PlayerHandUpdate with only handState sent
@@ -24,6 +24,7 @@
 
 
 # QOL
+- Player can play multiple hands at once
 - Admin tools (kick player, change money)
 - Have connection quality indicator, ping time
 - Timeout for users to bet between rounds, automatically start without them

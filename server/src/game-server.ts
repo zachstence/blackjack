@@ -2,7 +2,7 @@ import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 import { nanoid } from 'nanoid';
 
-import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, HandAction, IBoughtInsurance, ICard, IDealerHand, IDeclinedInsurance, IGame, IPlayer, IPlayerBoughtInsurance, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isPlayerInsured } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, HandAction, IBoughtInsurance, ICard, IDealerHand, IDeclinedInsurance, IGame, IPlayer, IInsuredPlayerHand, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isHandInsured, InsuranceSettleStatus } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
@@ -117,8 +117,13 @@ export class GameServer {
     })
   }
 
-  get playersWithInsurance(): IPlayerBoughtInsurance[] {
-    return this.playersInRound.filter(isPlayerInsured)
+  get insuredHandsByPlayer(): { [playerId: string]: IInsuredPlayerHand[] } {
+    return this.playersInRound.reduce<{ [playerId: string]: IInsuredPlayerHand[] }>((acc, player) => {
+      const playerHands = Object.values(player.hands)
+      const insuredHands = playerHands.filter(isHandInsured)
+      acc[player.id] = insuredHands
+      return acc
+    }, {})
   }
 
   get allPlayersReady(): boolean {
@@ -152,6 +157,7 @@ export class GameServer {
 
   get shouldOfferInsurance(): boolean {
     const dealerCards = this.game.dealer.hand.cards
+    console.log('shouldOfferInsurance', { dealerCards })
     if (dealerCards.length !== 2) {
       return false
     }
@@ -164,8 +170,9 @@ export class GameServer {
     return dealerUpCard.rank === Rank.Ace
   }
 
-  get playersInRoundHaveBoughtOrDeclinedInsurance(): boolean {
-    return this.playersInRound.every(player => typeof player.insurance !== 'undefined')
+  get handsHaveBoughtOrDeclinedInsurance(): boolean {
+    const allHands = this.playersInRound.flatMap(player => Object.values(player.hands))
+    return allHands.every(hand => typeof hand.insurance !== 'undefined')
   }
 
   private checkGameState = (): void => {
@@ -181,28 +188,29 @@ export class GameServer {
     if (this.game.state === GameState.PlayersReadying && this.allPlayersReady) {
       this.clearHands()
       this.collectBets()
-      return
     }
     
     if (this.game.state === GameState.PlacingBets && this.playersInRoundHaveFinishedBetting) {
       this.deal()
-      return
+      if (this.shouldOfferInsurance) {
+        this.offerInsurance()
+      } else {
+        this.playPlayers()
+      }
     }
 
-    if (this.game.state === GameState.Insuring && this.playersInRoundHaveBoughtOrDeclinedInsurance) {
+    if (this.game.state === GameState.Insuring && this.handsHaveBoughtOrDeclinedInsurance) {
       this.settleInsurance()
-      return
+      this.playPlayers()
     }
     
     if (this.game.state === GameState.PlayersPlaying && this.playersInRoundHaveFinishedHitting) {
       this.playDealer()
-      return
     }
     
     if (this.game.state === GameState.DealerPlaying && this.dealerIsDonePlaying) {
       this.settle()
       this.unReadyPlayers()
-      return
     }
   }
 
@@ -214,7 +222,7 @@ export class GameServer {
 
     /** Insurance testing cards */
     // decks.push({
-    //   rank: Rank.Ten,
+    //   rank: Rank.Nine,
     //   suit: Suit.Clubs,
     // })
 
@@ -273,15 +281,24 @@ export class GameServer {
       dealerHand: dealerHandWithHiddenCard,
       handsByPlayerId,
     })
+  }
 
-    if (this.shouldOfferInsurance) {
-      this.game.state = GameState.Insuring
-    } else {
-      this.game.state = GameState.PlayersPlaying
-    }
+  private offerInsurance = (): void => {
+    this.game.state = GameState.Insuring
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
 
-    this.checkGameState()
+    // All root hands can insure
+    this.playersInRound.forEach(player => {
+      Object.values(player.hands).filter(hand => hand.isRootHand).forEach(hand => {
+        hand.actions = this.getHandActionsByRootHandAndStateAndCards(hand.isRootHand, hand.state, hand.cards)
+
+        this.emitServerEvent(ServerEvent.UpdateHand, {
+          playerId: player.id,
+          handId: hand.id,
+          hand,
+        })
+      })
+    })
   }
 
   private settleInsurance = (): void => {
@@ -290,10 +307,16 @@ export class GameServer {
     const dealerBlackjack = dealerValue === 21
 
     if (dealerBlackjack) {
-      // If dealer has blackjack, players that insured win their insurance bet 2:1
-      for (const player of this.playersWithInsurance) {
-        player.insurance.won = true
-        player.money += player.insurance.bet * 3
+      // If dealer has blackjack, players that insured hands win their insurance bets 2:1
+      for (const [playerId, hands] of Object.entries(this.insuredHandsByPlayer)) {
+        const player = this.game.players[playerId]
+        
+        for (const hand of hands) {
+          const winnings = hand.insurance.bet * 3
+          player.money += winnings
+          hand.insurance.settleStatus = InsuranceSettleStatus.Win
+          hand.insurance.winnings = winnings
+        }
       }
 
       // Players immediately stand
@@ -310,22 +333,40 @@ export class GameServer {
     } else {
       // If dealer doesn't have blackjack, players that insured lose their money
       // and we keep playing
-      for (const player of this.playersWithInsurance) {
-        player.insurance.won = false
+      for (const hands of Object.values(this.insuredHandsByPlayer)) {
+        for (const hand of hands) {
+          hand.insurance.settleStatus = InsuranceSettleStatus.Lose
+        }
       }
     }
 
-    this.playersWithInsurance.forEach(player => {
-      this.emitServerEvent(ServerEvent.UpdatePlayerInsurance, {
-        playerId: player.id,
-        insurance: player.insurance,
+    Object.entries(this.insuredHandsByPlayer).forEach(([playerId, hands]) => {
+      hands.forEach(hand => {
+        this.emitServerEvent(ServerEvent.UpdateHandInsurance, {
+          playerId,
+          handId: hand.id,
+          insurance: hand.insurance,
+        })
+      })
+    })
+  }
+
+  private playPlayers = (): void => {
+    this.game.state = GameState.PlayersPlaying
+
+    this.playersInRound.forEach(player => {
+      Object.values(player.hands).forEach(hand => {
+        hand.actions = this.getHandActionsByRootHandAndStateAndCards(hand.isRootHand, hand.state, hand.cards)
+
+        this.emitServerEvent(ServerEvent.UpdateHand, {
+          playerId: player.id,
+          handId: hand.id,
+          hand,
+        })
       })
     })
 
-    this.game.state = GameState.PlayersPlaying
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
-
-    this.checkGameState()
   }
 
   private playDealer = (): void => {
@@ -390,11 +431,11 @@ export class GameServer {
     hand.cards.push(_card)
     hand.value = this.getCardsTotalValue(hand.cards)
     hand.state = this.getHandStateByValue(hand.value)
-    
-    if (hand.type === 'player') {
-      hand.actions = this.getHandActionsByStateAndCards(hand.state, hand.cards)
-    }
 
+    if (hand.type === 'player') {
+      hand.actions = this.getHandActionsByRootHandAndStateAndCards(hand.isRootHand, hand.state, hand.cards)
+    }
+    
     console.groupEnd()
   }
 
@@ -428,9 +469,14 @@ export class GameServer {
     return HandState.Hitting
   }
   
-  private getHandActionsByStateAndCards = (state: HandState, cards: ICard[]): HandAction[] => {
+  /** TODO these arguments are kinda gross */
+  private getHandActionsByRootHandAndStateAndCards = (isRootHand: boolean, state: HandState, cards: ICard[]): HandAction[] => {
     if (state !== HandState.Hitting) return []
     
+    if (isRootHand && this.game.state === GameState.Insuring) {
+      return [HandAction.Insure]
+    }
+
     const actions: HandAction[] = [HandAction.Stand, HandAction.Hit]
     if (cards.length === 2) {
       actions.push(HandAction.Double)
@@ -539,7 +585,7 @@ export class GameServer {
       // Give each player 1 empty hand
       const handId = nanoid()
       const hand = {
-        ...EMPTY_PLAYER_HAND(handId),
+        ...EMPTY_PLAYER_HAND({ id: handId, isRootHand: true }),
         actions: [HandAction.Bet],
       }
       const hands = { [hand.id]: hand }
@@ -564,8 +610,6 @@ export class GameServer {
 
     this.game.state = GameState.PlayersReadying
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.state })
-
-    this.checkGameState()
   }
 
   // ====================
@@ -707,11 +751,19 @@ export class GameServer {
 
     const [card1, card2] = originalCards as [ICard, ICard]
 
-    const newHand1 = EMPTY_PLAYER_HAND(nanoid(), originalBet)
+    const newHand1 = EMPTY_PLAYER_HAND({
+      id: nanoid(),
+      isRootHand: false,
+      bet: originalBet,
+    })
     this.dealCardToHand(newHand1, card1)
     this.dealCardToHand(newHand1)
 
-    const newHand2 = EMPTY_PLAYER_HAND(nanoid(), originalBet)
+    const newHand2 = EMPTY_PLAYER_HAND({
+      id: nanoid(),
+      isRootHand: false,
+      bet: originalBet,
+    })
     this.dealCardToHand(newHand2, card2)
     this.dealCardToHand(newHand2)
 
@@ -760,12 +812,17 @@ export class GameServer {
     this.checkGameState()
   }
 
-  private handleBuyInsurance: ClientEventHandler<ClientEvent.BuyInsurance> = (_, socket) => {
+  private handleBuyInsurance: ClientEventHandler<ClientEvent.BuyInsurance> = ({ handId }, socket) => {
     const player = this.game.players[socket.id]
     if (!player) return
-    const hand = Object.values(player.hands)[0]
+    const hand = player.hands[handId]
     if (!hand) return
     if (typeof hand.bet === 'undefined') return
+
+    const canInsure = hand.actions.includes(HandAction.Insure)
+    if (!canInsure) {
+      throw new Error(`Player ${player.id} cannot insure hand ${hand.id}`)
+    }
 
     if (this.game.state !== GameState.Insuring) {
       throw new Error(`Player ${player.id} tried to buy insurance when its not allowed`)
@@ -776,21 +833,29 @@ export class GameServer {
       bet: hand.bet / 2,
     }
 
-    player.insurance = insurance
+    hand.insurance = insurance
     player.money -= insurance.bet
 
-    this.emitServerEvent(ServerEvent.UpdatePlayerInsurance, {
+    this.emitServerEvent(ServerEvent.UpdateHandInsurance, {
       playerId: player.id,
-      insurance,
       playerMoney: player.money,
+      handId: hand.id,
+      insurance,
     })
     
     this.checkGameState()
   }
 
-  private handleDeclineInsurance: ClientEventHandler<ClientEvent.DeclineInsurance> = (_, socket) => {
+  private handleDeclineInsurance: ClientEventHandler<ClientEvent.DeclineInsurance> = ({ handId }, socket) => {
     const player = this.game.players[socket.id]
     if (!player) return
+    const hand = player.hands[handId]
+    if (!hand) return
+
+    const canInsure = hand.actions.includes(HandAction.Insure)
+    if (!canInsure) {
+      throw new Error(`Player ${player.id} cannot insure hand ${hand.id}`)
+    }
 
     if (this.game.state !== GameState.Insuring) {
       throw new Error(`Player ${player.id} tried to decline insurance when its not allowed`)
@@ -801,13 +866,14 @@ export class GameServer {
       bet: undefined,
     }
 
-    player.insurance = insurance
+    hand.insurance = insurance
 
-    this.emitServerEvent(ServerEvent.UpdatePlayerInsurance, {
+    this.emitServerEvent(ServerEvent.UpdateHandInsurance, {
       playerId: player.id,
+      handId: hand.id,
       insurance,
     })
-
+    
     this.checkGameState()
   }
 

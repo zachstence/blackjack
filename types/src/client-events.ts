@@ -23,8 +23,8 @@ type ArgsByClientEvent = {
     [ClientEvent.Split]: { handId: string }
     [ClientEvent.Stand]: { handId: string }
 
-    [ClientEvent.BuyInsurance]: {}
-    [ClientEvent.DeclineInsurance]: {}
+    [ClientEvent.BuyInsurance]: { handId: string }
+    [ClientEvent.DeclineInsurance]: { handId: string }
 
     [ClientEvent.Reset]: {}
 }
