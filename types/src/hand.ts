@@ -24,7 +24,7 @@ export enum HandSettleStatus {
     Lose = 'Lose',
 }
 
-export interface IPlayerHand {
+interface IPlayerHand {
     type: 'player'
     id: string
     isRootHand: boolean
@@ -59,7 +59,7 @@ export const EMPTY_PLAYER_HAND = ({ id, bet, isRootHand }: Pick<IPlayerHand, 'id
 
 export type MaybeHiddenCard = ICard | 'hidden'
 
-export interface IDealerHand {
+interface IDealerHand {
     type: 'dealer'
     state: HandState
     cards: MaybeHiddenCard[]
@@ -74,3 +74,35 @@ export const EMPTY_DEALER_HAND = (): IDealerHand => ({
 })
 
 export type IHand = IPlayerHand | IDealerHand
+
+export class PlayerHand implements IPlayerHand {
+    readonly type = 'player'
+
+    cards: ICard[] = []
+    
+    bet?: number
+    
+    insurance?: IInsurance
+    
+    value: IValue = { hard: 0 }
+    
+    state: HandState = HandState.Hitting
+
+    actions: HandAction[] = []
+
+    settleStatus?: HandSettleStatus;
+
+    winnings?: number;
+
+    constructor(readonly id: string, readonly isRootHand: boolean) {}
+}
+
+export class DealerHand implements IDealerHand {
+    readonly type = "dealer"
+
+    state: HandState = HandState.Hitting;
+
+    cards: MaybeHiddenCard[] = [];
+
+    value: IValue = { hard: 0 };
+}

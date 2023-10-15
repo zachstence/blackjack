@@ -2,11 +2,11 @@ import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 import { nanoid } from 'nanoid';
 
-import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, HandAction, IBoughtInsurance, ICard, IDealerHand, IDeclinedInsurance, IGame, IPlayer, IInsuredPlayerHand, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isHandInsured, InsuranceSettleStatus } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, HandAction, IBoughtInsurance, ICard, DealerHand, IDeclinedInsurance, IGame, IPlayer, IInsuredPlayerHand, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isHandInsured, InsuranceSettleStatus } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
-import { EMPTY_PLAYER_HAND, HandSettleStatus, HandState, IPlayerHand } from 'blackjack-types';
+import { EMPTY_PLAYER_HAND, HandSettleStatus, HandState, PlayerHand } from 'blackjack-types';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers
@@ -265,13 +265,13 @@ export class GameServer {
       this.dealCardToHand(dealerHand)
     }
     
-    const dealerHandWithHiddenCard: IDealerHand = {
+    const dealerHandWithHiddenCard: DealerHand = {
       ...dealerHand,
       cards: [dealerHand.cards[0], 'hidden'],
       value: RankValue[(dealerHand.cards[0] as ICard).rank],
     }
 
-    const handsByPlayerId = this.playersInRound.reduce<Record<string, IPlayerHand>>((acc, player) => {
+    const handsByPlayerId = this.playersInRound.reduce<Record<string, PlayerHand>>((acc, player) => {
       const playerHand = Object.values(player.hands)[0]!
       acc[player.id] = playerHand
       return acc
@@ -417,7 +417,7 @@ export class GameServer {
   /**
    * Deals a card to a hand. If no card specified, one is pulled from the deck.
    */
-  private dealCardToHand = (hand: IPlayerHand | IDealerHand, card?: ICard): void => {
+  private dealCardToHand = (hand: PlayerHand | DealerHand, card?: ICard): void => {
     let _card: ICard
     if (card) {
       _card = card
@@ -497,7 +497,7 @@ export class GameServer {
     const dealerStanding = dealer.hand.state === HandState.Standing
     const dealerBlackjack = dealerValue === 21 && dealer.hand.cards.length === 2
 
-    type HandsWithPlayerId = { hand: IPlayerHand; playerId: string }[]
+    type HandsWithPlayerId = { hand: PlayerHand; playerId: string }[]
     const handsWithPlayerId: HandsWithPlayerId = this.playersInRound
       .flatMap(player => 
         Object.values(player.hands)

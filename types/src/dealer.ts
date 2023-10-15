@@ -1,5 +1,5 @@
-import { IDealerHand } from "./hand";
+import { DealerHand } from "./hand";
 
 export interface IDealer {
-    hand: IDealerHand
+    hand: DealerHand
 }

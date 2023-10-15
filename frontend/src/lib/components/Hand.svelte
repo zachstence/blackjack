@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type IPlayerHand, HandAction, GameState, isHandInsured } from 'blackjack-types';
+  import { type PlayerHand, HandAction, GameState, isHandInsured } from 'blackjack-types';
 
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';
@@ -9,7 +9,7 @@
   let clazz: string = '';
   export { clazz as class };
 
-  export let hand: IPlayerHand;
+  export let hand: PlayerHand;
   export let showActions: boolean = false;
   export let maxBet: number | undefined = undefined;
 

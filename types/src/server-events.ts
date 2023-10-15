@@ -1,5 +1,5 @@
 import { GameState, IGame } from "./game"
-import { HandSettleStatus, HandState, IDealerHand, IPlayerHand } from "./hand"
+import { HandSettleStatus, HandState, DealerHand, PlayerHand } from "./hand"
 import { IInsurance } from "./insurance"
 import { IPlayer } from "./player"
 
@@ -63,31 +63,31 @@ type ArgsByServerEvent = {
     [ServerEvent.PlayerHit]: {
         playerId: string
         handId: string
-        hand: IPlayerHand
+        hand: PlayerHand
     }
     [ServerEvent.PlayerDoubled]: {
         playerId: string
         money: number
         handId: string
-        hand: IPlayerHand
+        hand: PlayerHand
     }
     [ServerEvent.PlayerSplit]: {
         playerId: string
         money: number
         hands: {
-            [handId: string]: IPlayerHand
+            [handId: string]: PlayerHand
         }
     }
     [ServerEvent.PlayerStand]: {
         playerId: string
         handId: string
-        hand: IPlayerHand
+        hand: PlayerHand
     }
 
     [ServerEvent.UpdateHand]: {
         playerId: string
         handId: string
-        hand: IPlayerHand
+        hand: PlayerHand
     }
     [ServerEvent.UpdateHandInsurance]: {
         playerId: string
@@ -102,15 +102,15 @@ type ArgsByServerEvent = {
     }
 
     [ServerEvent.Dealt]: {
-        dealerHand: IDealerHand
-        handsByPlayerId: Record<string, IPlayerHand>
+        dealerHand: DealerHand
+        handsByPlayerId: Record<string, PlayerHand>
     }
 
     [ServerEvent.RevealDealerHand]: {
-        hand: IDealerHand
+        hand: DealerHand
     }
     [ServerEvent.DealerHit]: {
-        hand: IDealerHand
+        hand: DealerHand
     }
     [ServerEvent.DealerStand]: {
         handState: HandState.Standing
@@ -133,11 +133,11 @@ type ArgsByServerEvent = {
         }
     }
     [ServerEvent.ClearHands]: {
-        dealerHand: IDealerHand
+        dealerHand: DealerHand
         handsByPlayerId: {
             [playerId: string]: {
                 hands: {
-                    [handId: string]: IPlayerHand
+                    [handId: string]: PlayerHand
                 }
             }
         }
