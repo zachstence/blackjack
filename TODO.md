@@ -18,14 +18,8 @@
 # Technical
 - Tests to prevent regressions
 - Refactor to OOP instead of Functional, there's a ton of computed state that would be more ergonomic in class getters
-- Genericize server game events to just provide a path to update and the value to set (_.get / _.set)
-  - Makes client even dumber, the server just syncs the game state
-  - Maybe even genericize client events for HandActions?
 - Error handling, don't crash server on errors
 - Don't pay 3:2 for blackjack on a split hand
-- Make events less specific
-  - i.e. instead of PlayerStand, do PlayerHandUpdate with only handState sent
-  - Works for other fields too
 
 
 # QOL
