@@ -45,36 +45,6 @@ export type IInsuredPlayerHand = IPlayerHand & { insurance: IBoughtInsurance }
 
 export const isHandInsured = (hand: IPlayerHand): hand is IInsuredPlayerHand => typeof hand.insurance !== 'undefined' && isBoughtInsurance(hand.insurance)
 
-export const EMPTY_PLAYER_HAND = ({ id, bet, isRootHand }: Pick<IPlayerHand, 'id' | 'bet' | 'isRootHand'>): IPlayerHand => ({
-    id,
-    bet,
-    isRootHand,
-
-    type: 'player',
-    state: HandState.Hitting,
-    cards: [],
-    value: { hard: 0 },
-    actions: [],
-})
-
-export type MaybeHiddenCard = ICard | 'hidden'
-
-interface IDealerHand {
-    type: 'dealer'
-    state: HandState
-    cards: MaybeHiddenCard[]
-    value: IValue
-}
-
-export const EMPTY_DEALER_HAND = (): IDealerHand => ({
-    type: 'dealer',
-    state: HandState.Hitting,
-    cards: [],
-    value: { hard: 0 },
-})
-
-export type IHand = IPlayerHand | IDealerHand
-
 export class PlayerHand implements IPlayerHand {
     readonly type = 'player'
 
@@ -97,7 +67,9 @@ export class PlayerHand implements IPlayerHand {
     constructor(readonly id: string, readonly isRootHand: boolean) {}
 }
 
-export class DealerHand implements IDealerHand {
+export type MaybeHiddenCard = ICard | 'hidden'
+
+export class DealerHand {
     readonly type = "dealer"
 
     state: HandState = HandState.Hitting;
@@ -106,3 +78,5 @@ export class DealerHand implements IDealerHand {
 
     value: IValue = { hard: 0 };
 }
+
+export type IHand = PlayerHand | DealerHand

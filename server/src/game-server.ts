@@ -2,11 +2,11 @@ import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http'
 import { nanoid } from 'nanoid';
 
-import { ClientEvent, ClientEventArgs, EMPTY_DEALER_HAND, GameState, HandAction, IBoughtInsurance, ICard, DealerHand, IDeclinedInsurance, IGame, IPlayer, IInsuredPlayerHand, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isHandInsured, InsuranceSettleStatus } from 'blackjack-types';
+import { ClientEvent, ClientEventArgs, GameState, HandAction, IBoughtInsurance, ICard, DealerHand, IDeclinedInsurance, IGame, IPlayer, IInsuredPlayerHand, IValue, MaybeHiddenCard, Rank, RankValue, ServerEvent, ServerEventArgs, isHandInsured, InsuranceSettleStatus } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { createDeck } from './createDeck';
 import { durstenfeldShuffle } from './durstenfeldShuffle';
-import { EMPTY_PLAYER_HAND, HandSettleStatus, HandState, PlayerHand } from 'blackjack-types';
+import { HandSettleStatus, HandState, PlayerHand } from 'blackjack-types';
 
 export class GameServer {
   private clientEventHandlers: ClientEventHandlers
@@ -45,7 +45,7 @@ export class GameServer {
 
     this.game = {
       state: GameState.PlayersReadying,
-      dealer: { hand: EMPTY_DEALER_HAND() },
+      dealer: { hand: new DealerHand() },
       players: {},
       shoe: [],
     }
@@ -56,7 +56,7 @@ export class GameServer {
   private reset = (): void => {
     this.game = {
       state: GameState.PlayersReadying,
-      dealer: { hand: EMPTY_DEALER_HAND() },
+      dealer: { hand: new DealerHand() },
       players: {},
       shoe: [],
     }
@@ -578,14 +578,14 @@ export class GameServer {
   }
 
   private clearHands = (): void => {
-    this.game.dealer.hand = EMPTY_DEALER_HAND()
+    this.game.dealer.hand = new DealerHand()
 
     type HandsByPlayerId = ServerEventArgs<ServerEvent.ClearHands>['handsByPlayerId']
     const handsByPlayerId = this.allPlayers.reduce<HandsByPlayerId>((acc, player) => {
       // Give each player 1 empty hand
       const handId = nanoid()
       const hand = {
-        ...EMPTY_PLAYER_HAND({ id: handId, isRootHand: true }),
+        ...new PlayerHand(handId, true),
         actions: [HandAction.Bet],
       }
       const hands = { [hand.id]: hand }
@@ -751,19 +751,13 @@ export class GameServer {
 
     const [card1, card2] = originalCards as [ICard, ICard]
 
-    const newHand1 = EMPTY_PLAYER_HAND({
-      id: nanoid(),
-      isRootHand: false,
-      bet: originalBet,
-    })
+    const newHand1 = new PlayerHand(nanoid(), false)
+    newHand1.bet = originalBet
     this.dealCardToHand(newHand1, card1)
     this.dealCardToHand(newHand1)
 
-    const newHand2 = EMPTY_PLAYER_HAND({
-      id: nanoid(),
-      isRootHand: false,
-      bet: originalBet,
-    })
+    const newHand2 = new PlayerHand(nanoid(), false)
+    newHand2.bet = originalBet
     this.dealCardToHand(newHand2, card2)
     this.dealCardToHand(newHand2)
 
