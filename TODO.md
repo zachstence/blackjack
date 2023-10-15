@@ -17,6 +17,7 @@
 
 # Technical
 - Tests to prevent regressions
+- Refactor to have separate types for Server-side game state and Client-side game state, and a converter
 - Refactor to OOP instead of Functional, there's a ton of computed state that would be more ergonomic in class getters
 - Error handling, don't crash server on errors
 - Don't pay 3:2 for blackjack on a split hand
