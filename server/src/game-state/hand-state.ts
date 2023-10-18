@@ -76,7 +76,7 @@ export class HandState implements ToClientJSON<IHand> {
 
 export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHand> {
   readonly id = nanoid()
-  
+
   bet?: number
   
   settleStatus?: HandSettleStatus
@@ -85,7 +85,7 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
   
   private _insurance?: IInsurance
   
-  constructor(readonly isRootHand: boolean, protected readonly root: GameState) {
+  constructor(readonly isRootHand: boolean, readonly playerId: string, protected readonly root: GameState) {
     super(root)
   }
   

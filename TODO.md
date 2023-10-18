@@ -39,6 +39,7 @@
 - player chat
 - show round outcome in player chat
 - tip dealer
+  - tip bet for dealer
 - rooms
   - public room joinable by anybody
   - private room joinable by link/code

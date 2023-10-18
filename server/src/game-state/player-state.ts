@@ -22,7 +22,7 @@ export class PlayerState implements ToClientJSON<IPlayer> {
     constructor(readonly id: string, readonly name: string, private readonly root: GameState) {}
 
     clearHands = (): void => {
-        const hand = new PlayerHandState(true, this.root)
+        const hand = new PlayerHandState(true, this.id, this.root)
         this._hands = { [hand.id]: hand }
     }
 
@@ -122,13 +122,13 @@ export class PlayerState implements ToClientJSON<IPlayer> {
         // Cards get split into 2 hands
         const [card1, card2] = hand.cards
 
-        const newHand1 = new PlayerHandState(false, this.root)
+        const newHand1 = new PlayerHandState(false, this.id, this.root)
         newHand1.bet = originalBet
         newHand1.dealCard(card1)
         newHand1.dealCard()
         this._hands[newHand1.id] = newHand1
 
-        const newHand2 = new PlayerHandState(false, this.root)
+        const newHand2 = new PlayerHandState(false, this.id, this.root)
         newHand2.bet = originalBet
         newHand2.dealCard(card2)
         newHand2.dealCard()
