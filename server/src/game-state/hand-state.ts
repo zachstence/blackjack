@@ -282,6 +282,7 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
     return {
       ...super.toClientJSON(),
       id: this.id,
+      playerId: this.playerId,
       bet: this.bet,
       insurance: this.insurance ?? null,
       actions: this.actions,

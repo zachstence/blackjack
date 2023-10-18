@@ -33,6 +33,7 @@ export type IHand = {
 
 export type IPlayerHand = IHand & {
     id: string
+    playerId: string
     bet?: number
     insurance: IInsurance | null
     actions: HandAction[]

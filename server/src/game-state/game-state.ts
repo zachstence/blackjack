@@ -1,4 +1,4 @@
-import { ICard, IGame, Rank, RoundState, Suit } from "blackjack-types";
+import { HandStatus, ICard, IGame, InsuranceStatus, Rank, RoundState, Suit } from "blackjack-types";
 import { DealerAction, DealerState } from "./dealer-state";
 import { PlayerState } from "./player-state";
 import { createDeck } from "../createDeck";
@@ -27,9 +27,31 @@ export class GameState implements ToClientJSON<IGame> {
     get players(): PlayerState[] {
         return Object.values(this._players)
     }
+
+    get allPlayersReady(): boolean {
+        return this.players.every(player => player.ready)
+    }
     
     get allPlayerHands(): PlayerHandState[] {
         return this.players.flatMap(player => Object.values(player.hands))
+    }
+
+    get allPlayerHandsHaveBet(): boolean {
+        return this.allPlayerHands.every(hand => hand.bet)
+    }
+
+    get shouldOfferInsurance(): boolean {
+        const dealerCards = this.dealer.hand.cards
+        if (dealerCards.length !== 2) return false
+        const dealerUpCard = dealerCards[0]
+        return dealerUpCard.rank === Rank.Ace
+    }
+
+    get allPlayerHandsHaveBoughtOrDeclinedInsurance(): boolean {
+        return this.allPlayerHands.every(hand => 
+            hand.insurance?.status === InsuranceStatus.Bought ||
+            hand.insurance?.status === InsuranceStatus.Declined
+        )
     }
 
     get insuredPlayerHands(): PlayerHandState[] {
@@ -42,6 +64,14 @@ export class GameState implements ToClientJSON<IGame> {
     
     get playersWithHands(): PlayerState[] {
         return this.players.filter(player => player.hasHand)
+    }
+
+    get allPlayerHandsHaveFinishedHitting(): boolean {
+        return this.allPlayerHands.every(hand => hand.status !== HandStatus.Hitting)
+    }
+
+    get dealerIsDonePlaying(): boolean {
+        return this.dealer.hand.status !== HandStatus.Hitting
     }
     
     resetShoe = (): void => {

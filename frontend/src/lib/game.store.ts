@@ -246,22 +246,19 @@ export class GameStore implements Readable<GameStore> {
     this._game.dealer.hand = hand
   }
 
-  private handleSettled: ServerEventHandler<ServerEvent.Settled> = ({ settledHandsByPlayer }) => {
-    Object.entries(settledHandsByPlayer).forEach(([playerId, { settledHands, money }]) => {
+  private handleSettled: ServerEventHandler<ServerEvent.Settled> = ({ settledHands, playerMoney }) => {
+    Object.entries(settledHands).forEach(([handId, hand]) => {
+      if (typeof this._game === 'undefined') return
+      const player = this._game.players[hand.playerId]
+      if (typeof player === 'undefined') return
+      player.hands[handId] = hand
+    })
+
+    Object.entries(playerMoney).forEach(([playerId, money]) => {
       if (typeof this._game === 'undefined') return
       const player = this._game.players[playerId]
       if (typeof player === 'undefined') return
-
       player.money = money
-
-      Object.entries(settledHands).forEach(([handId, settledHand]) => {
-        const hand = player.hands[handId]
-        if (typeof hand === 'undefined') return
-
-        hand.settleStatus = settledHand.settleStatus
-        hand.winnings = settledHand.winnings
-      })
-
     })
   }
 
@@ -269,7 +266,7 @@ export class GameStore implements Readable<GameStore> {
     if (typeof this._game === 'undefined') return
     this._game.dealer.hand = dealerHand
 
-    Object.entries(handsByPlayerId).forEach(([playerId, { hands }]) => {
+    Object.entries(handsByPlayerId).forEach(([playerId, hands]) => {
       if (typeof this._game === 'undefined') return
       const player = this._game.players[playerId]
       if (typeof player === 'undefined') return

@@ -118,25 +118,18 @@ type ArgsByServerEvent = {
     }
     
     [ServerEvent.Settled]: {
-        settledHandsByPlayer: {
-            [playerId: string]: {
-                settledHands: {
-                    [handId: string]: {
-                        settleStatus: HandSettleStatus
-                        winnings: number
-                    }
-                }
-                money: number
-            }
+        settledHands: {
+            [handId: string]: IPlayerHand
+        }
+        playerMoney: {
+            [playerId: string]: number
         }
     }
     [ServerEvent.ClearHands]: {
         dealerHand: IHand
         handsByPlayerId: {
             [playerId: string]: {
-                hands: {
-                    [handId: string]: IPlayerHand
-                }
+                [handId: string]: IPlayerHand
             }
         }
     }

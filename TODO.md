@@ -16,6 +16,7 @@
 - levelling and get coins
 - dealer's second card is upcard, not first
 - customizable insurance bet
+- on stand, set hand value to best value, don't show hard/soft
 
 
 # Technical

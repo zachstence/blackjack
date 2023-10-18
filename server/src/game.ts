@@ -1,10 +1,6 @@
-import { ClientEvent, RoundState, HandAction, Rank, ServerEvent, ServerEventArgs, ClientEventArgs, InsuranceStatus, IPlayerHand } from 'blackjack-types';
+import { ClientEvent, RoundState, HandAction, ServerEvent, ServerEventArgs, ClientEventArgs, IPlayerHand } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
-import { HandStatus } from 'blackjack-types';
 import { GameState } from './game-state/game-state';
-import { PlayerState } from './game-state/player-state';
-import { PlayerHandState } from './game-state/hand-state';
-import pick from 'lodash/pick';
 
 export interface GameEventEmitters {
   emitEvent: <E extends ServerEvent>(event: E, args: ServerEventArgs<E>) => void
@@ -59,105 +55,31 @@ export class Game {
   // ====================
   // Gameplay
   // ====================
-  get allPlayers(): PlayerState[] {
-    return Object.values(this.game.players)
-  }
-
-  get playersInRound(): PlayerState[] {
-    return this.allPlayers.filter(player => {
-      const playerHasHand = Object.values(player.hands).length > 0
-      return playerHasHand
-    })
-  }
-
-  get insuredHandsByPlayer(): { [playerId: string]: PlayerHandState[] } {
-    return this.playersInRound.reduce<{ [playerId: string]: PlayerHandState[] }>((acc, player) => {
-      const playerHands = Object.values(player.hands)
-      const insuredHands = playerHands.filter(hand => hand.insurance?.status === InsuranceStatus.Bought)
-      acc[player.id] = insuredHands
-      return acc
-    }, {})
-  }
-
-  get allPlayersReady(): boolean {
-    return this.allPlayers.every(player => player.ready)
-  }
-
-  get playersInRoundHaveFinishedBetting(): boolean {
-    return this.playersInRound.every(player => {
-      return Object.values(player.hands).every(hand => {
-        const handHasBet = typeof hand.bet !== 'undefined'
-        return handHasBet
-      })
-    })
-  }
-
-  get playersInRoundHaveFinishedHitting(): boolean {
-    // return this.playersInRound.every(p => p.hand!.state === HandState.Standing || p.hand!.state === HandState.Busted)
-    return this.playersInRound.every(player => {
-      return Object.values(player.hands).every(hand => {
-        const hasFinishedHitting = hand.status === HandStatus.Standing || hand.status === HandStatus.Busted
-        return hasFinishedHitting
-      })
-    })
-  }
-
-  get dealerIsDonePlaying(): boolean {
-    const dealerHandState = this.game.dealer.hand.status
-    const dealerIsDonePlaying = dealerHandState === HandStatus.Standing || dealerHandState === HandStatus.Busted
-    return dealerIsDonePlaying
-  }
-
-  get shouldOfferInsurance(): boolean {
-    const dealerCards = this.game.dealer.hand.cards
-    console.log('shouldOfferInsurance', { dealerCards })
-    if (dealerCards.length !== 2) {
-      return false
-    }
-
-    const dealerUpCard = this.game.dealer.hand.cards[0]
-    return dealerUpCard.rank === Rank.Ace
-  }
-
-  get handsHaveBoughtOrDeclinedInsurance(): boolean {
-    const allHands = this.playersInRound.flatMap(player => Object.values(player.hands))
-    return allHands.every(hand => hand.insurance?.status !== InsuranceStatus.Offered)
-  }
-
   private checkGameState = (): void => {
-    console.debug('checkGameState', {
-      gameState: this.game.roundState,
-      allPlayersReady: this.allPlayersReady,
-      playersInRoundHaveFinishedBetting: this.playersInRoundHaveFinishedBetting,
-      shouldOfferInsurance: this.shouldOfferInsurance,
-      playersInRoundHaveFinishedHitting: this.playersInRoundHaveFinishedHitting,
-      dealerIsDonePlaying: this.dealerIsDonePlaying,
-    })
-
-    if (this.game.roundState === RoundState.PlayersReadying && this.allPlayersReady) {
+    if (this.game.roundState === RoundState.PlayersReadying && this.game.allPlayersReady) {
       this.clearHands()
       this.collectBets()
     }
     
-    if (this.game.roundState === RoundState.PlacingBets && this.playersInRoundHaveFinishedBetting) {
+    if (this.game.roundState === RoundState.PlacingBets && this.game.allPlayerHandsHaveBet) {
       this.deal()
-      if (this.shouldOfferInsurance) {
+      if (this.game.shouldOfferInsurance) {
         this.offerInsurance()
       } else {
         this.playPlayers()
       }
     }
 
-    if (this.game.roundState === RoundState.Insuring && this.handsHaveBoughtOrDeclinedInsurance) {
+    if (this.game.roundState === RoundState.Insuring && this.game.allPlayerHandsHaveBoughtOrDeclinedInsurance) {
       this.settleInsurance()
       this.playPlayers()
     }
     
-    if (this.game.roundState === RoundState.PlayersPlaying && this.playersInRoundHaveFinishedHitting) {
+    if (this.game.roundState === RoundState.PlayersPlaying && this.game.allPlayerHandsHaveFinishedHitting) {
       this.playDealer()
     }
     
-    if (this.game.roundState === RoundState.DealerPlaying && this.dealerIsDonePlaying) {
+    if (this.game.roundState === RoundState.DealerPlaying && this.game.dealerIsDonePlaying) {
       this.settle()
       this.unReadyPlayers()
     }
@@ -171,9 +93,8 @@ export class Game {
   private deal = (): void => {
     this.game.deal()
 
-    const handsByPlayerId = this.playersInRound.reduce<Record<string, IPlayerHand>>((acc, player) => {
-      const playerHand = Object.values(player.hands)[0]!
-      acc[player.id] = playerHand.toClientJSON()
+    const handsByPlayerId = this.game.allPlayerHands.reduce<Record<string, IPlayerHand>>((acc, hand) => {
+      acc[hand.playerId] = hand.toClientJSON()
       return acc
     }, {})
 
@@ -188,15 +109,13 @@ export class Game {
     this.emitters.emitEvent(ServerEvent.GameStateChange, { gameState: this.game.roundState })
 
     // All root hands can insure
-    this.playersInRound.forEach(player => {
-      Object.values(player.hands).filter(hand => hand.isRootHand).forEach(hand => {
-        hand.offerInsurance()
+    this.game.allPlayerRootHands.forEach(hand => {
+      hand.offerInsurance()
 
-        this.emitters.emitEvent(ServerEvent.UpdateHand, {
-          playerId: player.id,
-          handId: hand.id,
-          hand: hand.toClientJSON(),
-        })
+      this.emitters.emitEvent(ServerEvent.UpdateHand, {
+        playerId: hand.playerId,
+        handId: hand.id,
+        hand: hand.toClientJSON(),
       })
     })
   }
@@ -225,13 +144,11 @@ export class Game {
   private playPlayers = (): void => {
     this.game.roundState = RoundState.PlayersPlaying
 
-    this.playersInRound.forEach(player => {
-      Object.values(player.hands).forEach(hand => {
-        this.emitters.emitEvent(ServerEvent.UpdateHand, {
-          playerId: player.id,
-          handId: hand.id,
-          hand: hand.toClientJSON(),
-        })
+    this.game.allPlayerHands.forEach(hand => {
+      this.emitters.emitEvent(ServerEvent.UpdateHand, {
+        playerId: hand.playerId,
+        handId: hand.id,
+        hand: hand.toClientJSON(),
       })
     })
 
@@ -258,33 +175,29 @@ export class Game {
   private settle = (): void => {
     this.game.settleBets()
 
-    type SettledHandsByPlayer = ServerEventArgs<ServerEvent.Settled>['settledHandsByPlayer']
-    type SettledHands = SettledHandsByPlayer[string]['settledHands']
-    const settledHandsByPlayer = this.playersInRound.reduce<SettledHandsByPlayer>((acc, player) => {
-        const settledHands = Object.values(player.hands).reduce<SettledHands>((acc, hand) => {
-          acc[hand.id] = {
-            settleStatus: hand.settleStatus!,
-            winnings: hand.winnings!,
-          }
-          return acc
-        }, {})
-
-        acc[player.id] = {
-          settledHands,
-          money: player.money,
-        }
+    type SettledHands = ServerEventArgs<ServerEvent.Settled>['settledHands']
+    type PlayerMoney = ServerEventArgs<ServerEvent.Settled>['playerMoney']
+    
+    const settledHands = this.game.allPlayerHands.reduce<SettledHands>((acc, hand) => {
+        acc[hand.id] = hand.toClientJSON()
         return acc
       }, {})
-    this.emitters.emitEvent(ServerEvent.Settled, { settledHandsByPlayer })
+    
+    const playerMoney = this.game.players.reduce<PlayerMoney>((acc, player) => {
+      acc[player.id] = player.money
+      return acc
+    }, {})
+
+    this.emitters.emitEvent(ServerEvent.Settled, { settledHands, playerMoney })
   }
 
   private clearHands = (): void => {
     this.game.dealer.hand.clear()
 
     type HandsByPlayerId = ServerEventArgs<ServerEvent.ClearHands>['handsByPlayerId']
-    const handsByPlayerId = this.allPlayers.reduce<HandsByPlayerId>((acc, player) => {
+    const handsByPlayerId = this.game.players.reduce<HandsByPlayerId>((acc, player) => {
       player.clearHands()
-      acc[player.id] = pick(player.toClientJSON(), 'hands')
+      acc[player.id] = Object.fromEntries(Object.entries(player.hands).map(([handId, hand]) => [handId, hand.toClientJSON()]))
       return acc
     }, {})
 
