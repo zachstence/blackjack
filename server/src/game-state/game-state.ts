@@ -11,7 +11,7 @@ export class GameState implements ToClientJSON<IGame> {
     
     readonly dealer = new DealerState(this)
     
-    readonly players: { [playerId: string]: PlayerState } = {}
+    private readonly _players: { [playerId: string]: PlayerState } = {}
     
     // TODO refactor into class to handle resetting shoe at cut card
     private _shoe: ICard[] = []
@@ -24,12 +24,12 @@ export class GameState implements ToClientJSON<IGame> {
         return this._shoe
     }
     
-    get allPlayers(): PlayerState[] {
-        return Object.values(this.players)
+    get players(): PlayerState[] {
+        return Object.values(this._players)
     }
     
     get allPlayerHands(): PlayerHandState[] {
-        return this.allPlayers.flatMap(player => Object.values(player.hands))
+        return this.players.flatMap(player => Object.values(player.hands))
     }
 
     get insuredPlayerHands(): PlayerHandState[] {
@@ -41,7 +41,7 @@ export class GameState implements ToClientJSON<IGame> {
     }
     
     get playersWithHands(): PlayerState[] {
-        return this.allPlayers.filter(player => player.hasHand)
+        return this.players.filter(player => player.hasHand)
     }
     
     resetShoe = (): void => {
@@ -74,19 +74,19 @@ export class GameState implements ToClientJSON<IGame> {
     }
 
     getPlayer = (playerId: string): PlayerState => {
-        const player = this.players[playerId]
+        const player = this._players[playerId]
         if (!player) throw new Error(`Player ${playerId} not found`)
         return player
     }
 
     addPlayer = (id: string, name: string): PlayerState => {
         const player = new PlayerState(id, name, this)
-        this.players[player.id] = player
+        this._players[player.id] = player
         return player
     }
 
     removePlayer = (playerId: string): void => {
-        delete this.players[playerId]
+        delete this._players[playerId]
     }
     
     draw = (): ICard => {
@@ -101,7 +101,7 @@ export class GameState implements ToClientJSON<IGame> {
     
     clearHands = (): void => {
         this.dealer.hand.clear()
-        this.allPlayers.forEach(player => player.clearHands())
+        this.players.forEach(player => player.clearHands())
     }
     
     deal = (): void => {

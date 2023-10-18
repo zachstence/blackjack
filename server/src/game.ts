@@ -321,12 +321,7 @@ export class Game {
   }
 
   private handlePlaceBet: ClientEventHandler<ClientEvent.PlaceBet> = ({ handId, amount }, playerId) => {
-    const player = this.game.players[playerId]
-    if (typeof player === 'undefined') {
-      this.emitters.emitEventTo(playerId, ServerEvent.Error, { message: 'You have not joined the game' })
-      return
-    }
-
+    const player = this.game.getPlayer(playerId)
     player.bet(handId, amount)
 
     this.emitters.emitEvent(ServerEvent.PlayerBet, {
@@ -438,8 +433,7 @@ export class Game {
   }
 
   private handleReady: ClientEventHandler<ClientEvent.Ready> = (_, playerId) => {
-    const player = this.game.players[playerId]
-    if (!player) return
+    const player = this.game.getPlayer(playerId)
 
     player.ready = true
     this.emitReadyPlayers()
