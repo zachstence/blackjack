@@ -14,7 +14,7 @@
 
   <dl class="w-fit">
     <dt>State</dt>
-    <dd>{dealer.hand.state}</dd>
+    <dd>{dealer.hand.status}</dd>
 
     <span class="h-3" />
 

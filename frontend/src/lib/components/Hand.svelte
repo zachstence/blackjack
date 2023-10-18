@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type PlayerHand, HandAction, GameState, isHandInsured } from 'blackjack-types';
+  import { type IPlayerHand, HandAction, RoundState } from 'blackjack-types';
 
   import { getGameStoreContext } from '$lib/game.context';
   import BetForm from './BetForm.svelte';
@@ -9,13 +9,13 @@
   let clazz: string = '';
   export { clazz as class };
 
-  export let hand: PlayerHand;
+  export let hand: IPlayerHand;
   export let showActions: boolean = false;
   export let maxBet: number | undefined = undefined;
 
   const store = getGameStoreContext();
 
-  $: playing = $store.game!.state === GameState.PlayersPlaying;
+  $: playing = $store.game!.roundState === RoundState.PlayersPlaying;
 
   $: canBet = hand.actions.includes(HandAction.Bet);
   $: canInsure = hand.actions.includes(HandAction.Insure);
@@ -28,7 +28,7 @@
 <div class="flex flex-col gap-1 {clazz}">
   <dl>
     <dt>State</dt>
-    <dd>{hand.state ?? '-'}</dd>
+    <dd>{hand.status ?? '-'}</dd>
 
     <dt>Bet</dt>
     {#if typeof hand.bet !== 'undefined'}
@@ -53,7 +53,7 @@
     <dt>Value</dt>
     {#if hand.value}
       <dd>
-        {hand.value.hard}
+        {hand.value.hard || '-'}
         {#if hand.value.soft}
           {' '}/ {hand.value.soft}
         {/if}
@@ -65,12 +65,12 @@
     {#if typeof hand.settleStatus !== 'undefined'}
       <span class="h-3" />
       <dt>Outcome</dt>
-      <dd>{hand.settleStatus}</dd>
+      <dd>{hand.settleStatus ?? '-'}</dd>
     {/if}
 
     {#if typeof hand.winnings !== 'undefined'}
       <dt>Winnings</dt>
-      <dd>{hand.winnings}</dd>
+      <dd>{hand.winnings ?? '-'}</dd>
     {/if}
   </dl>
 
@@ -79,7 +79,7 @@
       <BetForm onSubmit={(amount) => store.bet(hand.id, amount)} {maxBet} />
     {/if}
 
-    {#if canInsure || isHandInsured(hand)}
+    {#if hand.insurance}
       <InsureForm
         insurance={hand.insurance}
         onBuyInsurance={() => store.buyInsurance(hand.id)}

@@ -1,5 +1,6 @@
-import { GameState, IGame } from "./game"
-import { HandSettleStatus, HandState, IDealerHand, IPlayerHand } from "./hand"
+import { ICard } from "./card"
+import { RoundState, IGame } from "./game"
+import { HandAction, HandSettleStatus, HandStatus, IHand, IPlayerHand } from "./hand"
 import { IInsurance } from "./insurance"
 import { IPlayer } from "./player"
 
@@ -30,7 +31,6 @@ export enum ServerEvent {
     RevealDealerHand = 'RevealDealerHand',
     DealerHit = 'DealerHit',
     DealerStand = 'DealerStand',
-    DealerBust = 'DealerBust',
 
     Settled = 'Settled',
     ClearHands = 'ClearHands',
@@ -43,7 +43,7 @@ type ArgsByServerEvent = {
     
     // To all players
     [ServerEvent.Reset]: {}
-    [ServerEvent.GameStateChange]: { gameState: GameState }
+    [ServerEvent.GameStateChange]: { gameState: RoundState }
     [ServerEvent.ReadyPlayers]: {
         players: {
             [playerId: string]: {
@@ -92,8 +92,8 @@ type ArgsByServerEvent = {
     [ServerEvent.UpdateHandInsurance]: {
         playerId: string
         handId: string
-        insurance: IInsurance
-        playerMoney?: number
+        insurance: IInsurance | null
+        playerMoney: number
     }
     [ServerEvent.HandLostInsurance]: {
         playerId: string
@@ -102,23 +102,21 @@ type ArgsByServerEvent = {
     }
 
     [ServerEvent.Dealt]: {
-        dealerHand: IDealerHand
+        dealerHand: IHand
         handsByPlayerId: Record<string, IPlayerHand>
     }
 
     [ServerEvent.RevealDealerHand]: {
-        hand: IDealerHand
+        hand: IHand
     }
     [ServerEvent.DealerHit]: {
-        hand: IDealerHand
+        card: ICard
+        hand: IHand
     }
     [ServerEvent.DealerStand]: {
-        handState: HandState.Standing
+        hand: IHand
     }
-    [ServerEvent.DealerBust]: {
-        handState: HandState.Busted
-    }
-
+    
     [ServerEvent.Settled]: {
         settledHandsByPlayer: {
             [playerId: string]: {
@@ -133,7 +131,7 @@ type ArgsByServerEvent = {
         }
     }
     [ServerEvent.ClearHands]: {
-        dealerHand: IDealerHand
+        dealerHand: IHand
         handsByPlayerId: {
             [playerId: string]: {
                 hands: {

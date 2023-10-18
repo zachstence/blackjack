@@ -33,7 +33,7 @@
   </div>
 
   {#if debug}
-    <pre>{JSON.stringify($store.game, ['state', 'shoe'], 2)}</pre>
+    <pre>{JSON.stringify($store.game, ['roundState'], 2)}</pre>
   {/if}
 </div>
 

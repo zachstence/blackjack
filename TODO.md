@@ -11,8 +11,11 @@
   - max bet
   - allow card counter
   - allow coach mode
+  - expected player win rate based on options
 - vs mode playing against other players
 - levelling and get coins
+- dealer's second card is upcard, not first
+- customizable insurance bet
 
 
 # Technical
@@ -21,6 +24,9 @@
 - Refactor to OOP instead of Functional, there's a ton of computed state that would be more ergonomic in class getters
 - Error handling, don't crash server on errors
 - Don't pay 3:2 for blackjack on a split hand
+- Since players can have multiple hands, move all the authority of playing into the Hand, and give it functions to take or give money to its player
+  - Hands should be a root object in game rather than being nested within the player
+- Don't give player or dealer a hand until they bet. Betting is what creates the hand.
 
 
 # QOL
@@ -42,6 +48,7 @@
 - coach mode will show percentage of success under each button
 - Card counting helper
 - coach mode with counting cards enabled will show card count and adjust percentages based on the count
+- allow showing currency other than USD in UI (only client side)
 
 
 # UI

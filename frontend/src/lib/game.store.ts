@@ -40,7 +40,6 @@ export class GameStore implements Readable<GameStore> {
       [ServerEvent.RevealDealerHand]: this.handleRevealDealerHand,
       [ServerEvent.DealerHit]: this.handleDealerHit,
       [ServerEvent.DealerStand]: this.handleDealerStand,
-      [ServerEvent.DealerBust]: this.handleDealerBust,
 
       [ServerEvent.Settled]: this.handleSettled,
       [ServerEvent.ClearHands]: this.handleClearHands,
@@ -153,7 +152,7 @@ export class GameStore implements Readable<GameStore> {
 
   private handleGameStateChange: ServerEventHandler<ServerEvent.GameStateChange> = args => {
     if (typeof this._game === 'undefined') return
-    this._game.state = args.gameState
+    this._game.roundState = args.gameState
   }
 
   private handleReadyPlayers: ServerEventHandler<ServerEvent.ReadyPlayers> = ({ players }) => {
@@ -242,14 +241,9 @@ export class GameStore implements Readable<GameStore> {
     this._game.dealer.hand = hand
   }
 
-  private handleDealerStand: ServerEventHandler<ServerEvent.DealerStand> = ({ handState }) => {
+  private handleDealerStand: ServerEventHandler<ServerEvent.DealerStand> = ({ hand }) => {
     if (typeof this._game === 'undefined') return
-    this._game.dealer.hand.state = handState
-  }
-
-  private handleDealerBust: ServerEventHandler<ServerEvent.DealerBust> = ({ handState }) => {
-    if (typeof this._game === 'undefined') return
-    this._game.dealer.hand.state = handState
+    this._game.dealer.hand = hand
   }
 
   private handleSettled: ServerEventHandler<ServerEvent.Settled> = ({ settledHandsByPlayer }) => {

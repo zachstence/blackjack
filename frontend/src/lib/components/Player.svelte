@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { GameState, type IPlayer } from 'blackjack-types';
+  import { RoundState, type IPlayer } from 'blackjack-types';
   import { getGameStoreContext } from '$lib/game.context';
   import Hand from './Hand.svelte';
 
@@ -8,8 +8,8 @@
 
   const store = getGameStoreContext();
 
-  $: readying = $store.game!.state === GameState.PlayersReadying;
-  $: insuring = $store.game!.state === GameState.Insuring;
+  $: readying = $store.game!.roundState === RoundState.PlayersReadying;
+  $: insuring = $store.game!.roundState === RoundState.Insuring;
 
   const debug = new URLSearchParams(window.location.search).has('debug');
 </script>

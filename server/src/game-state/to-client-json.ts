@@ -1,8 +1,8 @@
 export type JSONPrimitive = string | number | boolean | null;
 export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
 export type JSONObject = { [member: string]: JSONValue };
-export interface JSONArray extends Array<JSONValue> {}
+export type JSONArray = JSONValue[] | readonly JSONValue[]
 
-export abstract class Serializable<Interface extends JSONValue> {
-    abstract serialize(): Interface
+export abstract class ToClientJSON<T extends JSONValue> {
+    abstract toClientJSON(): T
 }

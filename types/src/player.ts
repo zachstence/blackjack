@@ -1,9 +1,9 @@
-import { PlayerHand } from './hand'
+import { IPlayerHand } from "./hand"
 
-export interface IPlayer {
+export type IPlayer = {
     id: string
     name: string
-    hands: Record<string, PlayerHand>
+    hands: Record<string, IPlayerHand>
     money: number
     ready: boolean
 }
