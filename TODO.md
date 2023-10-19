@@ -25,8 +25,6 @@
 - Refactor to OOP instead of Functional, there's a ton of computed state that would be more ergonomic in class getters
 - Error handling, don't crash server on errors
 - Don't pay 3:2 for blackjack on a split hand
-- Since players can have multiple hands, move all the authority of playing into the Hand, and give it functions to take or give money to its player
-  - Hands should be a root object in game rather than being nested within the player
 - Don't give player or dealer a hand until they bet. Betting is what creates the hand.
 
 

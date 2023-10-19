@@ -1,12 +1,9 @@
 import { ICard } from "./card"
 import { RoundState, IGame } from "./game"
-import { HandAction, HandSettleStatus, HandStatus, IHand, IPlayerHand } from "./hand"
-import { IInsurance } from "./insurance"
+import { IHand, IPlayerHand } from "./hand"
 import { IPlayer } from "./player"
 
 export enum ServerEvent {
-    // To a specific player
-    Error = 'Error',
     JoinSuccess = 'JoinSuccess',
     
     // To all players
@@ -16,29 +13,22 @@ export enum ServerEvent {
 
     PlayerJoined = 'PlayerJoined',
     PlayerLeft = 'PlayerLeft',
-    PlayerBet = 'PlayerBet',
-    PlayerHit = 'PlayerHit',
-    PlayerDoubled = 'PlayerDoubled',
-    PlayerSplit = 'PlayerSplit',
-    PlayerStand = 'PlayerStand',
+    UpdatePlayerMoney = 'UpdatePlayerMoney',
 
+    AddHand = 'AddHand',
+    RemoveHand = 'RemoveHand',
     UpdateHand = 'UpdateHand',
-    UpdateHandInsurance = 'UpdateHandInsurance',
-    HandLostInsurance = 'HandLostInsurance',
 
     Dealt = 'Dealt',
 
-    RevealDealerHand = 'RevealDealerHand',
     DealerHit = 'DealerHit',
     DealerStand = 'DealerStand',
 
-    Settled = 'Settled',
     ClearHands = 'ClearHands',
 }
 
 type ArgsByServerEvent = {
     // To a specific player
-    [ServerEvent.Error]: { message?: string }
     [ServerEvent.JoinSuccess]: { game: IGame }
     
     // To all players
@@ -52,63 +42,36 @@ type ArgsByServerEvent = {
         }
     }
 
-    [ServerEvent.PlayerJoined]: { player: IPlayer }
+    [ServerEvent.PlayerJoined]: {
+        player: IPlayer
+        hand: IPlayerHand
+    }
     [ServerEvent.PlayerLeft]: { playerId: string }
-    [ServerEvent.PlayerBet]: {
+
+    [ServerEvent.UpdatePlayerMoney]: {
         playerId: string
         money: number
-        handId: string
-        bet: number
     }
-    [ServerEvent.PlayerHit]: {
-        playerId: string
-        handId: string
-        hand: IPlayerHand
-    }
-    [ServerEvent.PlayerDoubled]: {
-        playerId: string
-        money: number
-        handId: string
-        hand: IPlayerHand
-    }
-    [ServerEvent.PlayerSplit]: {
-        playerId: string
-        money: number
-        hands: {
-            [handId: string]: IPlayerHand
-        }
-    }
-    [ServerEvent.PlayerStand]: {
-        playerId: string
+
+    [ServerEvent.AddHand]: {
         handId: string
         hand: IPlayerHand
     }
 
+    [ServerEvent.RemoveHand]: {
+        handId: string
+    }
+
     [ServerEvent.UpdateHand]: {
-        playerId: string
         handId: string
         hand: IPlayerHand
-    }
-    [ServerEvent.UpdateHandInsurance]: {
-        playerId: string
-        handId: string
-        insurance: IInsurance | null
-        playerMoney: number
-    }
-    [ServerEvent.HandLostInsurance]: {
-        playerId: string
-        handId: string
-        insurance: undefined
     }
 
     [ServerEvent.Dealt]: {
         dealerHand: IHand
-        handsByPlayerId: Record<string, IPlayerHand>
+        playerHands: { [handId: string]: IPlayerHand }
     }
 
-    [ServerEvent.RevealDealerHand]: {
-        hand: IHand
-    }
     [ServerEvent.DealerHit]: {
         card: ICard
         hand: IHand
@@ -117,20 +80,10 @@ type ArgsByServerEvent = {
         hand: IHand
     }
     
-    [ServerEvent.Settled]: {
-        settledHands: {
-            [handId: string]: IPlayerHand
-        }
-        playerMoney: {
-            [playerId: string]: number
-        }
-    }
     [ServerEvent.ClearHands]: {
         dealerHand: IHand
-        handsByPlayerId: {
-            [playerId: string]: {
-                [handId: string]: IPlayerHand
-            }
+        playerHands: {
+            [handId: string]: IPlayerHand
         }
     }
 }

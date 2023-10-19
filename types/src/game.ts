@@ -1,5 +1,6 @@
 import { ICard } from "./card";
 import { IDealer } from "./dealer";
+import { IPlayerHand } from "./hand";
 import { IPlayer } from "./player";
 
 export enum RoundState {
@@ -13,6 +14,7 @@ export enum RoundState {
 export type IGame = {
     roundState: RoundState
     dealer: IDealer
-    players: Record<string, IPlayer>
     shoe: ICard[]
+    players: { [playerId: string]: IPlayer }
+    playerHands: { [handId: string]: IPlayerHand }
 }

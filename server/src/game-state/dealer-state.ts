@@ -27,12 +27,11 @@ export class DealerState implements ToClientJSON<IDealer> {
 
         // Stand
         if (shouldStand) {
-            this.hand.status = HandStatus.Standing
+            this.hand.stand()
             return { action: HandAction.Stand }
         }
 
-        // Hit
-        const card = this.hand.dealCard()
+        const card = this.hand.hit()
 
         if (this.hand.bestValue > 21) this.hand.status = HandStatus.Busted
         else if (this.hand.bestValue === 21) this.hand.status = HandStatus.Standing

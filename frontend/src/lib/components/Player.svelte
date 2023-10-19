@@ -1,44 +1,27 @@
 <script lang="ts">
   import { RoundState, type IPlayer } from 'blackjack-types';
   import { getGameStoreContext } from '$lib/game.context';
-  import Hand from './Hand.svelte';
 
   export let player: IPlayer;
-  export let isMe: boolean;
 
   const store = getGameStoreContext();
 
-  $: readying = $store.game!.roundState === RoundState.PlayersReadying;
-  $: insuring = $store.game!.roundState === RoundState.Insuring;
-
-  const debug = new URLSearchParams(window.location.search).has('debug');
+  $: isMe = player.id === $store.myPlayerId;
 </script>
 
-<div class="flex flex-col p-4 gap-2 bg-gray-100 rounded-xl">
-  <h2 class="text-lg font-semibold text-center">{player.name}</h2>
-
-  <dl>
-    <dt>Money</dt>
-    <dd>{player.money}</dd>
-  </dl>
-
-  <div class="flex flex-row gap-4">
-    {#each Object.values(player.hands) as hand}
-      <Hand class="flex-1" {hand} maxBet={player.money} showActions={isMe} />
-    {/each}
+<div class="flex flex-col gap-2 px-4 py-2 bg-gray-100 rounded-xl">
+  <div class="flex flex-row gap-2 justify-between">
+    <span class="font-semibold">{player.name}</span>
+    <span>{player.money}</span>
   </div>
 
-  {#if readying}
-    <button on:click={store.ready} disabled={!isMe || player.ready}>
+  {#if $store.game?.roundState === RoundState.PlayersReadying}
+    <button on:click={() => store.ready()} disabled={!isMe || player.ready}>
       {#if player.ready}
         ✅
       {:else}
         Ready
       {/if}
     </button>
-  {/if}
-
-  {#if debug}
-    <pre class="text-xs">{JSON.stringify(player, null, 2)}</pre>
   {/if}
 </div>

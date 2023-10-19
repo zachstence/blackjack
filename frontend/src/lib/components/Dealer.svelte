@@ -5,8 +5,6 @@
   const store = getGameStoreContext();
 
   $: dealer = $store.game!.dealer;
-
-  const debug = new URLSearchParams(window.location.search).has('debug');
 </script>
 
 <div class="p-4 bg-gray-100 rounded-xl">
@@ -41,8 +39,4 @@
       <dd>-</dd>
     {/if}
   </dl>
-
-  {#if debug}
-    <pre class="text-xs">{JSON.stringify(dealer, null, 2)}</pre>
-  {/if}
 </div>

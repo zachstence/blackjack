@@ -10,23 +10,29 @@
   export { clazz as class };
 
   export let hand: IPlayerHand;
-  export let showActions: boolean = false;
   export let maxBet: number | undefined = undefined;
 
   const store = getGameStoreContext();
 
+  $: player = $store.game?.players[hand.playerId];
+  $: showActions = hand.playerId === store.myPlayerId;
+
   $: playing = $store.game!.roundState === RoundState.PlayersPlaying;
 
   $: canBet = hand.actions.includes(HandAction.Bet);
-  $: canInsure = hand.actions.includes(HandAction.Insure);
   $: canStand = hand.actions.includes(HandAction.Stand);
   $: canHit = hand.actions.includes(HandAction.Hit);
   $: canDouble = hand.actions.includes(HandAction.Double);
   $: canSplit = hand.actions.includes(HandAction.Split);
 </script>
 
-<div class="flex flex-col gap-1 {clazz}">
+<div class="flex flex-col p-4 gap-2 bg-gray-100 rounded-xl {clazz}">
   <dl>
+    <dt>Player</dt>
+    <dd>{player?.name}</dd>
+
+    <span class="h-3" />
+
     <dt>State</dt>
     <dd>{hand.status ?? '-'}</dd>
 

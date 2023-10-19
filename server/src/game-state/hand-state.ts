@@ -2,6 +2,7 @@ import { HandAction, HandSettleStatus, HandStatus, IBoughtInsurance, ICard, IDec
 import { nanoid } from "nanoid";
 import { GameState } from "./game-state";
 import { ToClientJSON } from "./to-client-json";
+import { PlayerState } from "./player-state";
 
 export class HandState implements ToClientJSON<IHand> {
   protected _cards: ICard[] = []
@@ -34,6 +35,13 @@ export class HandState implements ToClientJSON<IHand> {
     }
     return { hard, soft: null }    
   }
+
+  get bestValue(): number {
+    const { hard, soft } = this.value
+    if (soft === null) return hard
+    if (soft <= 21) return soft
+    return hard
+  }
   
   get blackjack(): boolean {
     return this._cards.length === 2 && this.bestValue === 21
@@ -47,10 +55,19 @@ export class HandState implements ToClientJSON<IHand> {
     return this.status === HandStatus.Standing
   }
   
-  dealCard = (card?: ICard): ICard => {
-    const _card = card ?? this.root.draw()
-    this._cards.push(_card)
-    return _card
+  dealCard = (card: ICard): void => {
+    this._cards.push(card)
+    this.autoStandOrBust()
+  }
+
+  hit = (): ICard => {
+    const card = this.root.draw()
+    this.dealCard(card)
+    return card
+  }
+
+  stand = (): void => {
+    this.status = HandStatus.Standing
   }
   
   clear = (): void => {
@@ -66,18 +83,16 @@ export class HandState implements ToClientJSON<IHand> {
     }
   }
   
-  get bestValue(): number {
-    const { hard, soft } = this.value
-    if (soft === null) return hard
-    if (soft <= 21) return soft
-    return hard
+  private autoStandOrBust = (): void => {
+    if (this.bestValue > 21) this.status = HandStatus.Busted
+    else if (this.bestValue === 21) this.status = HandStatus.Standing
   }
 }
 
 export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHand> {
   readonly id = nanoid()
 
-  bet?: number
+  private _bet?: number
   
   settleStatus?: HandSettleStatus
   
@@ -88,13 +103,17 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
   constructor(readonly isRootHand: boolean, readonly playerId: string, protected readonly root: GameState) {
     super(root)
   }
+
+  get bet(): number | undefined {
+    return this._bet
+  }
   
   get insurance(): IInsurance | undefined {
     return this._insurance
   }
   
   get actions(): HandAction[] {
-    if (!this.bet) return [HandAction.Bet]
+    if (!this.bet && this.root.roundState === RoundState.PlacingBets) return [HandAction.Bet]
 
     if (this.status !== HandStatus.Hitting) return []
     
@@ -145,6 +164,11 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
   get blackjack(): boolean {
     return this.isRootHand && super.blackjack
   }
+
+  placeBet = (amount: number): void => {
+    this.player.takeMoney(amount)
+    this._bet = amount
+  }
   
   isInsured = (): this is PlayerHandState & { insurance: IBoughtInsurance } => {
     return this.insurance?.status === InsuranceStatus.Bought
@@ -158,9 +182,13 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
     return insurance
   }
   
-  buyInsurance = (bet: number): IBoughtInsurance => {
+  buyInsurance = (): IBoughtInsurance => {
     if (!this.canInsure) throw new Error(`Cannot insure hand ${this.id}`)
     if (!this.bet) throw new Error(`Cannot insure hand ${this.id}, it has no bet`)
+
+    // TODO customizable insurance bet
+    const bet = this.bet / 2
+    this.player.takeMoney(bet)
 
     const insurance: IBoughtInsurance = {
       status: InsuranceStatus.Bought,
@@ -178,11 +206,21 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
     this._insurance = insurance
     return insurance
   }
-  
-  settleInsurance = (): { winnings: number } => {
-    if (!this._insurance) throw new Error(`Cannot settle insurance for hand ${this.id}, hand insurance is undefined`)
 
-    console.log('settleInsurance', { dealerBlackjack: this.root.dealer.hand.blackjack })
+  double = (): void => {
+    if (!this._bet) throw new Error(`Cannot double hand ${this.id}, it has no bet`)
+    this.player.takeMoney(this._bet)
+    this._bet += this._bet
+    this.hit()
+
+    // Must stand after doubling
+    if (this.status === HandStatus.Hitting) {
+      this.status = HandStatus.Standing
+    }
+  }
+  
+  settleInsurance = (): void => {
+    if (!this._insurance) throw new Error(`Cannot settle insurance for hand ${this.id}, hand insurance is undefined`)
 
     if (this.root.dealer.hand.blackjack) {
       this.status = HandStatus.Standing
@@ -195,23 +233,19 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
           settleStatus: InsuranceSettleStatus.Win,
           winnings,
         }
-        return { winnings }
+        this.player.giveMoney(winnings)
       }
     } else if (this._insurance.status === InsuranceStatus.Bought) {
-      const winnings = 0
       this._insurance = {
         ...this._insurance,
         status: InsuranceStatus.Settled,
         settleStatus: InsuranceSettleStatus.Lose,
-        winnings,
+        winnings: 0,
       }
-      return { winnings }
     }
-    
-    return { winnings: 0 }
   }
   
-  settleBet = (): { winnings: number } => {
+  settleBet = (): void => {
     if (this.status === HandStatus.Hitting) throw new Error(`Cannot settle hand ${this.id}, still hitting`)
     if (this.root.dealer.hand.status === HandStatus.Hitting) throw new Error(`Cannot settle hand ${this.id}, dealer is still hitting`)
     if (!this.bet) throw new Error(`Cannot settle hand ${this.id}, it has no bet`)
@@ -266,13 +300,13 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
     }
     this.winnings = winnings
 
-    return { winnings }
+    this.player.giveMoney(winnings)
   }
 
   clear = (): void => {
     this._cards = []
     this.status = HandStatus.Hitting
-    this.bet = undefined
+    this._bet = undefined
     this._insurance = undefined
     this.settleStatus = undefined
     this.winnings = undefined
@@ -289,5 +323,11 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
       settleStatus: this.settleStatus ?? null,
       winnings: this.winnings ?? null,
     }
+  }
+
+  private get player(): PlayerState {
+    const player = this.root.players.find(player => player.id === this.playerId)
+    if (!player) throw new Error(`Cannot find player for hand ${{ handId: this.id, playerId: this.playerId }}`)
+    return player
   }
 }

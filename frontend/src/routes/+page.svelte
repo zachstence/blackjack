@@ -8,11 +8,8 @@
   const store = new GameStore();
   setGameStoreContext(store);
 
-  let debug = false;
-
   onMount(() => {
     store.connect();
-    debug = new URLSearchParams(window.location.search).has('debug');
   });
 </script>
 
@@ -25,7 +22,7 @@
   <Game />
 {/if}
 
-{#if debug}
+{#if $store.debug}
   <button class="fixed bottom-2 right-2" type="button" on:click={store.reset}>Reset Game</button>
 {/if}
 

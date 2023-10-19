@@ -62,6 +62,7 @@ export class GameServer {
 
   emitServerEvent = <E extends ServerEvent>(event: E, args: ServerEventArgs<E>): void => {
     this.server.emit(event, args)
+    console.debug(`Emitted server event ${event}`, { args })
   }
 
   emitServerEventTo = <E extends ServerEvent>(playerId: string, event: E, args: ServerEventArgs<E>): void => {
@@ -70,6 +71,7 @@ export class GameServer {
     const socket = this.server.sockets.sockets.get(socketId)
     if (!socket) throw new Error(`Failed to find socket for playerId ${playerId}`)
     socket.emit(event, args)
+  console.debug(`Emitted server event ${event} to ${playerId}`, { args })
   }
 
   handleClientEvent = <E extends ClientEvent>(event: E, args: ClientEventArgs<E>, playerId: string): void => {
@@ -86,6 +88,7 @@ export class GameServer {
   // ====================
   // Gameplay
   // ====================
+  // TODO this should live in GameState
   private checkGameState = (): void => {
     if (this.game.roundState === RoundState.PlayersReadying && this.game.allPlayersReady) {
       this.clearHands()
@@ -119,19 +122,26 @@ export class GameServer {
   private collectBets = (): void => {
     this.game.roundState = RoundState.PlacingBets
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.roundState })
+    this.game.playerHands.forEach(hand => {
+      this.emitServerEvent(ServerEvent.UpdateHand, {
+        handId: hand.id,
+        hand: hand.toClientJSON(),
+      })
+    })
   }
 
   private deal = (): void => {
     this.game.deal()
 
-    const handsByPlayerId = this.game.allPlayerHands.reduce<Record<string, IPlayerHand>>((acc, hand) => {
-      acc[hand.playerId] = hand.toClientJSON()
+    // TODO this object exists in GameState, but we have to access it via the array getter. Is there a better way?
+    const playerHands = this.game.playerHands.reduce<Record<string, IPlayerHand>>((acc, hand) => {
+      acc[hand.id] = hand.toClientJSON()
       return acc
     }, {})
 
     this.emitServerEvent(ServerEvent.Dealt, {
       dealerHand: this.game.dealer.hand.toClientJSON(),
-      handsByPlayerId,
+      playerHands,
     })
   }
 
@@ -144,7 +154,6 @@ export class GameServer {
       hand.offerInsurance()
 
       this.emitServerEvent(ServerEvent.UpdateHand, {
-        playerId: hand.playerId,
         handId: hand.id,
         hand: hand.toClientJSON(),
       })
@@ -154,20 +163,17 @@ export class GameServer {
   private settleInsurance = (): void => {
     this.game.settleInsurance()
 
-    Object.values(this.game.playersWithHands).forEach(player => {
-      Object.values(player.hands).forEach(hand => {
-        this.emitServerEvent(ServerEvent.UpdateHandInsurance, {
-          playerId: player.id,
-          handId: hand.id,
-          insurance: hand.toClientJSON().insurance,
-          playerMoney: player.money,
-        })
+    this.game.playerHands.forEach(hand => {
+      this.emitServerEvent(ServerEvent.UpdateHand, {
+        handId: hand.id,
+        hand: hand.toClientJSON(),
+      })
+    })
 
-        this.emitServerEvent(ServerEvent.UpdateHand, {
-          playerId: player.id,
-          handId: hand.id,
-          hand: hand.toClientJSON(),
-        })
+    this.game.players.forEach(player => {
+      this.emitServerEvent(ServerEvent.UpdatePlayerMoney, {
+        playerId: player.id,
+        money: player.money,
       })
     })
   }
@@ -175,9 +181,8 @@ export class GameServer {
   private playPlayers = (): void => {
     this.game.roundState = RoundState.PlayersPlaying
 
-    this.game.allPlayerHands.forEach(hand => {
+    this.game.playerHands.forEach(hand => {
       this.emitServerEvent(ServerEvent.UpdateHand, {
-        playerId: hand.playerId,
         handId: hand.id,
         hand: hand.toClientJSON(),
       })
@@ -206,35 +211,34 @@ export class GameServer {
   private settle = (): void => {
     this.game.settleBets()
 
-    type SettledHands = ServerEventArgs<ServerEvent.Settled>['settledHands']
-    type PlayerMoney = ServerEventArgs<ServerEvent.Settled>['playerMoney']
+    this.game.playerHands.forEach(hand => {
+      this.emitServerEvent(ServerEvent.UpdateHand, {
+        handId: hand.id,
+        hand: hand.toClientJSON(),
+      })
+    })
     
-    const settledHands = this.game.allPlayerHands.reduce<SettledHands>((acc, hand) => {
-        acc[hand.id] = hand.toClientJSON()
-        return acc
-      }, {})
-    
-    const playerMoney = this.game.players.reduce<PlayerMoney>((acc, player) => {
-      acc[player.id] = player.money
-      return acc
-    }, {})
-
-    this.emitServerEvent(ServerEvent.Settled, { settledHands, playerMoney })
+    this.game.players.forEach(player => {
+      this.emitServerEvent(ServerEvent.UpdatePlayerMoney, {
+        playerId: player.id,
+        money: player.money,
+      })
+    })
   }
 
   private clearHands = (): void => {
-    this.game.dealer.hand.clear()
+    this.game.clearHands()
 
-    type HandsByPlayerId = ServerEventArgs<ServerEvent.ClearHands>['handsByPlayerId']
-    const handsByPlayerId = this.game.players.reduce<HandsByPlayerId>((acc, player) => {
-      player.clearHands()
-      acc[player.id] = Object.fromEntries(Object.entries(player.hands).map(([handId, hand]) => [handId, hand.toClientJSON()]))
+    // TODO this object exists in GameState, but we have to access it via the array getter. Is there a better way?
+    type PlayerHands = { [handId: string]: IPlayerHand }
+    const playerHands = this.game.playerHands.reduce<PlayerHands>((acc, hand) => {
+      acc[hand.id] = hand.toClientJSON()
       return acc
     }, {})
 
     this.emitServerEvent(ServerEvent.ClearHands, {
       dealerHand: this.game.dealer.hand.toClientJSON(),
-      handsByPlayerId,
+      playerHands,
     })
   }
 
@@ -251,9 +255,14 @@ export class GameServer {
   // ====================
   private handlePlayerJoin: ClientEventHandler<ClientEvent.PlayerJoin> = ({ name }, playerId) => {
     const player = this.game.addPlayer(playerId, name)
+    const hand = this.game.playerHands.find(hand => hand.playerId === player.id)
+    if (!hand) throw new Error(`Can't find hand for new player ${player.id}`)
 
     this.emitServerEventTo(playerId, ServerEvent.JoinSuccess, { game: this.game.toClientJSON() })
-    this.emitServerEvent(ServerEvent.PlayerJoined, { player: player.toClientJSON() })
+    this.emitServerEvent(ServerEvent.PlayerJoined, {
+      player: player.toClientJSON(),
+      hand: hand.toClientJSON(),
+    })
     this.checkGameState()
   };
 
@@ -265,103 +274,115 @@ export class GameServer {
   }
 
   private handlePlaceBet: ClientEventHandler<ClientEvent.PlaceBet> = ({ handId, amount }, playerId) => {
-    const player = this.game.getPlayer(playerId)
-    player.bet(handId, amount)
+    this.game.bet(playerId, handId, amount)
 
-    this.emitServerEvent(ServerEvent.PlayerBet, {
-      playerId: player.id,
-      money: player.money,
+    const player = this.game.getPlayer(playerId)
+    const hand = this.game.getPlayerHand(playerId, handId)
+
+    this.emitServerEvent(ServerEvent.UpdateHand, {
       handId,
-      bet: amount,
+      hand: hand.toClientJSON()
+    })
+
+    this.emitServerEvent(ServerEvent.UpdatePlayerMoney, {
+      playerId,
+      money: player.money,
     })
 
     this.checkGameState()
   }
 
   private handleHit: ClientEventHandler<ClientEvent.Hit> = ({ handId }, playerId) => {
-    const hand = this.game.getPlayer(playerId).hit(handId).toClientJSON()
+    this.game.hit(playerId, handId)
 
-    this.emitServerEvent(ServerEvent.PlayerHit, {
-      playerId: playerId,
-      handId: handId,
-      hand,
+    const hand = this.game.getPlayerHand(playerId, handId)
+
+    this.emitServerEvent(ServerEvent.UpdateHand, {
+      handId,
+      hand: hand.toClientJSON()
     })
 
     this.checkGameState()
   }
 
   private handleDouble: ClientEventHandler<ClientEvent.Double> = ({ handId }, playerId) => {
-    const player = this.game.getPlayer(playerId)
-    const hand = player.double(handId)
+    this.game.double(playerId, handId)
 
-    this.emitServerEvent(ServerEvent.PlayerDoubled, {
+    const player = this.game.getPlayer(playerId)
+    const hand = this.game.getPlayerHand(playerId, handId)
+
+    this.emitServerEvent(ServerEvent.UpdateHand, {
+      handId,
+      hand: hand.toClientJSON()
+    })
+
+    this.emitServerEvent(ServerEvent.UpdatePlayerMoney, {
       playerId,
       money: player.money,
-      handId,
-      hand: hand.toClientJSON(),
     })
 
     this.checkGameState()
   }
 
   private handleSplit: ClientEventHandler<ClientEvent.Split> = ({ handId }, playerId) => {
+    const hands = this.game.split(playerId, handId)
     const player = this.game.getPlayer(playerId)
-    const [hand1, hand2] = player.split(handId)
 
-    this.emitServerEvent(ServerEvent.PlayerSplit, {
+    this.emitServerEvent(ServerEvent.UpdatePlayerMoney, {
       playerId,
       money: player.money,
-      hands: player.toClientJSON().hands,
     })
 
-    this.emitServerEvent(ServerEvent.PlayerHit, {
-      playerId,
-      handId: hand1.id,
-      hand: hand1.toClientJSON(),
-    })
+    this.emitServerEvent(ServerEvent.RemoveHand, { handId })
 
-    this.emitServerEvent(ServerEvent.PlayerHit, {
-      playerId,
-      handId: hand2.id,
-      hand: hand2.toClientJSON(),
+    hands.forEach(hand => {
+      this.emitServerEvent(ServerEvent.AddHand, {
+        handId: hand.id,
+        hand: hand.toClientJSON(),
+      })
     })
   }
 
   private handleStand: ClientEventHandler<ClientEvent.Stand> = ({ handId }, playerId) => {
-    const hand = this.game.getPlayer(playerId).stand(handId)
+    this.game.stand(playerId, handId)
 
-    this.emitServerEvent(ServerEvent.PlayerStand, {
-      playerId,
+    const hand = this.game.getPlayerHand(playerId, handId)
+
+    this.emitServerEvent(ServerEvent.UpdateHand, {
       handId,
-      hand: hand.toClientJSON(),
+      hand: hand.toClientJSON()
     })
 
     this.checkGameState()
   }
 
   private handleBuyInsurance: ClientEventHandler<ClientEvent.BuyInsurance> = ({ handId }, playerId) => {
-    const player = this.game.getPlayer(playerId)
-    const insurance = player.buyInsurance(handId)
+    this.game.buyInsurance(playerId, handId)
 
-    this.emitServerEvent(ServerEvent.UpdateHandInsurance, {
+    const player = this.game.getPlayer(playerId)
+    const hand = this.game.getPlayerHand(playerId, handId)
+
+    this.emitServerEvent(ServerEvent.UpdatePlayerMoney, {
       playerId,
-      playerMoney: player.money,
+      money: player.money,
+    })
+
+    this.emitServerEvent(ServerEvent.UpdateHand, {
       handId,
-      insurance,
+      hand: hand.toClientJSON(),
     })
     
     this.checkGameState()
   }
 
   private handleDeclineInsurance: ClientEventHandler<ClientEvent.DeclineInsurance> = ({ handId }, playerId) => {
-    const player = this.game.getPlayer(playerId)
-    const insurance = player.declineInsurance(handId)
+    this.game.buyInsurance(playerId, handId)
+    
+    const hand = this.game.getPlayerHand(playerId, handId)
 
-    this.emitServerEvent(ServerEvent.UpdateHandInsurance, {
-      playerId,
-      playerMoney: player.money,
+    this.emitServerEvent(ServerEvent.UpdateHand, {
       handId,
-      insurance,
+      hand: hand.toClientJSON(),
     })
     
     this.checkGameState()
