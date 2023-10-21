@@ -1,38 +1,38 @@
 import { HandStatus, IGame, InsuranceStatus, Rank, RoundState } from 'blackjack-types';
-import { DealerAction, DealerState } from './dealer-state';
-import { PlayerState } from './player-state';
+import { DealerAction, Dealer } from './dealer';
+import { Player } from './player';
 import { ToClientJSON } from './to-client-json';
-import { PlayerHandState } from './hand-state';
-import { ShoeState } from './shoe-state';
+import { PlayerHand } from './hand';
+import { Shoe } from './shoe';
 
-export class GameState implements ToClientJSON<IGame> {
+export class Game implements ToClientJSON<IGame> {
   roundState: RoundState;
 
-  private _shoe: ShoeState;
+  private _shoe: Shoe;
 
-  readonly dealer: DealerState;
+  readonly dealer: Dealer;
 
-  private readonly _players: { [playerId: string]: PlayerState };
+  private readonly _players: { [playerId: string]: Player };
 
-  private readonly _playerHands: { [handId: string]: PlayerHandState };
+  private readonly _playerHands: { [handId: string]: PlayerHand };
 
   constructor() {
     this.roundState = RoundState.PlayersReadying;
-    this._shoe = new ShoeState();
-    this.dealer = new DealerState(this);
+    this._shoe = new Shoe();
+    this.dealer = new Dealer(this);
     this._players = {};
     this._playerHands = {};
   }
 
-  get shoe(): ShoeState {
+  get shoe(): Shoe {
     return this._shoe;
   }
 
-  get players(): PlayerState[] {
+  get players(): Player[] {
     return Object.values(this._players);
   }
 
-  get playerHands(): PlayerHandState[] {
+  get playerHands(): PlayerHand[] {
     return Object.values(this._playerHands);
   }
 
@@ -57,11 +57,11 @@ export class GameState implements ToClientJSON<IGame> {
     );
   }
 
-  get insuredPlayerHands(): PlayerHandState[] {
+  get insuredPlayerHands(): PlayerHand[] {
     return this.playerHands.filter(hand => hand.isInsured());
   }
 
-  get allPlayerRootHands(): PlayerHandState[] {
+  get allPlayerRootHands(): PlayerHand[] {
     return this.playerHands.filter(hand => hand.isRootHand);
   }
 
@@ -85,13 +85,13 @@ export class GameState implements ToClientJSON<IGame> {
     return this.dealer.hand.status !== HandStatus.Hitting;
   }
 
-  getPlayer = (playerId: string): PlayerState => {
+  getPlayer = (playerId: string): Player => {
     const player = this._players[playerId];
     if (!player) throw new Error(`Player ${playerId} not found`);
     return player;
   };
 
-  getPlayerHand = (playerId: string, handId: string): PlayerHandState => {
+  getPlayerHand = (playerId: string, handId: string): PlayerHand => {
     const hand = this._playerHands[handId];
     if (!hand) throw new Error(`Hand ${handId} not found`);
     if (hand.playerId !== playerId) throw new Error(`Player ${playerId} does not own hand ${handId}`);
@@ -99,8 +99,8 @@ export class GameState implements ToClientJSON<IGame> {
     return hand;
   };
 
-  addPlayer = (id: string, name: string): PlayerState => {
-    const player = new PlayerState(id, name, this);
+  addPlayer = (id: string, name: string): Player => {
+    const player = new Player(id, name);
     this._players[player.id] = player;
 
     this.addHand(true, player.id);
@@ -108,8 +108,8 @@ export class GameState implements ToClientJSON<IGame> {
     return player;
   };
 
-  addHand = (isRootHand: boolean, playerId: string): PlayerHandState => {
-    const hand = new PlayerHandState(isRootHand, playerId, this);
+  addHand = (isRootHand: boolean, playerId: string): PlayerHand => {
+    const hand = new PlayerHand(isRootHand, playerId, this);
     this._playerHands[hand.id] = hand;
     return hand;
   };
@@ -153,7 +153,7 @@ export class GameState implements ToClientJSON<IGame> {
     this.roundState = RoundState.PlayersPlaying;
   };
 
-  offerInsurance = (): PlayerHandState[] => {
+  offerInsurance = (): PlayerHand[] => {
     this.roundState = RoundState.Insuring;
     this.allPlayerRootHands.forEach(hand => hand.offerInsurance());
     return this.allPlayerRootHands;
@@ -179,7 +179,7 @@ export class GameState implements ToClientJSON<IGame> {
     this.getPlayerHand(playerId, handId).double();
   };
 
-  split = (playerId: string, handId: string): [PlayerHandState, PlayerHandState] => {
+  split = (playerId: string, handId: string): [PlayerHand, PlayerHand] => {
     const player = this.getPlayer(playerId);
     const originalHand = this.getPlayerHand(playerId, handId);
     if (!originalHand.bet) throw new Error(`Cannot split hand ${handId}, it has no bet`);

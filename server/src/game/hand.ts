@@ -16,19 +16,19 @@ import {
   RoundState,
 } from 'blackjack-types';
 import { nanoid } from 'nanoid';
-import { GameState } from './game-state';
+import { Game } from './game';
 import { ToClientJSON } from './to-client-json';
-import { PlayerState } from './player-state';
-import { CardState } from './card-state';
+import { Player } from './player';
+import { Card } from './card';
 
-export class HandState implements ToClientJSON<IHand> {
-  protected _cards: CardState[] = [];
+export class Hand implements ToClientJSON<IHand> {
+  protected _cards: Card[] = [];
 
   status = HandStatus.Hitting;
 
-  constructor(protected readonly root: GameState) {}
+  constructor(protected readonly root: Game) {}
 
-  get cards(): CardState[] {
+  get cards(): Card[] {
     return this._cards;
   }
 
@@ -76,7 +76,7 @@ export class HandState implements ToClientJSON<IHand> {
     return this.status === HandStatus.Standing;
   }
 
-  dealCard = (card: CardState): void => {
+  dealCard = (card: Card): void => {
     this._cards.push(card);
     this.autoStandOrBust();
   };
@@ -110,7 +110,7 @@ export class HandState implements ToClientJSON<IHand> {
   };
 }
 
-export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHand> {
+export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
   readonly id = nanoid();
 
   private _bet?: number;
@@ -124,7 +124,7 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
   constructor(
     readonly isRootHand: boolean,
     readonly playerId: string,
-    protected readonly root: GameState,
+    protected readonly root: Game,
   ) {
     super(root);
   }
@@ -195,7 +195,7 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
     this._bet = amount;
   };
 
-  isInsured = (): this is PlayerHandState & { insurance: IBoughtInsurance } => {
+  isInsured = (): this is PlayerHand & { insurance: IBoughtInsurance } => {
     return this.insurance?.status === InsuranceStatus.Bought;
   };
 
@@ -349,7 +349,7 @@ export class PlayerHandState extends HandState implements ToClientJSON<IPlayerHa
     };
   }
 
-  private get player(): PlayerState {
+  private get player(): Player {
     const player = this.root.players.find(player => player.id === this.playerId);
     if (!player) throw new Error(`Cannot find player for hand ${{ handId: this.id, playerId: this.playerId }}`);
     return player;

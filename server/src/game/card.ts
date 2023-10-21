@@ -1,7 +1,7 @@
 import { ICard, Rank, Suit } from 'blackjack-types';
 import { ToClientJSON } from './to-client-json';
 
-export class CardState implements ToClientJSON<ICard> {
+export class Card implements ToClientJSON<ICard> {
   private _hidden = true;
 
   constructor(

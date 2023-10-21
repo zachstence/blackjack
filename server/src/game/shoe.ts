@@ -1,9 +1,9 @@
 import { IShoe, Rank, Suit } from 'blackjack-types';
 import { ToClientJSON } from './to-client-json';
-import { CardState } from './card-state';
+import { Card } from './card';
 
-export class ShoeState implements ToClientJSON<IShoe> {
-  private _cards: CardState[] = [];
+export class Shoe implements ToClientJSON<IShoe> {
+  private _cards: Card[] = [];
 
   private readonly numDecks = 6; // TODO control by options in the client
 
@@ -11,7 +11,7 @@ export class ShoeState implements ToClientJSON<IShoe> {
     this.reset();
   }
 
-  get cards(): CardState[] {
+  get cards(): Card[] {
     return this._cards;
   }
 
@@ -21,7 +21,7 @@ export class ShoeState implements ToClientJSON<IShoe> {
     this._cards = decks;
   };
 
-  draw = (): CardState => {
+  draw = (): Card => {
     const card = this._cards.pop();
     if (!card) {
       console.warn('Shoe empty when drawing! Resetting and drawing again...');
@@ -38,12 +38,12 @@ export class ShoeState implements ToClientJSON<IShoe> {
   }
 }
 
-const createDeck = (): CardState[] => {
-  const cards: CardState[] = [];
+const createDeck = (): Card[] => {
+  const cards: Card[] = [];
 
   for (const suit of Object.values(Suit)) {
     for (const rank of Object.values(Rank)) {
-      cards.push(new CardState(suit, rank));
+      cards.push(new Card(suit, rank));
     }
   }
 

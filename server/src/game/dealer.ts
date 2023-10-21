@@ -1,12 +1,12 @@
 import { DealerHandAction, HandStatus, ICard, IDealer } from 'blackjack-types';
-import { HandState } from './hand-state';
+import { Hand } from './hand';
 import { ToClientJSON } from './to-client-json';
-import { GameState } from './game-state';
+import { Game } from './game';
 
-export class DealerState implements ToClientJSON<IDealer> {
-  readonly hand = new HandState(this.root);
+export class Dealer implements ToClientJSON<IDealer> {
+  readonly hand = new Hand(this.root);
 
-  constructor(private readonly root: GameState) {}
+  constructor(private readonly root: Game) {}
 
   get revealed(): boolean {
     return this.hand.cards.every(card => !card.hidden);

@@ -11,14 +11,14 @@ import {
   DealerHandAction,
 } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
-import { GameState } from './game-state/game-state';
+import { Game } from './game/game';
 
 export class GameServer {
   private readonly server: SocketServer;
 
   private clientEventHandlers: ClientEventHandlers;
 
-  private game: GameState;
+  private game: Game;
 
   constructor(httpServer: HttpServer) {
     this.clientEventHandlers = {
@@ -57,11 +57,11 @@ export class GameServer {
       });
     });
 
-    this.game = new GameState();
+    this.game = new Game();
   }
 
   private reset = (): void => {
-    this.game = new GameState();
+    this.game = new Game();
 
     this.emitServerEvent(ServerEvent.Reset, {});
   };
