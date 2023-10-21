@@ -1,26 +1,23 @@
-import { DealerHandAction, HandStatus, ICard, IDealer } from 'blackjack-types';
-import { Hand } from './hand';
-import { ToClientJSON } from './to-client-json';
-import { Game } from './game';
+import { DealerHandAction, ICard, IDealer } from 'blackjack-types';
+import { Hand } from '../hand';
+import { ToClientJSON } from '../to-client-json';
+import { Game } from '../game';
 
 export class Dealer implements ToClientJSON<IDealer> {
-  readonly hand = new Hand(this.root);
-
-  constructor(private readonly root: Game) {}
+  constructor(
+    private readonly root: Game,
+    readonly hand: Hand = new Hand(root),
+  ) {}
 
   get revealed(): boolean {
     return this.hand.cards.every(card => !card.hidden);
   }
 
-  reveal = (): void => {
-    this.hand.cards.forEach(card => card.reveal());
-  };
-
   play = (): DealerAction[] => {
     const actions: DealerAction[] = [];
 
-    let action: DealerAction | undefined;
-    while (this.hand.status === HandStatus.Hitting) {
+    let action: DealerAction | undefined = undefined;
+    while (action?.action !== DealerHandAction.Stand) {
       action = this.playAction();
       actions.push(action);
     }
@@ -28,7 +25,7 @@ export class Dealer implements ToClientJSON<IDealer> {
     return actions;
   };
 
-  private playAction = (): DealerAction => {
+  playAction = (): DealerAction => {
     if (this.root.shouldDealerRevealAndPlay && !this.revealed) {
       this.reveal();
       return { action: DealerHandAction.Reveal };
@@ -39,7 +36,6 @@ export class Dealer implements ToClientJSON<IDealer> {
       return { action: DealerHandAction.Stand };
     }
 
-    // TODO config for soft/hard 17
     const bestValue = this.hand.bestValue;
     const shouldStand = bestValue >= 17;
     if (shouldStand) {
@@ -48,10 +44,6 @@ export class Dealer implements ToClientJSON<IDealer> {
     }
 
     const card = this.hand.hit();
-
-    if (this.hand.bestValue > 21) this.hand.status = HandStatus.Busted;
-    else if (this.hand.bestValue === 21) this.hand.status = HandStatus.Standing;
-    else this.hand.status = HandStatus.Hitting;
 
     return {
       action: DealerHandAction.Hit,
@@ -64,6 +56,10 @@ export class Dealer implements ToClientJSON<IDealer> {
       hand: this.hand.toClientJSON(),
     };
   }
+
+  private reveal = (): void => {
+    this.hand.cards.forEach(card => card.reveal());
+  };
 }
 
 export interface DealerRevealAction {

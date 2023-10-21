@@ -6,8 +6,8 @@ import { Rank, Suit } from 'blackjack-types';
 describe('Card', () => {
   describe('toClientJSON', () => {
     it('shouldnt expose suit/rank until card is revealed', () => {
-      const suit = faker.helpers.arrayElement(Object.values(Suit));
-      const rank = faker.helpers.arrayElement(Object.values(Rank));
+      const suit = randomSuit();
+      const rank = randomRank();
 
       const card = new Card(suit, rank);
 
@@ -19,3 +19,7 @@ describe('Card', () => {
     });
   });
 });
+
+export const randomSuit = (): Suit => faker.helpers.arrayElement(Object.values(Suit));
+
+export const randomRank = (): Rank => faker.helpers.arrayElement(Object.values(Rank));
