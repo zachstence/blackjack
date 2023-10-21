@@ -1,9 +1,12 @@
 # Gameplay
-- Surrender (before and after dealer reveal)
-- Even money (https://en.wikipedia.org/wiki/Even_money#:~:text=In%20blackjack%2C%20even%20money%20bet,the%20dealer%20has%20a%20blackjack.)
 - Dealer doesn't hit if all players bust
 - Dealer doesn't hit if all players get blackjack
 - Reset the shoe with 20% left (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
+- on stand, set hand value to best value, don't show hard/soft
+- dealer's second card is upcard, not first
+- customizable insurance bet
+- Surrender (before and after dealer reveal)
+- Even money (https://en.wikipedia.org/wiki/Even_money#:~:text=In%20blackjack%2C%20even%20money%20bet,the%20dealer%20has%20a%20blackjack.)
 - Config options (configurable by room)
   - Stand/hit on soft 17
   - max players
@@ -14,17 +17,11 @@
   - expected player win rate based on options
 - vs mode playing against other players
 - levelling and get coins
-- dealer's second card is upcard, not first
-- customizable insurance bet
-- on stand, set hand value to best value, don't show hard/soft
 
 
 # Technical
 - Tests to prevent regressions
-- Refactor to have separate types for Server-side game state and Client-side game state, and a converter
-- Refactor to OOP instead of Functional, there's a ton of computed state that would be more ergonomic in class getters
 - Error handling, don't crash server on errors
-- Don't pay 3:2 for blackjack on a split hand
 - Don't give player or dealer a hand until they bet. Betting is what creates the hand.
 
 
