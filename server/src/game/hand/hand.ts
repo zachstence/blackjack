@@ -1,7 +1,7 @@
 import { HandStatus, ICard, IHand, IValue, RankValue } from 'blackjack-types';
-import { Game } from './game';
-import { ToClientJSON } from './to-client-json';
-import { Card } from './card';
+import { Game } from '../game';
+import { ToClientJSON } from '../to-client-json';
+import { Card } from '../card';
 
 export class Hand implements ToClientJSON<IHand> {
   protected _cards: Card[] = [];
@@ -42,8 +42,7 @@ export class Hand implements ToClientJSON<IHand> {
   get bestValue(): number {
     const { hard, soft } = this.value;
     if (soft === null) return hard;
-    if (soft <= 21) return soft;
-    return hard;
+    return Math.max(hard, soft);
   }
 
   get blackjack(): boolean {
