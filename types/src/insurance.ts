@@ -1,33 +1,33 @@
 export enum InsuranceSettleStatus {
-    Win = 'Win',
-    Lose = 'Lose',
+  Win = 'Win',
+  Lose = 'Lose',
 }
 
 export enum InsuranceStatus {
-    Offered = 'Offered',
-    Bought = 'Bought',
-    Declined = 'Declined',
-    Settled = 'Settled',
+  Offered = 'Offered',
+  Bought = 'Bought',
+  Declined = 'Declined',
+  Settled = 'Settled',
 }
 
 export type IOfferedInsurance = {
-    status: InsuranceStatus.Offered
-}
+  status: InsuranceStatus.Offered;
+};
 
 export type IBoughtInsurance = {
-    status: InsuranceStatus.Bought
-    bet: number
-}
+  status: InsuranceStatus.Bought;
+  bet: number;
+};
 
 export type ISettledInsurance = {
-    status: InsuranceStatus.Settled
-    bet: number
-    settleStatus: InsuranceSettleStatus
-    winnings: number
-}
+  status: InsuranceStatus.Settled;
+  bet: number;
+  settleStatus: InsuranceSettleStatus;
+  winnings: number;
+};
 
 export type IDeclinedInsurance = {
-    status: InsuranceStatus.Declined
-}
+  status: InsuranceStatus.Declined;
+};
 
-export type IInsurance = IOfferedInsurance | IBoughtInsurance | ISettledInsurance | IDeclinedInsurance
+export type IInsurance = IOfferedInsurance | IBoughtInsurance | ISettledInsurance | IDeclinedInsurance;

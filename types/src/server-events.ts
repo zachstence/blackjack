@@ -1,95 +1,95 @@
-import { ICard } from "./card"
-import { RoundState, IGame } from "./game"
-import { IHand, IPlayerHand } from "./hand"
-import { IPlayer } from "./player"
+import { ICard } from './card';
+import { RoundState, IGame } from './game';
+import { IHand, IPlayerHand } from './hand';
+import { IPlayer } from './player';
 
 export enum ServerEvent {
-    JoinSuccess = 'JoinSuccess',
-    
-    // To all players
-    Reset = 'Reset',
-    GameStateChange = 'GameStateChange',
-    ReadyPlayers = 'ReadyPlayers',
+  JoinSuccess = 'JoinSuccess',
 
-    PlayerJoined = 'PlayerJoined',
-    PlayerLeft = 'PlayerLeft',
-    UpdatePlayerMoney = 'UpdatePlayerMoney',
+  // To all players
+  Reset = 'Reset',
+  GameStateChange = 'GameStateChange',
+  ReadyPlayers = 'ReadyPlayers',
 
-    AddHand = 'AddHand',
-    RemoveHand = 'RemoveHand',
-    UpdateHand = 'UpdateHand',
+  PlayerJoined = 'PlayerJoined',
+  PlayerLeft = 'PlayerLeft',
+  UpdatePlayerMoney = 'UpdatePlayerMoney',
 
-    Dealt = 'Dealt',
+  AddHand = 'AddHand',
+  RemoveHand = 'RemoveHand',
+  UpdateHand = 'UpdateHand',
 
-    RevealDealerHand = 'RevealDealerHand',
-    DealerHit = 'DealerHit',
-    DealerStand = 'DealerStand',
+  Dealt = 'Dealt',
 
-    ClearHands = 'ClearHands',
+  RevealDealerHand = 'RevealDealerHand',
+  DealerHit = 'DealerHit',
+  DealerStand = 'DealerStand',
+
+  ClearHands = 'ClearHands',
 }
 
 type ArgsByServerEvent = {
-    // To a specific player
-    [ServerEvent.JoinSuccess]: { game: IGame }
-    
-    // To all players
-    [ServerEvent.Reset]: {}
-    [ServerEvent.GameStateChange]: { gameState: RoundState }
-    [ServerEvent.ReadyPlayers]: {
-        players: {
-            [playerId: string]: {
-                ready: boolean
-            }
-        }
-    }
+  // To a specific player
+  [ServerEvent.JoinSuccess]: { game: IGame };
 
-    [ServerEvent.PlayerJoined]: {
-        player: IPlayer
-        hand: IPlayerHand
-    }
-    [ServerEvent.PlayerLeft]: { playerId: string }
+  // To all players
+  [ServerEvent.Reset]: {};
+  [ServerEvent.GameStateChange]: { gameState: RoundState };
+  [ServerEvent.ReadyPlayers]: {
+    players: {
+      [playerId: string]: {
+        ready: boolean;
+      };
+    };
+  };
 
-    [ServerEvent.UpdatePlayerMoney]: {
-        playerId: string
-        money: number
-    }
+  [ServerEvent.PlayerJoined]: {
+    player: IPlayer;
+    hand: IPlayerHand;
+  };
+  [ServerEvent.PlayerLeft]: { playerId: string };
 
-    [ServerEvent.AddHand]: {
-        handId: string
-        hand: IPlayerHand
-    }
+  [ServerEvent.UpdatePlayerMoney]: {
+    playerId: string;
+    money: number;
+  };
 
-    [ServerEvent.RemoveHand]: {
-        handId: string
-    }
+  [ServerEvent.AddHand]: {
+    handId: string;
+    hand: IPlayerHand;
+  };
 
-    [ServerEvent.UpdateHand]: {
-        handId: string
-        hand: IPlayerHand
-    }
+  [ServerEvent.RemoveHand]: {
+    handId: string;
+  };
 
-    [ServerEvent.Dealt]: {
-        dealerHand: IHand
-        playerHands: { [handId: string]: IPlayerHand }
-    }
+  [ServerEvent.UpdateHand]: {
+    handId: string;
+    hand: IPlayerHand;
+  };
 
-    [ServerEvent.RevealDealerHand]: {
-        hand: IHand
-    }
-    [ServerEvent.DealerHit]: {
-        card: ICard
-        hand: IHand
-    }
-    [ServerEvent.DealerStand]: {
-        hand: IHand
-    }
-    
-    [ServerEvent.ClearHands]: {
-        dealerHand: IHand
-        playerHands: {
-            [handId: string]: IPlayerHand
-        }
-    }
-}
+  [ServerEvent.Dealt]: {
+    dealerHand: IHand;
+    playerHands: { [handId: string]: IPlayerHand };
+  };
 
-export type ServerEventArgs<E extends ServerEvent> = ArgsByServerEvent[E]
+  [ServerEvent.RevealDealerHand]: {
+    hand: IHand;
+  };
+  [ServerEvent.DealerHit]: {
+    card: ICard;
+    hand: IHand;
+  };
+  [ServerEvent.DealerStand]: {
+    hand: IHand;
+  };
+
+  [ServerEvent.ClearHands]: {
+    dealerHand: IHand;
+    playerHands: {
+      [handId: string]: IPlayerHand;
+    };
+  };
+};
+
+export type ServerEventArgs<E extends ServerEvent> = ArgsByServerEvent[E];

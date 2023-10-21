@@ -2,8 +2,13 @@
   "name": "blackjack-types",
   "version": "0.0.1",
   "main": "src/index.ts",
-  "scripts": {},
+  "scripts": {
+    "format": "prettier --plugin-search-dir . --write ."
+  },
   "dependencies": {
     "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.3"
   }
 }

@@ -1,4 +1,4 @@
 export type IValue = {
-    hard: number
-    soft: number | null
-}
+  hard: number;
+  soft: number | null;
+};

@@ -1,3 +1,3 @@
 export type IShoe = {
-    length: number
-}
+  length: number;
+};
