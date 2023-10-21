@@ -1,17 +1,14 @@
-import { HandStatus, ICard, IGame, InsuranceStatus, Rank, RoundState } from "blackjack-types";
+import { HandStatus, IGame, InsuranceStatus, Rank, RoundState } from "blackjack-types";
 import { DealerAction, DealerState } from "./dealer-state";
 import { PlayerState } from "./player-state";
-import { createDeck } from "../createDeck";
-import { durstenfeldShuffle } from "../durstenfeldShuffle";
 import { ToClientJSON } from "./to-client-json";
 import { PlayerHandState } from "./hand-state";
-import { CardState } from "./card-state";
+import { ShoeState } from "./shoe-state";
 
 export class GameState implements ToClientJSON<IGame> {
     roundState: RoundState
     
-    // TODO refactor into class to handle resetting shoe at cut card
-    private _shoe: CardState[] = []
+    private _shoe: ShoeState
 
     readonly dealer: DealerState
 
@@ -21,12 +18,13 @@ export class GameState implements ToClientJSON<IGame> {
     
     constructor() {
         this.roundState = RoundState.PlayersReadying
+        this._shoe = new ShoeState()
         this.dealer = new DealerState(this)
         this._players = {}
         this._playerHands = {}
     }
 
-    get shoe(): ICard[] {
+    get shoe(): ShoeState {
         return this._shoe
     }
     
@@ -76,15 +74,6 @@ export class GameState implements ToClientJSON<IGame> {
         return this.dealer.hand.status !== HandStatus.Hitting
     }
     
-    resetShoe = (): void => {
-        const numDecks = 6 // TODO control by options in the client
-        
-        const decks = Array.from({ length: numDecks }).flatMap(createDeck)
-        durstenfeldShuffle(decks)
-        
-        this._shoe = decks
-    }
-
     getPlayer = (playerId: string): PlayerState => {
         const player = this._players[playerId]
         if (!player) throw new Error(`Player ${playerId} not found`)
@@ -124,18 +113,6 @@ export class GameState implements ToClientJSON<IGame> {
         delete this._playerHands[handId]
     }
     
-    draw = (): CardState => {
-        console.log('draw', this._shoe.length)
-        const card = this._shoe.pop()
-        console.log('draw', card)
-        if (!card) {
-            console.warn('Shoe empty when drawing! Resetting and drawing again...')
-            this.resetShoe()
-            return this.draw()
-        }
-        return card
-    }
-    
     clearHands = (): void => {
         this.dealer.hand.clear()
         
@@ -152,10 +129,10 @@ export class GameState implements ToClientJSON<IGame> {
     deal = (): void => {
         for (let i = 0; i < 2; i++) {
             for (const hand of this.playerHands) {
-                const card = this.draw().reveal()
+                const card = this._shoe.draw().reveal()
                 hand.dealCard(card)
             }
-            const card = this.draw()
+            const card = this._shoe.draw()
             if (i === 0) card.reveal()
             this.dealer.hand.dealCard(card)
         }
@@ -236,7 +213,7 @@ export class GameState implements ToClientJSON<IGame> {
         
         return {
             roundState: this.roundState,
-            shoe: { length: this._shoe.length },
+            shoe: this._shoe.toClientJSON(),
             dealer: this.dealer.toClientJSON(),
             players,
             playerHands,

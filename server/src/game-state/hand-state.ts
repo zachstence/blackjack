@@ -66,7 +66,7 @@ export class HandState implements ToClientJSON<IHand> {
   }
 
   hit = (): ICard => {
-    const card = this.root.draw().reveal()
+    const card = this.root.shoe.draw().reveal()
     this.dealCard(card)
     return card
   }

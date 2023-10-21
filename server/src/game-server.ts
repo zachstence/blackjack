@@ -50,12 +50,10 @@ export class GameServer {
     })
 
     this.game = new GameState()
-    this.game.resetShoe()
   }
 
   private reset = (): void => {
     this.game = new GameState()
-    this.game.resetShoe()
 
     this.emitServerEvent(ServerEvent.Reset, {})
   }
