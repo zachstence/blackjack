@@ -2,7 +2,7 @@ import { HandStatus, IGame, InsuranceStatus, Rank, RoundState } from 'blackjack-
 import { DealerAction, Dealer } from './dealer';
 import { Player } from './player';
 import { ToClientJSON } from './to-client-json';
-import { PlayerHand } from './hand';
+import { PlayerHand } from './player-hand';
 import { Shoe } from './shoe';
 
 export class Game implements ToClientJSON<IGame> {
