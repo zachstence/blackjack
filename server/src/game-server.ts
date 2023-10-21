@@ -192,8 +192,12 @@ export class GameServer {
   }
 
   private playDealer = (): void => {
+    this.game.dealer.reveal()
+    this.emitServerEvent(ServerEvent.RevealDealerHand, { hand: this.game.dealer.hand.toClientJSON() })
+
     const actions = this.game.playDealer()
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.roundState })
+
     actions.forEach(action => {
       if (action.action === HandAction.Hit) {
         this.emitServerEvent(ServerEvent.DealerHit, {

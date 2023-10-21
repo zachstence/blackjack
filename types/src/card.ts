@@ -39,7 +39,14 @@ export const RankValue: Record<Rank, IValue> = {
     [Rank.King]: { hard: 10, soft: null },
 }
 
-export type ICard = {
+export type IHiddenCard = {
+    hidden: true
+}
+
+export type IVisibleCard = {
+    hidden: false
     suit: Suit
     rank: Rank
 }
+
+export type ICard = IHiddenCard | IVisibleCard

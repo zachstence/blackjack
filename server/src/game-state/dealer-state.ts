@@ -8,7 +8,13 @@ export class DealerState implements ToClientJSON<IDealer> {
 
     constructor(private readonly root: GameState) {}
 
+    reveal = (): void => {
+        this.hand.cards.forEach(card => card.reveal())
+    }
+
     play = (): DealerAction[] => {
+        this.reveal()
+
         const actions: DealerAction[] = []
 
         let action: DealerAction | undefined

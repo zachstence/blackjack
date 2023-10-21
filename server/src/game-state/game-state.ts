@@ -1,16 +1,17 @@
-import { HandStatus, ICard, IGame, InsuranceStatus, Rank, RoundState, Suit } from "blackjack-types";
+import { HandStatus, ICard, IGame, InsuranceStatus, Rank, RoundState } from "blackjack-types";
 import { DealerAction, DealerState } from "./dealer-state";
 import { PlayerState } from "./player-state";
 import { createDeck } from "../createDeck";
 import { durstenfeldShuffle } from "../durstenfeldShuffle";
 import { ToClientJSON } from "./to-client-json";
 import { PlayerHandState } from "./hand-state";
+import { CardState } from "./card-state";
 
 export class GameState implements ToClientJSON<IGame> {
     roundState: RoundState
     
     // TODO refactor into class to handle resetting shoe at cut card
-    private _shoe: ICard[] = []
+    private _shoe: CardState[] = []
 
     readonly dealer: DealerState
 
@@ -82,26 +83,6 @@ export class GameState implements ToClientJSON<IGame> {
         durstenfeldShuffle(decks)
         
         this._shoe = decks
-
-        this._shoe.push({
-            suit: Suit.Spades,
-            rank: Rank.Ten,
-        })
-
-        this._shoe.push({
-            suit: Suit.Spades,
-            rank: Rank.Eight
-        })
-        
-        this._shoe.push({
-            suit: Suit.Spades,
-            rank: Rank.Ace,
-        })
-        
-        this._shoe.push({
-            suit: Suit.Spades,
-            rank: Rank.Nine,
-        })
     }
 
     getPlayer = (playerId: string): PlayerState => {
@@ -143,8 +124,10 @@ export class GameState implements ToClientJSON<IGame> {
         delete this._playerHands[handId]
     }
     
-    draw = (): ICard => {
+    draw = (): CardState => {
+        console.log('draw', this._shoe.length)
         const card = this._shoe.pop()
+        console.log('draw', card)
         if (!card) {
             console.warn('Shoe empty when drawing! Resetting and drawing again...')
             this.resetShoe()
@@ -169,10 +152,11 @@ export class GameState implements ToClientJSON<IGame> {
     deal = (): void => {
         for (let i = 0; i < 2; i++) {
             for (const hand of this.playerHands) {
-                const card = this._shoe.pop()!
+                const card = this.draw().reveal()
                 hand.dealCard(card)
             }
-            const card = this._shoe.pop()!
+            const card = this.draw()
+            if (i === 0) card.reveal()
             this.dealer.hand.dealCard(card)
         }
     }
@@ -250,7 +234,7 @@ export class GameState implements ToClientJSON<IGame> {
         
         return {
             roundState: this.roundState,
-            shoe: this.shoe, // TODO hide cards
+            shoe: { length: this._shoe.length },
             dealer: this.dealer.toClientJSON(),
             players,
             playerHands,

@@ -21,6 +21,7 @@ export enum ServerEvent {
 
     Dealt = 'Dealt',
 
+    RevealDealerHand = 'RevealDealerHand',
     DealerHit = 'DealerHit',
     DealerStand = 'DealerStand',
 
@@ -72,6 +73,9 @@ type ArgsByServerEvent = {
         playerHands: { [handId: string]: IPlayerHand }
     }
 
+    [ServerEvent.RevealDealerHand]: {
+        hand: IHand
+    }
     [ServerEvent.DealerHit]: {
         card: ICard
         hand: IHand

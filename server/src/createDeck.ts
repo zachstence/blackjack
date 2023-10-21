@@ -1,11 +1,13 @@
-import { ICard, Rank, Suit } from "blackjack-types";
+import { Rank, Suit } from "blackjack-types";
 
-export const createDeck = (): ICard[] => {
-  const cards: ICard[] = []
+import { CardState } from "./game-state/card-state";
+
+export const createDeck = (): CardState[] => {
+  const cards: CardState[] = []
   
   for (const suit of Object.values(Suit)) {
     for (const rank of Object.values(Rank)) {
-      cards.push({ suit, rank })
+      cards.push(new CardState(suit, rank))
     }
   }
 

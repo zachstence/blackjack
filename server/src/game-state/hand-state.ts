@@ -3,15 +3,16 @@ import { nanoid } from "nanoid";
 import { GameState } from "./game-state";
 import { ToClientJSON } from "./to-client-json";
 import { PlayerState } from "./player-state";
+import { CardState } from "./card-state";
 
 export class HandState implements ToClientJSON<IHand> {
-  protected _cards: ICard[] = []
+  protected _cards: CardState[] = []
   
   status = HandStatus.Hitting
 
   constructor(protected readonly root: GameState) {}
   
-  get cards(): ICard[] {
+  get cards(): CardState[] {
     return this._cards
   }
   
@@ -19,16 +20,20 @@ export class HandState implements ToClientJSON<IHand> {
     let soft = 0
     let hard = 0
     
-    this._cards.forEach(card => {    
-      const cardValue = RankValue[card.rank]
-      if (cardValue.soft !== null) {
-        soft += cardValue.soft
-      } else {
-        soft += cardValue.hard
-      }
-      
-      hard += cardValue.hard
-    })
+    this.cards
+      .map(card => card.toClientJSON())
+      .forEach(card => {
+        if (card.hidden) return
+
+        const cardValue = RankValue[card.rank]
+        if (cardValue.soft !== null) {
+          soft += cardValue.soft
+        } else {
+          soft += cardValue.hard
+        }
+        
+        hard += cardValue.hard
+      })
     
     if (soft !== hard && soft <= 21) {
       return { soft, hard }
@@ -55,13 +60,13 @@ export class HandState implements ToClientJSON<IHand> {
     return this.status === HandStatus.Standing
   }
   
-  dealCard = (card: ICard): void => {
+  dealCard = (card: CardState): void => {
     this._cards.push(card)
     this.autoStandOrBust()
   }
 
   hit = (): ICard => {
-    const card = this.root.draw()
+    const card = this.root.draw().reveal()
     this.dealCard(card)
     return card
   }
@@ -77,7 +82,7 @@ export class HandState implements ToClientJSON<IHand> {
   
   toClientJSON(): IHand {
     return {
-      cards: this.cards, // TODO optionally hide cards
+      cards: this.cards.map(card => card.toClientJSON()),
       status: this.status, // TODO base off of partially hidden cards
       value: this.value, // TODO base off of partially hidden cards
     }

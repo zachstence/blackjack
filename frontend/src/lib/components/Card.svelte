@@ -36,11 +36,11 @@
   let clazz: string = '';
   export { clazz as class };
 
-  export let card: ICard | 'hidden';
+  export let card: ICard;
 
-  $: color = card === 'hidden' ? 'black' : SUIT_TO_COLOR[card.suit];
-  $: suitChar = card === 'hidden' ? '?' : SUIT_TO_CHAR[card.suit];
-  $: rankChar = card === 'hidden' ? '?' : RANK_TO_CHAR[card.rank];
+  $: color = card.hidden ? 'black' : SUIT_TO_COLOR[card.suit];
+  $: suitChar = card.hidden ? '?' : SUIT_TO_CHAR[card.suit];
+  $: rankChar = card.hidden ? '?' : RANK_TO_CHAR[card.rank];
 </script>
 
 <span class:text-red-500={color === 'red'} class="h-full font-bold border border-black p-1 {clazz}">

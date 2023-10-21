@@ -36,7 +36,7 @@
 </div>
 
 {#if $store.debug}
-  <pre>{JSON.stringify({ ...$store.game, shoe: '?' }, null, 2)}</pre>
+  <pre>{JSON.stringify($store.game, null, 2)}</pre>
 {/if}
 
 <style>
