@@ -376,7 +376,7 @@ export class GameServer {
   }
 
   private handleDeclineInsurance: ClientEventHandler<ClientEvent.DeclineInsurance> = ({ handId }, playerId) => {
-    this.game.buyInsurance(playerId, handId)
+    this.game.declineInsurance(playerId, handId)
     
     const hand = this.game.getPlayerHand(playerId, handId)
 
