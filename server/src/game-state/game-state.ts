@@ -192,13 +192,15 @@ export class GameState implements ToClientJSON<IGame> {
     }
 
     split = (playerId: string, handId: string): [PlayerHandState, PlayerHandState] => {
+        const player = this.getPlayer(playerId)
         const originalHand = this.getPlayerHand(playerId, handId)
         if (!originalHand.bet) throw new Error(`Cannot split hand ${handId}, it has no bet`)
 
-        this.getPlayer(playerId).takeMoney(originalHand.bet)
-
+        // Refund original bet and remove original hand
+        player.giveMoney(originalHand.bet)
         this.removeHand(handId)
 
+        // Split original hand into two hands, re-bet for each of them
         const [card1, card2] = originalHand.cards
 
         const newHand1 = this.addHand(false, playerId)
