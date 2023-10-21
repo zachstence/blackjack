@@ -1,6 +1,4 @@
 # Gameplay
-- Dealer doesn't hit if all players bust
-- Dealer doesn't hit if all players get blackjack
 - Reset the shoe with 20% left (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
 - on stand, set hand value to best value, don't show hard/soft
 - dealer's second card is upcard, not first

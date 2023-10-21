@@ -70,7 +70,19 @@ export class GameState implements ToClientJSON<IGame> {
         return this.playerHands.every(hand => hand.status !== HandStatus.Hitting)
     }
 
+    get shouldDealerRevealAndPlay(): boolean {
+        const allHandsBusted = this.playerHands.every(hand => hand.busted)
+        if (allHandsBusted) return false
+
+        const nonBustedHands = this.playerHands.filter(hand => !hand.busted)
+        const allNonBustedHandsHaveBlackjack = nonBustedHands.every(hand => hand.blackjack)
+        if (allNonBustedHandsHaveBlackjack && !this.dealer.hand.blackjack) return false
+
+        return true
+    }
+
     get dealerIsDonePlaying(): boolean {
+        if (!this.shouldDealerRevealAndPlay) return true
         return this.dealer.hand.status !== HandStatus.Hitting
     }
     

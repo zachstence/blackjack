@@ -1,4 +1,4 @@
-import { HandAction, HandStatus, ICard, IDealer } from "blackjack-types";
+import { DealerHandAction, HandStatus, ICard, IDealer } from "blackjack-types";
 import { HandState } from "./hand-state";
 import { ToClientJSON } from "./to-client-json";
 import { GameState } from "./game-state";
@@ -8,13 +8,15 @@ export class DealerState implements ToClientJSON<IDealer> {
 
     constructor(private readonly root: GameState) {}
 
+    get revealed(): boolean {
+        return this.hand.cards.every(card => !card.hidden)
+    }
+
     reveal = (): void => {
         this.hand.cards.forEach(card => card.reveal())
     }
 
     play = (): DealerAction[] => {
-        this.reveal()
-
         const actions: DealerAction[] = []
 
         let action: DealerAction | undefined
@@ -27,14 +29,22 @@ export class DealerState implements ToClientJSON<IDealer> {
     }
 
     private playAction = (): DealerAction => {
+        if (this.root.shouldDealerRevealAndPlay && !this.revealed) {
+            this.reveal()
+            return { action: DealerHandAction.Reveal }
+        }
+
+        if (!this.root.shouldDealerRevealAndPlay) {
+            this.hand.stand()
+            return { action: DealerHandAction.Stand }
+        }
+
         // TODO config for soft/hard 17
         const bestValue = this.hand.bestValue
         const shouldStand = bestValue >= 17
-
-        // Stand
         if (shouldStand) {
             this.hand.stand()
-            return { action: HandAction.Stand }
+            return { action: DealerHandAction.Stand }
         }
 
         const card = this.hand.hit()
@@ -44,7 +54,7 @@ export class DealerState implements ToClientJSON<IDealer> {
         else this.hand.status = HandStatus.Hitting
 
         return {
-            action: HandAction.Hit,
+            action: DealerHandAction.Hit,
             card,
         }
     }
@@ -56,13 +66,17 @@ export class DealerState implements ToClientJSON<IDealer> {
     }
 }
 
+export interface DealerRevealAction {
+    action: DealerHandAction.Reveal
+}
+
 export interface DealerHitAction {
-    action: HandAction.Hit
+    action: DealerHandAction.Hit
     card: ICard
 }
 
 export interface DealerStandAction {
-    action: HandAction.Stand
+    action: DealerHandAction.Stand
 }
 
-export type DealerAction = DealerHitAction | DealerStandAction
+export type DealerAction = DealerRevealAction | DealerHitAction | DealerStandAction

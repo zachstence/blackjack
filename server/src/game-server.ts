@@ -1,7 +1,7 @@
 import { Server as SocketServer } from 'socket.io';
 import { Server as HttpServer } from 'http'
 
-import { ClientEvent, RoundState, HandAction, ServerEvent, ServerEventArgs, ClientEventArgs, IPlayerHand } from 'blackjack-types';
+import { ClientEvent, RoundState, ServerEvent, ServerEventArgs, ClientEventArgs, IPlayerHand, DealerHandAction } from 'blackjack-types';
 import { ClientEventHandlers, ClientEventHandler } from './types';
 import { GameState } from './game-state/game-state';
 
@@ -190,14 +190,15 @@ export class GameServer {
   }
 
   private playDealer = (): void => {
-    this.game.dealer.reveal()
-    this.emitServerEvent(ServerEvent.RevealDealerHand, { hand: this.game.dealer.hand.toClientJSON() })
-
     const actions = this.game.playDealer()
+
     this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.roundState })
 
     actions.forEach(action => {
-      if (action.action === HandAction.Hit) {
+      if (action.action === DealerHandAction.Reveal) {
+        this.emitServerEvent(ServerEvent.RevealDealerHand, { hand: this.game.dealer.hand.toClientJSON() })
+      }
+      else if (action.action === DealerHandAction.Hit) {
         this.emitServerEvent(ServerEvent.DealerHit, {
           card: action.card,
           hand: this.game.dealer.hand.toClientJSON()
