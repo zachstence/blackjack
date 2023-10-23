@@ -94,7 +94,8 @@ export class GameServer {
   // ====================
   // Gameplay
   // ====================
-  // TODO this should live in GameState
+  // TODO ideally, this should live in the Game class. But to integrate with sockets we'd need to pass some
+  // sort of callback to emit changes to clients
   private checkGameState = (): void => {
     if (this.game.roundState === RoundState.PlayersReadying && this.game.allPlayersReady) {
       this.clearHands();
