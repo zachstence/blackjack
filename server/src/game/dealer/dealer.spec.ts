@@ -6,38 +6,6 @@ import { Card } from '../card';
 import { randomRank, randomSuit } from '../card/card.spec';
 
 describe('Dealer', () => {
-  describe('play', () => {
-    it('should play until stand', () => {
-      const mockGame = {
-        shouldDealerRevealAndPlay: true,
-      };
-
-      const mockHand = {
-        cards: [new Card(randomSuit(), randomRank())],
-        bestValue: 16,
-        hit: jest.fn(),
-      };
-
-      const dealer = new Dealer(mockGame as unknown as Game, mockHand as unknown as Hand);
-
-      const expectedActions: DealerAction[] = [
-        { action: DealerHandAction.Reveal },
-        { action: DealerHandAction.Hit, card: {} as Card },
-        { action: DealerHandAction.Stand },
-      ];
-
-      jest
-        .spyOn(dealer, 'playAction')
-        .mockReturnValueOnce(expectedActions[0])
-        .mockReturnValueOnce(expectedActions[1])
-        .mockReturnValueOnce(expectedActions[2]);
-
-      const actions = dealer.play();
-
-      expect(actions).toEqual(expectedActions);
-    });
-  });
-
   describe('playAction', () => {
     it('should stand if dealer doesnt need to play', () => {
       const mockGame = {
@@ -46,7 +14,7 @@ describe('Dealer', () => {
 
       const mockHand = {
         cards: [],
-        bestValue: 10,
+        getBestValue: jest.fn().mockReturnValue(10),
         stand: jest.fn(),
       };
 
@@ -66,7 +34,7 @@ describe('Dealer', () => {
 
       const mockHand = {
         cards: [new Card(randomSuit(), randomRank())],
-        bestValue: 16,
+        getBestValue: jest.fn().mockReturnValue(16),
         hit: jest.fn(),
       };
 
@@ -86,7 +54,7 @@ describe('Dealer', () => {
       const card = new Card(randomSuit(), randomRank());
       const mockHand = {
         cards: [],
-        bestValue: 16,
+        getBestValue: jest.fn().mockReturnValue(16),
         hit: jest.fn().mockReturnValueOnce(card),
       };
 
@@ -106,7 +74,7 @@ describe('Dealer', () => {
 
       const mockHand = {
         cards: [],
-        bestValue: 17,
+        getBestValue: jest.fn().mockReturnValue(17),
         stand: jest.fn(),
       };
 

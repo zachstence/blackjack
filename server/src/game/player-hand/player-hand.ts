@@ -159,6 +159,7 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
   }
 
   stand(): void {
+    if (this.status === HandStatus.Standing) return;
     if (!this.actions.includes(HandAction.Stand)) throw new Error(`Cannot stand hand ${this.id}`);
     super.stand();
   }
@@ -195,14 +196,11 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
       throw new Error(`Cannot settle hand ${this.id}, dealer is still hitting`);
     if (!this.bet) throw new Error(`Cannot settle hand ${this.id}, it has no bet`);
 
-    const {
-      bestValue: dealerValue,
-      busted: dealerBusted,
-      standing: dealerStanding,
-      blackjack: dealerBlackjack,
-    } = this.root.dealer.hand;
+    const dealerValue = this.root.dealer.hand.getBestValue();
+    const { busted: dealerBusted, standing: dealerStanding, blackjack: dealerBlackjack } = this.root.dealer.hand;
 
-    const { bestValue: handValue, busted: handBusted, standing: handStanding, blackjack: handBlackjack } = this;
+    const { busted: handBusted, standing: handStanding, blackjack: handBlackjack } = this;
+    const handValue = this.getBestValue();
 
     const blackjack = handBlackjack && !dealerBlackjack; // Player wins blackjack if they get blackjack and dealer doesn't
 

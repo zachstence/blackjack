@@ -13,7 +13,7 @@ describe('Hand', () => {
       hand.dealCard(new Card(randomSuit(), Rank.Nine).reveal());
       hand.dealCard(new Card(randomSuit(), Rank.Jack).reveal());
 
-      expect(hand.value).toEqual({ soft: null, hard: 21 });
+      expect(hand.getValue()).toEqual({ soft: null, hard: 21 });
     });
 
     it('should include soft value when cards have an ace', () => {
@@ -22,7 +22,7 @@ describe('Hand', () => {
       hand.dealCard(new Card(randomSuit(), Rank.Two).reveal());
       hand.dealCard(new Card(randomSuit(), Rank.Ace).reveal());
 
-      expect(hand.value).toEqual({ soft: 13, hard: 3 });
+      expect(hand.getValue()).toEqual({ soft: 13, hard: 3 });
     });
 
     it('should set soft to null when soft would be over 21', () => {
@@ -32,7 +32,7 @@ describe('Hand', () => {
       hand.dealCard(new Card(randomSuit(), Rank.Jack).reveal());
       hand.dealCard(new Card(randomSuit(), Rank.Ace).reveal());
 
-      expect(hand.value).toEqual({ soft: null, hard: 16 });
+      expect(hand.getValue()).toEqual({ soft: null, hard: 16 });
     });
 
     it('should not count hidden cards', () => {
@@ -46,7 +46,7 @@ describe('Hand', () => {
       hand.dealCard(new Card(randomSuit(), Rank.Seven).reveal());
       hand.dealCard(new Card(randomSuit(), Rank.Jack));
 
-      expect(hand.value).toEqual({ soft: null, hard: 12 });
+      expect(hand.getValue()).toEqual({ soft: null, hard: 12 });
     });
   });
 
@@ -57,7 +57,7 @@ describe('Hand', () => {
       hand.dealCard(new Card(randomSuit(), Rank.Two).reveal());
       hand.dealCard(new Card(randomSuit(), Rank.Ace).reveal());
 
-      expect(hand.bestValue).toEqual(13);
+      expect(hand.getBestValue()).toEqual(13);
     });
 
     it('should return hard value when soft is over 21', () => {
@@ -68,7 +68,7 @@ describe('Hand', () => {
       hand.dealCard(new Card(randomSuit(), Rank.Ace).reveal());
       hand.dealCard(new Card(randomSuit(), Rank.Seven).reveal());
 
-      expect(hand.bestValue).toEqual(14);
+      expect(hand.getBestValue()).toEqual(14);
     });
   });
 

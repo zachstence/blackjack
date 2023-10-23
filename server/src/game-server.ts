@@ -97,6 +97,17 @@ export class GameServer {
   // TODO ideally, this should live in the Game class. But to integrate with sockets we'd need to pass some
   // sort of callback to emit changes to clients
   private checkGameState = (): void => {
+    if (this.game.players.length === 0) return;
+
+    console.log('checkGameState', {
+      roundState: this.game.roundState,
+      allPlayersReady: this.game.allPlayersReady,
+      allPlayerHandsHaveBet: this.game.allPlayerHandsHaveBet,
+      allPlayerHandsHaveBoughtOrDeclinedInsurance: this.game.allPlayerHandsHaveBoughtOrDeclinedInsurance,
+      allPlayerHandsHaveFinishedHitting: this.game.allPlayerHandsHaveFinishedHitting,
+      dealerIsDonePlaying: this.game.dealerIsDonePlaying,
+    });
+
     if (this.game.roundState === RoundState.PlayersReadying && this.game.allPlayersReady) {
       this.clearHands();
       this.collectBets();
@@ -188,6 +199,14 @@ export class GameServer {
   private playPlayers = (): void => {
     this.game.roundState = RoundState.PlayersPlaying;
 
+    this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.roundState });
+
+    if (this.game.dealer.hand.blackjack) {
+      this.game.playerHands.forEach(hand => {
+        hand.stand();
+      });
+    }
+
     this.game.playerHands.forEach(hand => {
       this.emitServerEvent(ServerEvent.UpdateHand, {
         handId: hand.id,
@@ -195,7 +214,7 @@ export class GameServer {
       });
     });
 
-    this.emitServerEvent(ServerEvent.GameStateChange, { gameState: this.game.roundState });
+    this.checkGameState();
   };
 
   private playDealer = (): void => {

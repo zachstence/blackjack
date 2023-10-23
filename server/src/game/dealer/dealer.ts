@@ -36,7 +36,7 @@ export class Dealer implements ToClientJSON<IDealer> {
       return { action: DealerHandAction.Stand };
     }
 
-    const bestValue = this.hand.bestValue;
+    const bestValue = this.hand.getBestValue();
     const shouldStand = bestValue >= 17;
     if (shouldStand) {
       this.hand.stand();

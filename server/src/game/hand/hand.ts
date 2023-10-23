@@ -14,40 +14,8 @@ export class Hand implements ToClientJSON<IHand> {
     return this._cards;
   }
 
-  get value(): IValue {
-    let soft = 0;
-    let hard = 0;
-
-    this.cards
-      .map(card => card.toClientJSON())
-      .forEach(card => {
-        if (card.hidden) return;
-
-        const cardValue = RankValue[card.rank];
-        if (cardValue.soft !== null) {
-          soft += cardValue.soft;
-        } else {
-          soft += cardValue.hard;
-        }
-
-        hard += cardValue.hard;
-      });
-
-    if (soft !== hard && soft <= 21) {
-      if (this.status === HandStatus.Standing) return { soft: null, hard: soft };
-      return { soft, hard };
-    }
-    return { hard, soft: null };
-  }
-
-  get bestValue(): number {
-    const { hard, soft } = this.value;
-    if (soft === null) return hard;
-    return Math.max(hard, soft);
-  }
-
   get blackjack(): boolean {
-    return this._cards.length === 2 && this.bestValue === 21;
+    return this._cards.length === 2 && this.getBestValue({ includeHiddenCards: true }) === 21;
   }
 
   get busted(): boolean {
@@ -56,6 +24,36 @@ export class Hand implements ToClientJSON<IHand> {
 
   get standing(): boolean {
     return this.status === HandStatus.Standing;
+  }
+
+  getValue({ includeHiddenCards }: { includeHiddenCards?: boolean } = {}): IValue {
+    let soft = 0;
+    let hard = 0;
+
+    this._cards.forEach(card => {
+      if (card.hidden && !includeHiddenCards) return;
+
+      const cardValue = RankValue[card.rank];
+      if (cardValue.soft !== null) {
+        soft += cardValue.soft;
+      } else {
+        soft += cardValue.hard;
+      }
+
+      hard += cardValue.hard;
+    });
+
+    if (soft !== hard && soft <= 21) {
+      if (this.status === HandStatus.Standing) return { soft: null, hard: soft };
+      return { soft, hard };
+    }
+    return { hard, soft: null };
+  }
+
+  getBestValue({ includeHiddenCards }: { includeHiddenCards?: boolean } = {}): number {
+    const { hard, soft } = this.getValue({ includeHiddenCards });
+    if (soft === null) return hard;
+    return Math.max(hard, soft);
   }
 
   dealCard(card: Card): void {
@@ -81,13 +79,13 @@ export class Hand implements ToClientJSON<IHand> {
   toClientJSON(): IHand {
     return {
       cards: this.cards.map(card => card.toClientJSON()),
-      status: this.status, // TODO base off of partially hidden cards
-      value: this.value, // TODO base off of partially hidden cards
+      status: this.status,
+      value: this.getValue(),
     };
   }
 
   private autoStandOrBust(): void {
-    if (this.bestValue > 21) this.status = HandStatus.Busted;
-    else if (this.bestValue === 21) this.status = HandStatus.Standing;
+    if (this.getBestValue() > 21) this.status = HandStatus.Busted;
+    else if (this.getBestValue() === 21) this.status = HandStatus.Standing;
   }
 }

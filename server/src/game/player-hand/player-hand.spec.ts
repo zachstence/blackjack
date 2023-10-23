@@ -136,7 +136,7 @@ describe('PlayerHand', () => {
           roundState: RoundState.PlayersPlaying,
           dealer: {
             hand: {
-              bestValue: 20,
+              getBestValue: jest.fn().mockReturnValue(20),
               busted: false,
               standing: true,
               blackjack: false,
@@ -169,7 +169,7 @@ describe('PlayerHand', () => {
           roundState: RoundState.PlayersPlaying,
           dealer: {
             hand: {
-              bestValue: 25,
+              getBestValue: jest.fn().mockReturnValue(25),
               busted: true,
               standing: false,
               blackjack: false,
@@ -201,7 +201,7 @@ describe('PlayerHand', () => {
           roundState: RoundState.PlayersPlaying,
           dealer: {
             hand: {
-              bestValue: 19,
+              getBestValue: jest.fn().mockReturnValue(19),
               busted: false,
               standing: true,
               blackjack: false,
@@ -235,7 +235,7 @@ describe('PlayerHand', () => {
           roundState: RoundState.PlayersPlaying,
           dealer: {
             hand: {
-              bestValue: 18,
+              getBestValue: jest.fn().mockReturnValue(18),
               busted: false,
               standing: true,
               blackjack: false,
@@ -269,7 +269,7 @@ describe('PlayerHand', () => {
           roundState: RoundState.PlayersPlaying,
           dealer: {
             hand: {
-              bestValue: 20,
+              getBestValue: jest.fn().mockReturnValue(20),
               busted: false,
               standing: true,
               blackjack: false,
@@ -301,7 +301,7 @@ describe('PlayerHand', () => {
           roundState: RoundState.PlayersPlaying,
           dealer: {
             hand: {
-              bestValue: 20,
+              getBestValue: jest.fn().mockReturnValue(20),
               busted: false,
               standing: true,
               blackjack: false,
@@ -333,7 +333,7 @@ describe('PlayerHand', () => {
           roundState: RoundState.PlayersPlaying,
           dealer: {
             hand: {
-              bestValue: 21,
+              getBestValue: jest.fn().mockReturnValue(21),
               busted: false,
               standing: true,
               blackjack: true,
