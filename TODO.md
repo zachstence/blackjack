@@ -1,6 +1,6 @@
 # Gameplay
+
 - Reset the shoe with 20% left (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
-- on stand, set hand value to best value, don't show hard/soft
 - dealer's second card is upcard, not first
 - customizable insurance bet
 - Surrender (before and after dealer reveal)
@@ -16,14 +16,14 @@
 - vs mode playing against other players
 - levelling and get coins
 
-
 # Technical
+
 - Tests to prevent regressions
 - Error handling, don't crash server on errors
 - Don't give player or dealer a hand until they bet. Betting is what creates the hand.
 
-
 # QOL
+
 - Player can play multiple hands at once
 - Admin tools (kick player, change money)
 - Have connection quality indicator, ping time
@@ -38,15 +38,15 @@
   - public room joinable by anybody
   - private room joinable by link/code
 - Let a player place a cut card (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
-- daily challenge to play optimally 
+- daily challenge to play optimally
 - emotes like Google meet
 - coach mode will show percentage of success under each button
 - Card counting helper
 - coach mode with counting cards enabled will show card count and adjust percentages based on the count
 - allow showing currency other than USD in UI (only client side)
 
-
 # UI
+
 - configurable card backs and/or fronts
 - customize table color
 - dark mode
@@ -62,8 +62,8 @@
 - animate money going up/down
 - chat in separate sidebar or maybe in bottom right/left or something
 
-
 # Stats
+
 - track every hand played in a DB to compute fun stats
   - include dealer hand, player hand, player id, and money won
 - chart that shows a players strategy, how close they are to optimal strategy
@@ -74,14 +74,14 @@
 - show hand history in sidebar
 - show most common misplays
 
-
 # Bots
+
 - implement blackjack bot
 - bot can play at different difficulty levels, controls how optimally they play
 - put bot in empty room with person to make it seem more popular
 
-
 # Achievements
+
 - play x optimal hands in a row
 - beat dealer on both hands of a split
 - beat dealer on a double

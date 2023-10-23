@@ -34,6 +34,7 @@ export class Hand implements ToClientJSON<IHand> {
       });
 
     if (soft !== hard && soft <= 21) {
+      if (this.status === HandStatus.Standing) return { soft: null, hard: soft };
       return { soft, hard };
     }
     return { hard, soft: null };
