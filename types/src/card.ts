@@ -1,5 +1,3 @@
-import { IValue } from './value';
-
 export enum Suit {
   Diamonds = 'Diamonds',
   Clubs = 'Clubs',
@@ -23,20 +21,20 @@ export enum Rank {
   King = 'King',
 }
 
-export const RankValue: Record<Rank, IValue> = {
-  [Rank.Ace]: { hard: 1, soft: 11 },
-  [Rank.Two]: { hard: 2, soft: null },
-  [Rank.Three]: { hard: 3, soft: null },
-  [Rank.Four]: { hard: 4, soft: null },
-  [Rank.Five]: { hard: 5, soft: null },
-  [Rank.Six]: { hard: 6, soft: null },
-  [Rank.Seven]: { hard: 7, soft: null },
-  [Rank.Eight]: { hard: 8, soft: null },
-  [Rank.Nine]: { hard: 9, soft: null },
-  [Rank.Ten]: { hard: 10, soft: null },
-  [Rank.Jack]: { hard: 10, soft: null },
-  [Rank.Queen]: { hard: 10, soft: null },
-  [Rank.King]: { hard: 10, soft: null },
+export const RankValue: Record<Rank, number> = {
+  [Rank.Ace]: 1,
+  [Rank.Two]: 2,
+  [Rank.Three]: 3,
+  [Rank.Four]: 4,
+  [Rank.Five]: 5,
+  [Rank.Six]: 6,
+  [Rank.Seven]: 7,
+  [Rank.Eight]: 8,
+  [Rank.Nine]: 9,
+  [Rank.Ten]: 10,
+  [Rank.Jack]: 10,
+  [Rank.Queen]: 10,
+  [Rank.King]: 10,
 };
 
 export type IHiddenCard = {

@@ -35,7 +35,7 @@ describe('Hand', () => {
       expect(hand.getValue()).toEqual({ soft: null, hard: 16 });
     });
 
-    it('should not count hidden cards', () => {
+    it('should not count hidden cards by default', () => {
       const hand = new Hand({} as unknown as Game);
 
       hand.dealCard(new Card(randomSuit(), Rank.Five).reveal());
@@ -47,6 +47,25 @@ describe('Hand', () => {
       hand.dealCard(new Card(randomSuit(), Rank.Jack));
 
       expect(hand.getValue()).toEqual({ soft: null, hard: 12 });
+    });
+
+    it('should count hidden cards when includeHiddenCards=true', () => {
+      const hand = new Hand({} as unknown as Game);
+
+      hand.dealCard(new Card(randomSuit(), Rank.Ace));
+      hand.dealCard(new Card(randomSuit(), Rank.Ten));
+
+      expect(hand.getValue({ includeHiddenCards: true })).toEqual({ soft: 21, hard: 11 });
+    });
+
+    it('should correctly compute value with multiple Aces', () => {
+      const hand = new Hand({} as unknown as Game);
+
+      hand.dealCard(new Card(randomSuit(), Rank.Two).reveal());
+      hand.dealCard(new Card(randomSuit(), Rank.Ace).reveal());
+      hand.dealCard(new Card(randomSuit(), Rank.Ace).reveal());
+
+      expect(hand.getValue()).toEqual({ soft: 14, hard: 4 });
     });
   });
 

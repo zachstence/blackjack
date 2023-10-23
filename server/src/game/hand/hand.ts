@@ -1,4 +1,4 @@
-import { HandStatus, ICard, IHand, IValue, RankValue } from 'blackjack-types';
+import { HandStatus, ICard, IHand, IValue, Rank, RankValue } from 'blackjack-types';
 import { Game } from '../game';
 import { ToClientJSON } from '../to-client-json';
 import { Card } from '../card';
@@ -27,26 +27,19 @@ export class Hand implements ToClientJSON<IHand> {
   }
 
   getValue({ includeHiddenCards }: { includeHiddenCards?: boolean } = {}): IValue {
-    let soft = 0;
-    let hard = 0;
+    const hasAce = this._cards.some(card => card.rank === Rank.Ace);
 
-    this._cards.forEach(card => {
-      if (card.hidden && !includeHiddenCards) return;
+    const hard = this._cards.reduce<number>((acc, card) => {
+      if (card.hidden && !includeHiddenCards) return acc;
+      acc += RankValue[card.rank];
+      return acc;
+    }, 0);
 
-      const cardValue = RankValue[card.rank];
-      if (cardValue.soft !== null) {
-        soft += cardValue.soft;
-      } else {
-        soft += cardValue.hard;
-      }
-
-      hard += cardValue.hard;
-    });
-
-    if (soft !== hard && soft <= 21) {
-      if (this.status === HandStatus.Standing) return { soft: null, hard: soft };
-      return { soft, hard };
+    if (hasAce) {
+      const soft = hard + 10;
+      if (soft <= 21) return { hard, soft };
     }
+
     return { hard, soft: null };
   }
 
