@@ -1,6 +1,5 @@
 {
   "name": "blackjack-types",
-  "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
     "format": "prettier --plugin-search-dir . --write ."
