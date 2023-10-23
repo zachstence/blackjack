@@ -1,6 +1,6 @@
 {
   "name": "blackjack-server",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev": "nodemon -r dotenv/config src/index.ts",
