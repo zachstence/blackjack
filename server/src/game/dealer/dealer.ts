@@ -1,4 +1,4 @@
-import { DealerHandAction, ICard, IDealer } from 'blackjack-types';
+import { DealerHandAction, HandStatus, ICard, IDealer } from 'blackjack-types';
 import { Hand } from '../hand';
 import { ToClientJSON } from '../to-client-json';
 import { Game } from '../game';
@@ -17,7 +17,7 @@ export class Dealer implements ToClientJSON<IDealer> {
     const actions: DealerAction[] = [];
 
     let action: DealerAction | undefined = undefined;
-    while (action?.action !== DealerHandAction.Stand) {
+    while (this.hand.status === HandStatus.Hitting) {
       action = this.playAction();
       actions.push(action);
     }
