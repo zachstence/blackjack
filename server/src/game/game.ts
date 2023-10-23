@@ -144,7 +144,7 @@ export class Game implements ToClientJSON<IGame> {
         hand.dealCard(card);
       }
       const card = this._shoe.draw();
-      if (i === 0) card.reveal();
+      if (i === 1) card.reveal();
       this.dealer.hand.dealCard(card);
     }
   };
