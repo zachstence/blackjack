@@ -135,6 +135,10 @@ export class GameServer {
       this.settle();
       this.unReadyPlayers();
     }
+
+    if (this.game.shoe.shouldReset) {
+      this.game.shoe.reset();
+    }
   };
 
   private collectBets = (): void => {

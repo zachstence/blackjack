@@ -7,12 +7,19 @@ export class Shoe implements ToClientJSON<IShoe> {
 
   private readonly numDecks = 6; // TODO control by options in the client
 
+  // Reset shoe when 30% of the original size is left
+  private readonly resetShoeAtSize = 52 * this.numDecks * 0.3;
+
   constructor() {
     this.reset();
   }
 
   get cards(): Card[] {
     return this._cards;
+  }
+
+  get shouldReset(): boolean {
+    return this._cards.length <= this.resetShoeAtSize;
   }
 
   reset = (): void => {
@@ -22,13 +29,7 @@ export class Shoe implements ToClientJSON<IShoe> {
   };
 
   draw = (): Card => {
-    const card = this._cards.pop();
-    if (!card) {
-      console.warn('Shoe empty when drawing! Resetting and drawing again...');
-      this.reset();
-      return this.draw();
-    }
-    return card;
+    return this._cards.pop()!;
   };
 
   toClientJSON(): IShoe {

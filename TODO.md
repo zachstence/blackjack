@@ -1,6 +1,5 @@
 # Gameplay
 
-- Reset the shoe with 20% left (https://www.reddit.com/r/blackjack/comments/t12sd0/comment/hyejfz1/?utm_source=share&utm_medium=web2x&context=3)
 - customizable insurance bet
 - Surrender (before and after dealer reveal)
 - Even money (https://en.wikipedia.org/wiki/Even_money#:~:text=In%20blackjack%2C%20even%20money%20bet,the%20dealer%20has%20a%20blackjack.)

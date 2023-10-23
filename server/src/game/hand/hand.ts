@@ -27,7 +27,10 @@ export class Hand implements ToClientJSON<IHand> {
   }
 
   getValue({ includeHiddenCards }: { includeHiddenCards?: boolean } = {}): IValue {
-    const hasAce = this._cards.some(card => card.rank === Rank.Ace);
+    const hasAce = this._cards.some(card => {
+      if (card.hidden && !includeHiddenCards) return false;
+      return card.rank === Rank.Ace;
+    });
 
     const hard = this._cards.reduce<number>((acc, card) => {
       if (card.hidden && !includeHiddenCards) return acc;
