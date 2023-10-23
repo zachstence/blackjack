@@ -10,12 +10,13 @@ import {
   IOfferedInsurance,
   IDeclinedInsurance,
   InsuranceSettleStatus,
+  ICard,
 } from 'blackjack-types';
 import { nanoid } from 'nanoid';
-import { Game } from './game';
-import { Hand } from './hand';
-import { Player } from './player';
-import { ToClientJSON } from './to-client-json';
+import { Game } from '../game';
+import { Hand } from '../hand';
+import { Player } from '../player';
+import { ToClientJSON } from '../to-client-json';
 
 export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
   readonly id = nanoid();
@@ -97,24 +98,24 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
     return this.isRootHand && super.blackjack;
   }
 
-  placeBet = (amount: number): void => {
+  placeBet(amount: number): void {
     this.player.takeMoney(amount);
     this._bet = amount;
-  };
+  }
 
-  isInsured = (): this is PlayerHand & { insurance: IBoughtInsurance } => {
+  isInsured(): this is PlayerHand & { insurance: IBoughtInsurance } {
     return this.insurance?.status === InsuranceStatus.Bought;
-  };
+  }
 
-  offerInsurance = (): IOfferedInsurance => {
+  offerInsurance(): IOfferedInsurance {
     const insurance: IOfferedInsurance = {
       status: InsuranceStatus.Offered,
     };
     this._insurance = insurance;
     return insurance;
-  };
+  }
 
-  buyInsurance = (): IBoughtInsurance => {
+  buyInsurance(): IBoughtInsurance {
     if (!this.canInsure) throw new Error(`Cannot insure hand ${this.id}`);
     if (!this.bet) throw new Error(`Cannot insure hand ${this.id}, it has no bet`);
 
@@ -129,17 +130,23 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
     this._insurance = insurance;
 
     return insurance;
-  };
+  }
 
-  declineInsurance = (): IDeclinedInsurance => {
+  declineInsurance(): IDeclinedInsurance {
     const insurance: IDeclinedInsurance = {
       status: InsuranceStatus.Declined,
     };
     this._insurance = insurance;
     return insurance;
-  };
+  }
 
-  double = (): void => {
+  hit(): ICard {
+    if (!this.actions.includes(HandAction.Hit)) throw new Error(`Cannot hit hand ${this.id}`);
+    return super.hit();
+  }
+
+  double(): void {
+    if (!this.actions.includes(HandAction.Double)) throw new Error(`Cannot double hand ${this.id}`);
     if (!this._bet) throw new Error(`Cannot double hand ${this.id}, it has no bet`);
     this.player.takeMoney(this._bet);
     this._bet += this._bet;
@@ -149,9 +156,14 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
     if (this.status === HandStatus.Hitting) {
       this.status = HandStatus.Standing;
     }
-  };
+  }
 
-  settleInsurance = (): void => {
+  stand(): void {
+    if (!this.actions.includes(HandAction.Stand)) throw new Error(`Cannot stand hand ${this.id}`);
+    super.stand();
+  }
+
+  settleInsurance(): void {
     if (!this._insurance) throw new Error(`Cannot settle insurance for hand ${this.id}, hand insurance is undefined`);
 
     if (this.root.dealer.hand.blackjack) {
@@ -175,9 +187,9 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
         winnings: 0,
       };
     }
-  };
+  }
 
-  settleBet = (): void => {
+  settleBet(): void {
     if (this.status === HandStatus.Hitting) throw new Error(`Cannot settle hand ${this.id}, still hitting`);
     if (this.root.dealer.hand.status === HandStatus.Hitting)
       throw new Error(`Cannot settle hand ${this.id}, dealer is still hitting`);
@@ -196,8 +208,7 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
 
     const win =
       (handStanding && dealerBusted) || // Player wins if they stand and dealer busts
-      (handValue > dealerValue && handStanding) || // Player wins if they beat dealer without busting
-      (handValue === dealerValue && handBlackjack && !dealerBlackjack); // Player wins if they tie with dealer but got a blackjack
+      (handValue > dealerValue && handStanding); // Player wins if they beat dealer without busting
 
     const lose =
       handBusted || // Player automatically loses if they bust
@@ -232,16 +243,16 @@ export class PlayerHand extends Hand implements ToClientJSON<IPlayerHand> {
     this.winnings = winnings;
 
     this.player.giveMoney(winnings);
-  };
+  }
 
-  clear = (): void => {
+  clear(): void {
     this._cards = [];
     this.status = HandStatus.Hitting;
     this._bet = undefined;
     this._insurance = undefined;
     this.settleStatus = undefined;
     this.winnings = undefined;
-  };
+  }
 
   toClientJSON(): IPlayerHand {
     return {

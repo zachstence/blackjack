@@ -57,25 +57,25 @@ export class Hand implements ToClientJSON<IHand> {
     return this.status === HandStatus.Standing;
   }
 
-  dealCard = (card: Card): void => {
+  dealCard(card: Card): void {
     this._cards.push(card);
     this.autoStandOrBust();
-  };
+  }
 
-  hit = (): ICard => {
+  hit(): ICard {
     const card = this.root.shoe.draw().reveal();
     this.dealCard(card);
     return card;
-  };
+  }
 
-  stand = (): void => {
+  stand(): void {
     this.status = HandStatus.Standing;
-  };
+  }
 
-  clear = (): void => {
+  clear(): void {
     this._cards = [];
     this.status = HandStatus.Hitting;
-  };
+  }
 
   toClientJSON(): IHand {
     return {
@@ -85,8 +85,8 @@ export class Hand implements ToClientJSON<IHand> {
     };
   }
 
-  private autoStandOrBust = (): void => {
+  private autoStandOrBust(): void {
     if (this.bestValue > 21) this.status = HandStatus.Busted;
     else if (this.bestValue === 21) this.status = HandStatus.Standing;
-  };
+  }
 }
