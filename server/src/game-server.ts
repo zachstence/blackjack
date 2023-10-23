@@ -99,15 +99,6 @@ export class GameServer {
   private checkGameState = (): void => {
     if (this.game.players.length === 0) return;
 
-    console.log('checkGameState', {
-      roundState: this.game.roundState,
-      allPlayersReady: this.game.allPlayersReady,
-      allPlayerHandsHaveBet: this.game.allPlayerHandsHaveBet,
-      allPlayerHandsHaveBoughtOrDeclinedInsurance: this.game.allPlayerHandsHaveBoughtOrDeclinedInsurance,
-      allPlayerHandsHaveFinishedHitting: this.game.allPlayerHandsHaveFinishedHitting,
-      dealerIsDonePlaying: this.game.dealerIsDonePlaying,
-    });
-
     if (this.game.roundState === RoundState.PlayersReadying && this.game.allPlayersReady) {
       this.clearHands();
       this.collectBets();
@@ -164,6 +155,10 @@ export class GameServer {
     this.emitServerEvent(ServerEvent.Dealt, {
       dealerHand: this.game.dealer.hand.toClientJSON(),
       playerHands,
+    });
+
+    this.emitServerEvent(ServerEvent.UpdateShoe, {
+      shoe: this.game.shoe.toClientJSON(),
     });
   };
 
@@ -233,6 +228,9 @@ export class GameServer {
         this.emitServerEvent(ServerEvent.DealerHit, {
           card: action.card,
           hand: this.game.dealer.hand.toClientJSON(),
+        });
+        this.emitServerEvent(ServerEvent.UpdateShoe, {
+          shoe: this.game.shoe.toClientJSON(),
         });
       } else {
         this.emitServerEvent(ServerEvent.DealerStand, {
@@ -336,6 +334,10 @@ export class GameServer {
       hand: hand.toClientJSON(),
     });
 
+    this.emitServerEvent(ServerEvent.UpdateShoe, {
+      shoe: this.game.shoe.toClientJSON(),
+    });
+
     this.checkGameState();
   };
 
@@ -348,6 +350,10 @@ export class GameServer {
     this.emitServerEvent(ServerEvent.UpdateHand, {
       handId,
       hand: hand.toClientJSON(),
+    });
+
+    this.emitServerEvent(ServerEvent.UpdateShoe, {
+      shoe: this.game.shoe.toClientJSON(),
     });
 
     this.emitServerEvent(ServerEvent.UpdatePlayerMoney, {
@@ -374,6 +380,10 @@ export class GameServer {
         handId: hand.id,
         hand: hand.toClientJSON(),
       });
+    });
+
+    this.emitServerEvent(ServerEvent.UpdateShoe, {
+      shoe: this.game.shoe.toClientJSON(),
     });
   };
 

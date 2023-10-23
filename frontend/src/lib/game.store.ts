@@ -46,6 +46,8 @@ export class GameStore implements Readable<GameStore> {
 
       [ServerEvent.ClearHands]: this.handleClearHands,
 
+      [ServerEvent.UpdateShoe]: this.handleUpdateShoe,
+
       [ServerEvent.Reset]: this.handleReset,
     };
   }
@@ -232,5 +234,10 @@ export class GameStore implements Readable<GameStore> {
   private handleUpdateHand: ServerEventHandler<ServerEvent.UpdateHand> = ({ handId, hand }) => {
     if (!this._game) return;
     this._game.playerHands[handId] = hand;
+  };
+
+  private handleUpdateShoe: ServerEventHandler<ServerEvent.UpdateShoe> = ({ shoe }) => {
+    if (!this._game) return;
+    this._game.shoe = shoe;
   };
 }

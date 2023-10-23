@@ -2,6 +2,7 @@ import { ICard } from './card';
 import { RoundState, IGame } from './game';
 import { IHand, IPlayerHand } from './hand';
 import { IPlayer } from './player';
+import { IShoe } from './shoe';
 
 export enum ServerEvent {
   JoinSuccess = 'JoinSuccess',
@@ -26,6 +27,8 @@ export enum ServerEvent {
   DealerStand = 'DealerStand',
 
   ClearHands = 'ClearHands',
+
+  UpdateShoe = 'UpdateShoe',
 }
 
 type ArgsByServerEvent = {
@@ -89,6 +92,10 @@ type ArgsByServerEvent = {
     playerHands: {
       [handId: string]: IPlayerHand;
     };
+  };
+
+  [ServerEvent.UpdateShoe]: {
+    shoe: IShoe;
   };
 };
 

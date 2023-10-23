@@ -3,6 +3,7 @@
   import { getGameStoreContext } from '$lib/game.context';
   import Hand from './Hand.svelte';
   import Player from './Player.svelte';
+  import Shoe from './Shoe.svelte';
 
   const store = getGameStoreContext();
 </script>
@@ -14,8 +15,10 @@
     {/each}
   </div>
 
-  <div class="flex-1 flex flex-col items-center gap-6 border border-black p-2">
+  <div class="relative flex-1 flex flex-col items-center gap-6 border border-black p-2">
     <Dealer />
+
+    <Shoe class="absolute top-2 right-2" height={80} />
 
     <div class="hands-grid" class:with-others={$store.otherHands.length}>
       <div>
