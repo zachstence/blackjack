@@ -4,5 +4,5 @@
 
 <T.Mesh>
   <T.CylinderGeometry />
-  <T.MeshBasicMaterial />
+  <T.MeshStandardMaterial />
 </T.Mesh>
