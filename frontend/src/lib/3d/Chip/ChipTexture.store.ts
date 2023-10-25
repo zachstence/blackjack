@@ -90,33 +90,42 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     const size = 1000;
     ctx.canvas.width = size;
     ctx.canvas.height = size;
-    const { width, height } = ctx.canvas;
 
-    const cx = width / 2;
-    const cy = height / 2;
+    const d = size;
+    const r = d / 2;
+    const cx = r;
+    const cy = r;
 
     // Make whole chip white
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = this._color;
     ctx.beginPath();
-    ctx.arc(width / 2, height / 2, size / 2, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
     ctx.fill();
 
-    // Draw red rectangles for stripes
-    const stripeRad = (2 * Math.PI) / this._numStripes;
-    ctx.fillStyle = 'red';
+    // Debugging lines
+    ctx.strokeStyle = 'gray';
+    ctx.beginPath();
+    ctx.moveTo(0, size / 2);
+    ctx.lineTo(size, size / 2);
+    ctx.moveTo(size / 2, 0);
+    ctx.lineTo(size / 2, size);
+    ctx.stroke();
+
+    // Draw rectangles for stripes
+    ctx.fillStyle = 'white';
+    const rectWidth = 200;
+    const rectHeight = 100;
 
     for (let i = 0; i < this._numStripes; i++) {
-      const r = width / 2;
-      const rad = i * stripeRad + (3 * stripeRad) / 4;
-
-      const { x, y } = polarToCartesian(cx, cy, r, rad);
-      ctx.beginPath();
-      ctx.arc(x, y, 130.5, 0, 2 * Math.PI);
-      ctx.fill();
+      const angle = i * ((2 * Math.PI) / this._numStripes);
+      const { x, y } = polarToCartesian(cx, cy, r - rectHeight, angle);
+      const pathD = buildPath(x, y, rectWidth, rectHeight, 0, angle);
+      ctx.fill(new Path2D(pathD));
     }
 
     // Draw denomination
-    ctx.font = `${width / 4}px sans-serif`;
+    ctx.fillStyle = 'white';
+    ctx.font = `${size / 4}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.denominationString, cx, cy);
@@ -162,3 +171,87 @@ const polarToCartesian = (cx: number, cy: number, r: number, rad: number): { x: 
   x: r * Math.cos(rad) + cx,
   y: r * Math.sin(rad) + cy,
 });
+
+/**
+ * Builds a path definition for the SVG Path `d` parameter. The path draws a rectangle at any (x, y), with any
+ * width and height, with corners rounded at a certain radius, and the whole rectangle rotated at a specified angle.
+ *
+ * ```
+ * (This drawing corresponds to angle = 0. As angle is increased, this box is rotated clockwise)
+ *
+ *
+ *                                         ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤ height
+ *                                          ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤  heightWithoutRoundedCorners
+ *
+ *                                           D                                      E
+ *                                         ╭─────────────────────────────────────────╮          ┬
+ *                                       C │                                         │ F     ┬  ╎
+ *                                         │                                         │       ╎  ╎
+ *   [  center of ]                        │                                         │       ╎  ╎
+ *   [< waveform  ]               (x,y)  A │                                         │       ╎  ╎
+ *   [   circle   ]                        │                                         │       ╎  ╎
+ *                                         │                                         │       ╎  ╎
+ *                                       B │                                         │ G     ┴  ╎
+ *                                         ╰─────────────────────────────────────────╯          ┴
+ *                                       /  I                                       H        ╲   ╲
+ *                                      /                                                     ╲    width
+ *                                     /                                                       ╲
+ *      [ Rounded corners are difficult     ]                                                    widthWithoutRoundedCorners
+ *      [ to draw with ASCII, but a corner  ]
+ *      [ radius is fairly self-explanatory ]
+ *
+ * ```
+ * @param x Where to place the center bottom of the rectangle
+ * @param y Where to place the center bottom of the rectangle
+ * @param width How wide the rectangle is (width is measured tangentially to the circle)
+ * @param height How tall the rectangle is (height is measured radially to the circle)
+ * @param cornerRadius How rounded the corners of the rectangle are
+ * @param angleRad The overall rotation of the rectangle, in radians
+ * @returns A string containing the path definition
+ */
+const buildPath = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  cornerRadius: number,
+  angleRad: number,
+): string => {
+  const widthWithoutRoundedCorners = width - 2 * cornerRadius;
+  const heightWithoutRoundedCorners = height - 2 * cornerRadius;
+
+  const goToA = `M ${x} ${y}`;
+  const m = widthWithoutRoundedCorners / 2;
+  const my = m * Math.cos(angleRad);
+  const mx = m * -Math.sin(angleRad);
+  const goToBFromA = `m ${mx} ${my}`;
+
+  const drawBC = l(angleRad + (3 / 2) * Math.PI, widthWithoutRoundedCorners);
+  const drawCD = a(angleRad + (3 / 2) * Math.PI, cornerRadius);
+  const drawDE = l(angleRad + (0 / 2) * Math.PI, heightWithoutRoundedCorners);
+  const drawEF = a(angleRad + (0 / 2) * Math.PI, cornerRadius);
+  const drawFG = l(angleRad + (1 / 2) * Math.PI, widthWithoutRoundedCorners);
+  const drawGH = a(angleRad + (1 / 2) * Math.PI, cornerRadius);
+  const drawHI = l(angleRad + (2 / 2) * Math.PI, heightWithoutRoundedCorners);
+  const drawIB = a(angleRad + (2 / 2) * Math.PI, cornerRadius);
+
+  return `
+    ${goToA}
+    ${goToBFromA}
+    ${drawBC}
+    ${drawCD}
+    ${drawDE}
+    ${drawEF}
+    ${drawFG}
+    ${drawGH}
+    ${drawHI}
+    ${drawIB}
+  `;
+};
+
+/** Draws a line of length `d` at angle `rad` (radians) */
+const l = (rad: number, d: number) => `l ${d * Math.cos(rad)} ${d * Math.sin(rad)}`;
+
+/** Draws an arc of radius `r` at angle `rad` (radians) */
+const a = (deg: number, r: number) =>
+  `a ${r * Math.SQRT1_2} ${r * Math.SQRT1_2} 0 0 1 ${r * Math.cos(deg + 45)} ${r * Math.sin(deg + 45)}`;
