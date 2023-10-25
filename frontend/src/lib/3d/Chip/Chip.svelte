@@ -8,8 +8,9 @@
 
   const diameter = 39;
   const thickness = 3.5;
+  const numStripes = 6;
 
-  const textureStore = new ChipTextureStore({ color, diameter, thickness });
+  const textureStore = new ChipTextureStore({ color, diameter, thickness, numStripes, denomination: 5 });
 
   onMount(() => {
     textureStore.setup();
