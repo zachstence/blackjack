@@ -8,10 +8,40 @@
 
   const uvTexture = useLoader(TextureLoader).load('static/3d/uv.png');
 
-  const faceCanvas = document.createElement('canvas');
-  const faceTexture = new CanvasTexture(faceCanvas);
+  let faceCanvas: HTMLCanvasElement | undefined;
+  let faceTexture: CanvasTexture | undefined;
+
+  let edgeCanvas: HTMLCanvasElement | undefined;
+  let edgeTexture: CanvasTexture | undefined;
+
+  onMount(() => {
+    faceCanvas = document.createElement('canvas');
+    faceTexture = new CanvasTexture(faceCanvas);
+    drawFace();
+
+    edgeCanvas = document.createElement('canvas');
+    edgeTexture = new CanvasTexture(edgeCanvas);
+    drawEdge();
+
+    [faceCanvas, edgeCanvas].forEach((canvas, i) => {
+      if (!canvas) return;
+
+      const canvasAspectRatio = canvas.width / canvas.height;
+      const width = 200;
+      const height = width / canvasAspectRatio;
+
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = `${i * width}px`;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      document.body.append(canvas);
+    });
+  });
+
   const drawFace = (): void => {
-    const ctx = faceCanvas.getContext('2d');
+    const ctx = faceCanvas?.getContext('2d');
     if (!ctx) return;
 
     ctx.canvas.width = 1000;
@@ -27,10 +57,8 @@
     ctx.fill();
   };
 
-  const edgeCanvas = document.createElement('canvas');
-  const edgeTexture = new CanvasTexture(edgeCanvas);
   const drawEdge = (): void => {
-    const ctx = edgeCanvas.getContext('2d');
+    const ctx = edgeCanvas?.getContext('2d');
     if (!ctx) return;
 
     const scale = 100;
@@ -41,23 +69,6 @@
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, width, height);
   };
-
-  [faceCanvas, edgeCanvas].forEach((canvas, i) => {
-    const size = 200;
-
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = `${i * size}px`;
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
-
-    document.body.append(canvas);
-  });
-
-  onMount(() => {
-    drawFace();
-    drawEdge();
-  });
 </script>
 
 <T.Mesh>
