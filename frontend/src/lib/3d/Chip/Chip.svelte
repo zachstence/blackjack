@@ -4,14 +4,18 @@
 
   import { ChipTextureStore } from './ChipTexture.store';
 
+  export let color: string;
+
   const diameter = 39;
   const thickness = 3.5;
 
-  const textureStore = new ChipTextureStore({ diameter, thickness });
+  const textureStore = new ChipTextureStore({ color, diameter, thickness });
 
   onMount(() => {
     textureStore.setup();
   });
+
+  $: textureStore.setColor(color);
 </script>
 
 <T.Mesh>

@@ -1,13 +1,18 @@
 import { writable, type Readable } from 'svelte/store';
 import { CanvasTexture } from 'three/src/Three.js';
 
-export interface ChipDimensions {
+export interface ChipTextureOpts {
   diameter: number;
   thickness: number;
+  color: string;
 }
 
 export class ChipTextureStore implements Readable<ChipTextureStore> {
   private readonly _store = writable(this);
+
+  private _diameter: number;
+  private _thickness: number;
+  private _color: string;
 
   private faceCanvas: HTMLCanvasElement | undefined;
   private edgeCanvas: HTMLCanvasElement | undefined;
@@ -15,7 +20,11 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
   private _faceTexture: CanvasTexture | undefined;
   private _edgeTexture: CanvasTexture | undefined;
 
-  constructor(readonly dimensions: ChipDimensions) {}
+  constructor(opts: ChipTextureOpts) {
+    this._diameter = opts.diameter;
+    this._thickness = opts.thickness;
+    this._color = opts.color;
+  }
 
   get textures(): CanvasTexture[] {
     if (!this._faceTexture || !this._edgeTexture) return [];
@@ -47,6 +56,14 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     this.drawEdge();
   };
 
+  setColor = (color: string): void => {
+    this._color = color;
+    this.tick();
+
+    this.draw();
+    this.updateTextures();
+  };
+
   private drawFace = (): void => {
     const ctx = this.faceCanvas?.getContext('2d');
     if (!ctx) return;
@@ -56,7 +73,7 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     ctx.canvas.height = size;
     const { width, height } = ctx.canvas;
 
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = this._color;
     ctx.beginPath();
     ctx.arc(width / 2, height / 2, size / 2, 0, 2 * Math.PI);
     ctx.fill();
@@ -72,11 +89,16 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     if (!ctx) return;
 
     const scale = 100;
-    ctx.canvas.width = scale * Math.PI * this.dimensions.diameter;
-    ctx.canvas.height = scale * this.dimensions.thickness;
+    ctx.canvas.width = scale * Math.PI * this._diameter;
+    ctx.canvas.height = scale * this._thickness;
     const { width, height } = ctx.canvas;
 
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, width, height);
+  };
+
+  private updateTextures = (): void => {
+    if (this._edgeTexture) this._edgeTexture.needsUpdate = true;
+    if (this._faceTexture) this._faceTexture.needsUpdate = true;
   };
 }
