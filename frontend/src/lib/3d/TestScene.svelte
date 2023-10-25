@@ -3,12 +3,12 @@
   import { OrbitControls } from '@threlte/extras';
 </script>
 
-<T.PerspectiveCamera makeDefault position={[5, 5, 5]}>
+<T.PerspectiveCamera makeDefault position={[80, 80, 80]}>
   <OrbitControls />
 </T.PerspectiveCamera>
 
-<T.DirectionalLight position={[3, 10, 10]} />
-<T.DirectionalLight position={[-3, 10, -10]} intensity={0.2} />
+<T.DirectionalLight position={[30, 80, 80]} />
+<T.DirectionalLight position={[-30, 80, -80]} intensity={0.2} />
 <T.AmbientLight intensity={0.2} />
 
 <slot />
