@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { T, useLoader } from '@threlte/core';
   import { onMount } from 'svelte';
-  import { CanvasTexture, TextureLoader } from 'three';
+
+  import { T } from '@threlte/core';
+  import { CanvasTexture } from 'three';
 
   const diameter = 39;
   const thickness = 3.5;
-
-  const uvTexture = useLoader(TextureLoader).load('static/3d/uv.png');
 
   let faceCanvas: HTMLCanvasElement | undefined;
   let faceTexture: CanvasTexture | undefined;
@@ -44,12 +43,15 @@
     const ctx = faceCanvas?.getContext('2d');
     if (!ctx) return;
 
-    ctx.canvas.width = 1000;
-    ctx.canvas.height = 1000;
+    const size = 1000;
+    ctx.canvas.width = size;
+    ctx.canvas.height = size;
     const { width, height } = ctx.canvas;
 
     ctx.fillStyle = 'red';
-    ctx.fillRect(0, 0, width, height);
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, size / 2, 0, 2 * Math.PI);
+    ctx.fill();
 
     ctx.fillStyle = 'white';
     ctx.beginPath();
@@ -72,7 +74,7 @@
 </script>
 
 <T.Mesh>
-  <T.CylinderGeometry args={[diameter / 2, diameter / 2, thickness]} />
+  <T.CylinderGeometry args={[diameter / 2, diameter / 2, thickness, 64]} />
 
   <T.MeshStandardMaterial
     map={edgeTexture}
