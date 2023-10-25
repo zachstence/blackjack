@@ -19,8 +19,8 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
   private _numStripes: number;
   private _denomination: Denomination;
 
-  private faceCanvas: HTMLCanvasElement | undefined;
-  private edgeCanvas: HTMLCanvasElement | undefined;
+  private _faceCanvas: HTMLCanvasElement | undefined;
+  private _edgeCanvas: HTMLCanvasElement | undefined;
 
   private _topTexture: CanvasTexture | undefined;
   private _edgeTexture: CanvasTexture | undefined;
@@ -32,6 +32,14 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     this._color = opts.color;
     this._numStripes = opts.numStripes;
     this._denomination = opts.denomination;
+  }
+
+  get faceCanvas(): HTMLCanvasElement | undefined {
+    return this._faceCanvas;
+  }
+
+  get edgeCanvas(): HTMLCanvasElement | undefined {
+    return this._edgeCanvas;
   }
 
   get textures(): CanvasTexture[] {
@@ -48,14 +56,14 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
   };
 
   setup = (): void => {
-    this.faceCanvas = document.createElement('canvas');
-    this.edgeCanvas = document.createElement('canvas');
+    this._faceCanvas = document.createElement('canvas');
+    this._edgeCanvas = document.createElement('canvas');
 
-    this._topTexture = new CanvasTexture(this.faceCanvas);
-    this._bottomTexture = new CanvasTexture(this.faceCanvas);
+    this._topTexture = new CanvasTexture(this._faceCanvas);
+    this._bottomTexture = new CanvasTexture(this._faceCanvas);
     this._bottomTexture.center = new Vector2(0.5, 0.5);
     this._bottomTexture.rotation = (3 * Math.PI) / 2;
-    this._edgeTexture = new CanvasTexture(this.edgeCanvas);
+    this._edgeTexture = new CanvasTexture(this._edgeCanvas);
 
     this.draw();
 
@@ -76,7 +84,7 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
   };
 
   private drawFace = (): void => {
-    const ctx = this.faceCanvas?.getContext('2d');
+    const ctx = this._faceCanvas?.getContext('2d');
     if (!ctx) return;
 
     const size = 1000;
@@ -124,7 +132,7 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
   }
 
   private drawEdge = (): void => {
-    const ctx = this.edgeCanvas?.getContext('2d');
+    const ctx = this._edgeCanvas?.getContext('2d');
     if (!ctx) return;
 
     const scale = 100;
