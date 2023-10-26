@@ -6,11 +6,19 @@
 
   export let color: string;
 
-  const diameter = 39;
-  const thickness = 3.5;
-  const numStripes = 6;
+  const diameterMm = 39;
+  const thicknessMm = 3.5;
 
-  const textureStore = new ChipTextureStore({ color, diameter, thickness, numStripes, denomination: 5 });
+  const textureStore = new ChipTextureStore({
+    diameterMm,
+    thicknessMm,
+    stripeWidthMm: 7,
+    stripeHeightMm: 5,
+    numStripes: 6,
+    pxPerMm: 20,
+    color,
+    denomination: 5,
+  });
 
   onMount(() => {
     textureStore.setup();
@@ -20,7 +28,7 @@
 </script>
 
 <T.Mesh>
-  <T.CylinderGeometry args={[diameter / 2, diameter / 2, thickness, 64]} />
+  <T.CylinderGeometry args={[diameterMm / 2, diameterMm / 2, thicknessMm, 64]} />
 
   {#each $textureStore.textures as texture}
     <T.MeshStandardMaterial

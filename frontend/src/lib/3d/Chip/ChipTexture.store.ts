@@ -3,8 +3,11 @@ import { CanvasTexture, Vector2 } from 'three';
 import type { Denomination } from './Chip.types';
 
 export interface ChipTextureOpts {
-  diameter: number;
-  thickness: number;
+  diameterMm: number;
+  thicknessMm: number;
+  stripeWidthMm: number;
+  stripeHeightMm: number;
+  pxPerMm: number;
   color: string;
   numStripes: number;
   denomination: Denomination;
@@ -13,8 +16,11 @@ export interface ChipTextureOpts {
 export class ChipTextureStore implements Readable<ChipTextureStore> {
   private readonly _store = writable(this);
 
-  private _diameter: number;
-  private _thickness: number;
+  private readonly diameterPx: number;
+  private readonly thicknessPx: number;
+  private readonly stripeWidthPx: number;
+  private readonly stripeHeightPx: number;
+
   private _color: string;
   private _numStripes: number;
   private _denomination: Denomination;
@@ -27,8 +33,10 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
   private _bottomTexture: CanvasTexture | undefined;
 
   constructor(opts: ChipTextureOpts) {
-    this._diameter = opts.diameter;
-    this._thickness = opts.thickness;
+    this.diameterPx = opts.diameterMm * opts.pxPerMm;
+    this.thicknessPx = opts.thicknessMm * opts.pxPerMm;
+    this.stripeWidthPx = opts.stripeWidthMm * opts.pxPerMm;
+    this.stripeHeightPx = opts.stripeHeightMm * opts.pxPerMm;
     this._color = opts.color;
     this._numStripes = opts.numStripes;
     this._denomination = opts.denomination;
@@ -62,7 +70,7 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     this._topTexture = new CanvasTexture(this._faceCanvas);
     this._bottomTexture = new CanvasTexture(this._faceCanvas);
     this._bottomTexture.center = new Vector2(0.5, 0.5);
-    this._bottomTexture.rotation = (3 * Math.PI) / 2;
+    this._bottomTexture.rotation = Math.PI;
     this._edgeTexture = new CanvasTexture(this._edgeCanvas);
 
     this.draw();
@@ -83,56 +91,16 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     this.updateTextures();
   };
 
-  private drawFace = (): void => {
-    const ctx = this._faceCanvas?.getContext('2d');
-    if (!ctx) return;
+  private get circumferencePx(): number {
+    return this.diameterPx * Math.PI;
+  }
 
-    const size = 1000;
-    ctx.canvas.width = size;
-    ctx.canvas.height = size;
+  private get radiusPx(): number {
+    return this.diameterPx / 2;
+  }
 
-    const d = size;
-    const r = d / 2;
-    const cx = r;
-    const cy = r;
-
-    // Make whole chip white
-    ctx.fillStyle = this._color;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-    ctx.fill();
-
-    // Debugging lines
-    ctx.strokeStyle = 'gray';
-    ctx.beginPath();
-    ctx.moveTo(0, size / 2);
-    ctx.lineTo(size, size / 2);
-    ctx.moveTo(size / 2, 0);
-    ctx.lineTo(size / 2, size);
-    ctx.stroke();
-
-    // Draw rectangles for stripes
-    ctx.fillStyle = 'white';
-    const rectWidth = 200;
-    const rectHeight = 100;
-
-    for (let i = 0; i < this._numStripes; i++) {
-      const angle = i * ((2 * Math.PI) / this._numStripes);
-      const { x, y } = polarToCartesian(cx, cy, r - rectHeight, angle);
-      const pathD = buildPath(x, y, rectWidth, rectHeight, 0, angle);
-      ctx.fill(new Path2D(pathD));
-    }
-
-    // Draw denomination
-    ctx.fillStyle = 'white';
-    ctx.font = `${size / 4}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(this.denominationString, cx, cy);
-  };
-
-  private get circumference(): number {
-    return this._diameter * Math.PI;
+  private get stripeArcLengthPx(): number {
+    return this.diameterPx * Math.asin(this.stripeWidthPx / this.diameterPx);
   }
 
   private get denominationString(): string {
@@ -140,25 +108,91 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     return `$${this._denomination / 1000}k`;
   }
 
-  private drawEdge = (): void => {
-    const ctx = this._edgeCanvas?.getContext('2d');
-    if (!ctx) return;
+  private drawFace = (): void => {
+    console.group('drawFace');
+    const ctx = this._faceCanvas?.getContext('2d');
+    console.log({ ctx });
+    if (!ctx) {
+      console.groupEnd();
+      return;
+    }
 
-    const scale = 100;
-    ctx.canvas.width = scale * this.circumference;
-    ctx.canvas.height = scale * this._thickness;
+    ctx.canvas.width = this.diameterPx;
+    ctx.canvas.height = this.diameterPx;
+
+    const cx = this.radiusPx;
+    const cy = this.radiusPx;
+
+    // Draw circle for chip face color
+    ctx.fillStyle = this._color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, this.radiusPx, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Draw rectangles for stripes
+    ctx.fillStyle = 'white';
+    for (let i = 0; i < this._numStripes; i++) {
+      const angle = i * ((2 * Math.PI) / this._numStripes);
+      const { x, y } = polarToCartesian(cx, cy, this.radiusPx - this.stripeHeightPx, angle);
+      const pathD = buildPath(x, y, this.stripeWidthPx, this.stripeHeightPx, 0, angle);
+      ctx.fill(new Path2D(pathD));
+    }
+
+    // Draw denomination
+    ctx.fillStyle = 'white';
+    ctx.font = `${this.radiusPx / 2}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.denominationString, cx, cy);
+
+    console.groupEnd();
+  };
+
+  private drawEdge = (): void => {
+    console.group('drawEdge');
+    const ctx = this._edgeCanvas?.getContext('2d');
+    console.log({ ctx });
+    if (!ctx) {
+      console.groupEnd();
+      return;
+    }
+
+    ctx.canvas.width = this.circumferencePx;
+    ctx.canvas.height = this.thicknessPx;
     const { width, height } = ctx.canvas;
 
-    // Make whole edge white
-    ctx.fillStyle = 'white';
+    // Color whole edge
+    ctx.fillStyle = 'red';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw red stripes
-    const stripeWidth = width / this._numStripes;
-    ctx.fillStyle = this._color;
+    // Draw white stripes
+    ctx.fillStyle = 'white';
+    const combinedLength = width / this._numStripes;
+    const whiteLength = this.stripeArcLengthPx;
+
     for (let i = 0; i < this._numStripes; i++) {
-      ctx.fillRect(i * stripeWidth, 0, stripeWidth / 2, height);
+      const start = i * combinedLength - whiteLength / 2;
+
+      if (start < 0) {
+        // Before break
+        const beforeWidth = Math.abs(start);
+        const beforeX = this.circumferencePx - beforeWidth;
+        ctx.fillRect(beforeX, 0, beforeWidth, height);
+
+        // After break
+        const afterX = 0;
+        const afterWidth = whiteLength - beforeWidth;
+        ctx.fillRect(afterX, 0, afterWidth, height);
+      } else {
+        console.log('fillRect', {
+          x: start,
+          width: whiteLength,
+        });
+        ctx.fillRect(start, 0, whiteLength, height);
+      }
     }
+
+    console.groupEnd();
   };
 
   private updateTextures = (): void => {

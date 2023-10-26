@@ -10,11 +10,14 @@
   let color = 'red';
 
   const store = new ChipTextureStore({
-    diameter: 39,
-    thickness: 3.5,
+    diameterMm: 39,
+    thicknessMm: 3.5,
+    stripeWidthMm: 7,
+    stripeHeightMm: 5,
+    numStripes: 6,
+    pxPerMm: 20,
     color,
     denomination: 5,
-    numStripes: 6,
   });
 
   let container: HTMLDivElement;
