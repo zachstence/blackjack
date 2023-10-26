@@ -5,14 +5,14 @@
 
   export let color: string;
 
-  const obj = new OBJLoaderStore('/static/3d/Poker Chip v9.obj', {
-    Red_Plastic: new MeshStandardMaterial({ color }),
-    White_Plastic: new MeshStandardMaterial({ color: '#d5dfe8' }),
+  const obj = new OBJLoaderStore('/static/3d/chip/chip.obj', {
+    Base: new MeshStandardMaterial({ color }),
+    Accent: new MeshStandardMaterial({ color: '#d5dfe8' }),
   });
   obj.load();
 
   // Update material when prop changes
-  $: obj.setMaterial('Red_Plastic', new MeshStandardMaterial({ color }));
+  $: obj.setMaterial('Base', new MeshStandardMaterial({ color }));
 </script>
 
 {#if $obj}
