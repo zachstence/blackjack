@@ -7,7 +7,7 @@
 
   export let Hst: Hst;
 
-  let color = 'red';
+  let color = '#982C29';
 </script>
 
 <Hst.Story>
@@ -17,7 +17,7 @@
 
   <TestCanvas>
     <TestScene>
-      <Chip />
+      <Chip {color} />
     </TestScene>
   </TestCanvas>
 </Hst.Story>
