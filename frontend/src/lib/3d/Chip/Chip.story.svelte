@@ -4,6 +4,7 @@
   import TestCanvas from '../TestCanvas.svelte';
   import Chip from './Chip.svelte';
   import TestScene from '../TestScene.svelte';
+  import ChipOBJ from './ChipOBJ.svelte';
 
   export let Hst: Hst;
 
@@ -15,9 +16,19 @@
     <Hst.ColorSelect bind:value={color} title="color" />
   </svelte:fragment>
 
-  <TestCanvas>
-    <TestScene>
-      <Chip {color} />
-    </TestScene>
-  </TestCanvas>
+  <Hst.Variant title="Chip">
+    <TestCanvas>
+      <TestScene>
+        <Chip {color} />
+      </TestScene>
+    </TestCanvas>
+  </Hst.Variant>
+
+  <Hst.Variant title="ChipOBJ">
+    <TestCanvas>
+      <TestScene>
+        <ChipOBJ />
+      </TestScene>
+    </TestCanvas>
+  </Hst.Variant>
 </Hst.Story>
