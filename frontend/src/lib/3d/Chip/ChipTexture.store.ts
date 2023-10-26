@@ -109,11 +109,9 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
   }
 
   private drawFace = (): void => {
-    console.group('drawFace');
     const ctx = this._faceCanvas?.getContext('2d');
-    console.log({ ctx });
+
     if (!ctx) {
-      console.groupEnd();
       return;
     }
 
@@ -144,16 +142,12 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.denominationString, cx, cy);
-
-    console.groupEnd();
   };
 
   private drawEdge = (): void => {
-    console.group('drawEdge');
     const ctx = this._edgeCanvas?.getContext('2d');
-    console.log({ ctx });
+
     if (!ctx) {
-      console.groupEnd();
       return;
     }
 
@@ -184,15 +178,9 @@ export class ChipTextureStore implements Readable<ChipTextureStore> {
         const afterWidth = whiteLength - beforeWidth;
         ctx.fillRect(afterX, 0, afterWidth, height);
       } else {
-        console.log('fillRect', {
-          x: start,
-          width: whiteLength,
-        });
         ctx.fillRect(start, 0, whiteLength, height);
       }
     }
-
-    console.groupEnd();
   };
 
   private updateTextures = (): void => {
