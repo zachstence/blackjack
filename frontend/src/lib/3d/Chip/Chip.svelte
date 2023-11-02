@@ -1,20 +1,20 @@
 <script lang="ts">
   import { T } from '@threlte/core';
-  import { MeshStandardMaterial } from 'three';
-  import { OBJLoaderStore } from '../obj-loader.store';
+  import { ChipGeometry } from './ChipGeometry';
 
-  export let color: string;
+  const diameter = 39;
+  const radius = diameter / 2;
+  const height = 3.5;
+  const edgeRadius = 0.5;
 
-  const obj = new OBJLoaderStore('/static/3d/chip/chip.obj', {
-    Base: new MeshStandardMaterial({ color }),
-    Accent: new MeshStandardMaterial({ color: '#d5dfe8' }),
-  });
-  obj.load();
-
-  // Update material when prop changes
-  $: obj.setMaterial('Base', new MeshStandardMaterial({ color }));
+  const radialSegments = 64;
+  const heightSegments = 2;
+  const filletSegments = 8;
 </script>
 
-{#if $obj}
-  <T is={$obj} />
-{/if}
+<T.AxesHelper args={[diameter]} />
+
+<T.Mesh>
+  <T is={ChipGeometry(radius, height, edgeRadius, radialSegments, heightSegments, filletSegments)} />
+  <T.MeshStandardMaterial color="red" />
+</T.Mesh>
