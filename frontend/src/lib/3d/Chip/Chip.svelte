@@ -1,30 +1,24 @@
 <script lang="ts">
-  import { T } from '@threlte/core';
+  import { T, useLoader } from '@threlte/core';
   import { ChipGeometry } from './ChipGeometry';
-  import { DoubleSide, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial } from 'three';
+  import { DoubleSide, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, TextureLoader } from 'three';
 
-  const diameter = 39;
-  const radius = diameter / 2;
-  const height = 3.5;
-  const edgeRadius = 0.5;
+  export let radialSegments: number = 64;
+  export let pathSegments: number = 64;
+  export let diameter: number = 39;
+  export let height: number = 3.5;
+  export let filletRadius: number = 0.5;
 
-  const radialSegments = 64;
-  const faceSegments = 10;
-  const heightSegments = 3;
-  const filletSegments = 8;
+  $: radius = diameter / 2;
 
-  const chip = ChipGeometry(radius, height, edgeRadius, radialSegments, faceSegments, heightSegments, filletSegments);
+  $: chip = ChipGeometry(radius, height, filletRadius, pathSegments, radialSegments);
 
-  const lineMaterial = new LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
-  const meshMaterial = new MeshStandardMaterial({
-    color: 0x156289,
-    emissive: 0x072534,
-    side: DoubleSide,
-    flatShading: true,
-  });
+  const uv = useLoader(TextureLoader).load('/static/3d/uv.jpg');
+  $: meshMaterial = new MeshStandardMaterial({ map: $uv, side: DoubleSide });
+  $: mesh = new Mesh(chip, meshMaterial);
 
-  const mesh = new Mesh(chip, meshMaterial);
-  const edges = new LineSegments(chip, lineMaterial);
+  const lineMaterial = new LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2 });
+  $: edges = new LineSegments(chip, lineMaterial);
 </script>
 
 <T.Group>
