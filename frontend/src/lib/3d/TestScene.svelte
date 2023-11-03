@@ -4,11 +4,11 @@
   import { Environment } from '@threlte/extras';
 </script>
 
-<Environment isBackground files="/static/3d/casino.jpg" />
+<!-- <Environment isBackground files="/static/3d/casino.jpg" /> -->
 
 <T.AxesHelper args={[100]} />
 
-<T.PerspectiveCamera makeDefault position={[30, 30, 30]}>
+<T.PerspectiveCamera makeDefault position={[50, 30, 50]}>
   <OrbitControls />
 </T.PerspectiveCamera>
 
