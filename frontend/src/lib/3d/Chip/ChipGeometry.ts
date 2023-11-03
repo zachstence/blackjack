@@ -1,57 +1,54 @@
-import { BufferGeometry, CircleGeometry, CylinderGeometry, LatheGeometry, Vector2 } from 'three';
-import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { BufferGeometry, EllipseCurve, LatheGeometry, LineCurve, Vector2 } from 'three';
 
 export const ChipGeometry = (
   radius: number,
   height: number,
   filletRadius: number,
   radialSegments: number,
+  faceSegments: number,
   heightSegments: number,
   filletSegments: number,
 ): BufferGeometry => {
   const faceRadius = radius - filletRadius;
   const sideHeight = height - 2 * filletRadius;
 
-  const topGeometry = new CircleGeometry(faceRadius, radialSegments);
-  topGeometry.rotateX(-Math.PI / 2);
-  topGeometry.translate(0, height / 2, 0);
+  const topFaceCurve = new LineCurve(new Vector2(0, height / 2), new Vector2(faceRadius, height / 2));
+  const topFacePoints = topFaceCurve.getPoints(faceSegments);
 
-  const topEdgeGeometry = new LatheGeometry(
-    edgePoints(new Vector2(faceRadius, sideHeight / 2), filletRadius, 1, 1, filletSegments),
+  const topEdgeCurve = new EllipseCurve(
+    faceRadius,
+    sideHeight / 2,
+    filletRadius,
+    filletRadius,
+    Math.PI / 2,
+    0,
+    true,
+    0,
+  );
+  const topEdgePoints = topEdgeCurve.getPoints(filletSegments);
+
+  const sideCurve = new LineCurve(new Vector2(radius, sideHeight / 2), new Vector2(radius, -sideHeight / 2));
+  const sidePoints = sideCurve.getPoints(heightSegments);
+
+  const bottomEdgeCurve = new EllipseCurve(
+    faceRadius,
+    -sideHeight / 2,
+    filletRadius,
+    filletRadius,
+    0,
+    -Math.PI / 2,
+    true,
+    0,
+  );
+  const bottomEdgePoints = bottomEdgeCurve.getPoints(filletSegments);
+
+  const bottomFaceCurve = new LineCurve(new Vector2(0, -height / 2), new Vector2(faceRadius, -height / 2));
+  const bottomFacePoints = bottomFaceCurve.getPoints(faceSegments);
+
+  const geometry = new LatheGeometry(
+    [...topFacePoints, ...topEdgePoints, ...sidePoints, ...bottomEdgePoints, ...bottomFacePoints],
     radialSegments,
   );
 
-  const sideGeometry = new CylinderGeometry(radius, radius, sideHeight, radialSegments, heightSegments, true);
-
-  const bottomEdgeGeometry = topEdgeGeometry.clone();
-  bottomEdgeGeometry.rotateX(Math.PI);
-
-  const bottomGeometry = topGeometry.clone();
-  bottomGeometry.rotateX(Math.PI);
-
-  const geometry = BufferGeometryUtils.mergeGeometries([
-    topGeometry,
-    topEdgeGeometry,
-    sideGeometry,
-    bottomEdgeGeometry,
-    bottomGeometry,
-  ]);
-
   return geometry;
-};
-
-const edgePoints = (
-  center: Vector2,
-  radius: number,
-  xDirection: -1 | 1,
-  yDirection: -1 | 1,
-  segments: number,
-): Vector2[] => {
-  const a = Math.PI / 2 / segments;
-  const numPoints = segments + 1;
-  return Array.from({ length: numPoints }).map((_, i) => {
-    const x = center.x + xDirection * radius * Math.cos(a * i);
-    const y = center.y + yDirection * radius * Math.sin(a * i);
-    return new Vector2(x, y);
-  });
 };
