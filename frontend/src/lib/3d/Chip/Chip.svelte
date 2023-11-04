@@ -1,16 +1,19 @@
 <script lang="ts">
   import { T } from '@threlte/core';
 
-  import type { ChipProps } from './Chip.types';
+  import type { Denomination } from './Chip.types';
   import { ChipMesh } from './ChipMesh';
-  import { onMount } from 'svelte';
-  import type { Mesh } from 'three';
 
-  export let props: Partial<ChipProps> = {};
+  export let denomination: Denomination;
+  export let radialResolution: number = 128;
+  export let pathResolution: number = 256;
+  export let canvasScale: number = 4;
 
-  let chip: Mesh | undefined;
-  onMount(() => {
-    chip = ChipMesh(props);
+  $: chip = ChipMesh({
+    denomination,
+    radialResolution,
+    pathResolution,
+    canvasScale,
   });
 </script>
 

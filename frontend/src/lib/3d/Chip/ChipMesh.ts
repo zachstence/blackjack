@@ -8,17 +8,33 @@ import {
   MeshStandardMaterial,
   Path,
 } from 'three';
-import merge from 'lodash/merge';
 
-import type { ChipProps } from './Chip.types';
-import { CIRCUMFERENCE, DEFAULT_PROPS, RADIUS, THICKNESS } from './Chip.constants';
+import type { Denomination } from './Chip.types';
+import {
+  CIRCUMFERENCE,
+  ColorByDenomination,
+  FILLET_RADIUS,
+  NUM_STRIPES,
+  RADIUS,
+  SLOT_DEPTH,
+  SLOT_INNER_RADIUS,
+  SLOT_WIDTH,
+  STRIPE_HEIGHT,
+  STRIPE_WIDTH,
+  THICKNESS,
+} from './Chip.constants';
 
-export const ChipMesh = (props: Partial<ChipProps> = {}): Mesh | undefined => {
-  const _props = merge({}, DEFAULT_PROPS, props);
+export interface ChipOpts {
+  denomination: Denomination;
+  radialResolution: number;
+  pathResolution: number;
+  canvasScale: number;
+}
 
-  const path = createPath(_props);
-  const geometry = createGeometry(path, _props);
-  const texture = createCanvasTexture(path, _props);
+export const ChipMesh = (opts: ChipOpts): Mesh | undefined => {
+  const path = createPath();
+  const geometry = createGeometry(path, opts);
+  const texture = createCanvasTexture(path, opts);
 
   const material = new MeshStandardMaterial({
     map: texture,
@@ -30,38 +46,40 @@ export const ChipMesh = (props: Partial<ChipProps> = {}): Mesh | undefined => {
   return mesh;
 };
 
-const createPath = ({ slotInnerRadius, slotWidth, slotDepth, filletRadius }: ChipProps): Path => {
-  const faceRadius = RADIUS - filletRadius;
-  const sideHeight = THICKNESS - 2 * filletRadius;
+const createPath = (): Path => {
+  const faceRadius = RADIUS - FILLET_RADIUS;
+  const sideHeight = THICKNESS - 2 * FILLET_RADIUS;
 
   const path = new Path();
   path.moveTo(0, THICKNESS / 2);
-  path.lineTo(slotInnerRadius, THICKNESS / 2);
-  path.lineTo(slotInnerRadius, THICKNESS / 2 - slotDepth);
-  path.lineTo(slotInnerRadius + slotWidth, THICKNESS / 2 - slotDepth);
-  path.lineTo(slotInnerRadius + slotWidth, THICKNESS / 2);
+  path.lineTo(SLOT_INNER_RADIUS, THICKNESS / 2);
+  path.lineTo(SLOT_INNER_RADIUS, THICKNESS / 2 - SLOT_DEPTH);
+  path.lineTo(SLOT_INNER_RADIUS + SLOT_WIDTH, THICKNESS / 2 - SLOT_DEPTH);
+  path.lineTo(SLOT_INNER_RADIUS + SLOT_WIDTH, THICKNESS / 2);
   path.lineTo(faceRadius, THICKNESS / 2);
-  path.arc(0, -filletRadius, filletRadius, Math.PI / 2, 0, true);
+  path.arc(0, -FILLET_RADIUS, FILLET_RADIUS, Math.PI / 2, 0, true);
   path.lineTo(RADIUS, -sideHeight / 2);
-  path.arc(-filletRadius, 0, filletRadius, 0, -Math.PI / 2, true);
-  path.lineTo(slotInnerRadius + slotWidth, -THICKNESS / 2);
-  path.lineTo(slotInnerRadius + slotWidth, -THICKNESS / 2 + slotDepth);
-  path.lineTo(slotInnerRadius, -THICKNESS / 2 + slotDepth);
-  path.lineTo(slotInnerRadius, -THICKNESS / 2);
+  path.arc(-FILLET_RADIUS, 0, FILLET_RADIUS, 0, -Math.PI / 2, true);
+  path.lineTo(SLOT_INNER_RADIUS + SLOT_WIDTH, -THICKNESS / 2);
+  path.lineTo(SLOT_INNER_RADIUS + SLOT_WIDTH, -THICKNESS / 2 + SLOT_DEPTH);
+  path.lineTo(SLOT_INNER_RADIUS, -THICKNESS / 2 + SLOT_DEPTH);
+  path.lineTo(SLOT_INNER_RADIUS, -THICKNESS / 2);
   path.lineTo(0, -THICKNESS / 2);
 
   return path;
 };
 
-const createGeometry = (path: Path, { pathResolution, radialResolution }: ChipProps): BufferGeometry => {
+const createGeometry = (path: Path, { pathResolution, radialResolution }: ChipOpts): BufferGeometry => {
   const points = path.getSpacedPoints(pathResolution);
   const geometry = new LatheGeometry(points, radialResolution);
   return geometry;
 };
 
-const createCanvasTexture = (path: Path, props: ChipProps): CanvasTexture => {
+const createCanvasTexture = (
+  path: Path,
+  { denomination, radialResolution, pathResolution, canvasScale }: ChipOpts,
+): CanvasTexture => {
   const pathLength = path.getLength();
-  const { color, numStripes, stripeWidth, stripeHeight, radialResolution, pathResolution, canvasScale } = props;
 
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -71,16 +89,17 @@ const createCanvasTexture = (path: Path, props: ChipProps): CanvasTexture => {
   ctx.canvas.height = pathResolution * canvasScale;
   const { width, height } = ctx.canvas;
 
-  const stripeWidthPx = (stripeWidth / CIRCUMFERENCE) * width;
-  const stripeHeightPx = (stripeHeight / pathLength) * height;
+  const stripeWidthPx = (STRIPE_WIDTH / CIRCUMFERENCE) * width;
+  const stripeHeightPx = (STRIPE_HEIGHT / pathLength) * height;
 
   // Fill canvas with base color
+  const color = ColorByDenomination[denomination];
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, width, height);
 
   // Draw stripes
-  const intervalWidthPx = width / numStripes;
-  for (let i = 0.5; i < numStripes; i++) {
+  const intervalWidthPx = width / NUM_STRIPES;
+  for (let i = 0.5; i < NUM_STRIPES; i++) {
     ctx.fillStyle = 'white';
     const x = i * intervalWidthPx - stripeWidthPx / 2;
     const y = height / 2 - stripeHeightPx / 2;

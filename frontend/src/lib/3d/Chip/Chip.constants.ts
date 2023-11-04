@@ -1,25 +1,29 @@
-import type { ChipProps } from './Chip.types';
+import type { Denomination } from './Chip.types';
 
 export const DIAMETER = 39;
 export const CIRCUMFERENCE = Math.PI * DIAMETER;
 export const RADIUS = DIAMETER / 2;
 export const THICKNESS = 3.5;
 
-export const DEFAULT_PROPS: ChipProps = {
-  // Texture appearance
-  color: '#982C29',
-  numStripes: 6,
-  stripeWidth: 8,
-  stripeHeight: 10,
+// Texture appearance
+export const NUM_STRIPES = 6;
+export const STRIPE_WIDTH = 8;
+export const STRIPE_HEIGHT = 10;
 
-  // Physical shape
-  slotInnerRadius: 13,
-  slotWidth: 2,
-  slotDepth: 0.2,
-  filletRadius: 0.5,
+// Physical shape
+export const SLOT_INNER_RADIUS = 13;
+export const SLOT_WIDTH = 2;
+export const SLOT_DEPTH = 0.2;
+export const FILLET_RADIUS = 0.5;
 
-  // Resolution
-  radialResolution: 128,
-  pathResolution: 256,
-  canvasScale: 4,
+export const ColorByDenomination: Record<Denomination, string> = {
+  [1]: 'red',
+  [5]: 'orange',
+  [25]: 'yellow',
+  [100]: 'green',
+  [500]: 'blue',
+  [1_000]: 'purple',
+  [5_000]: 'pink',
+  [25_000]: 'gray',
+  [100_000]: 'black',
 };
