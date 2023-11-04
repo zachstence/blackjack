@@ -83,7 +83,7 @@ const createCanvasTexture = (
 
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  if (ctx === null) throw new Error(`Canvas 2d context is null`);
+  if (ctx === null) throw new Error('Canvas 2d context is null');
 
   ctx.canvas.width = radialResolution * canvasScale;
   ctx.canvas.height = pathResolution * canvasScale;
