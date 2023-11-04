@@ -6,7 +6,7 @@
   import { onMount } from 'svelte';
   import type { Mesh } from 'three';
 
-  export let props: Partial<ChipProps> | undefined = undefined;
+  export let props: Partial<ChipProps> = {};
 
   let chip: Mesh | undefined;
   onMount(() => {

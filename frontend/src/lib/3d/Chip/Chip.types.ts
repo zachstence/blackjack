@@ -14,7 +14,7 @@ export interface ChipProps {
   filletRadius: number;
 
   // Resolution
-  radialSegments: number;
-  pathSegments: number;
-  // TODO props for texture resolution
+  radialResolution: number;
+  pathResolution: number;
+  canvasScale: number;
 }
