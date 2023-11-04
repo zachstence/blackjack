@@ -8,7 +8,7 @@
 
 <T.AxesHelper args={[100]} />
 
-<T.PerspectiveCamera makeDefault position={[50, 30, 50]}>
+<T.PerspectiveCamera args={[undefined, undefined, 10, 10000]} makeDefault position={[50, 30, 50]}>
   <OrbitControls />
 </T.PerspectiveCamera>
 
