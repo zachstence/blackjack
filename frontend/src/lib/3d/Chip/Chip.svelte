@@ -1,41 +1,19 @@
 <script lang="ts">
   import { T } from '@threlte/core';
-  import { DoubleSide, Mesh, MeshStandardMaterial } from 'three';
 
-  import { ChipGeometry } from './ChipGeometry';
-  import { ChipTextureStore } from './ChipTexture.store';
-  import { DEFAULT_PROPS } from './Chip.constants';
+  import type { ChipProps } from './Chip.types';
+  import { ChipMesh } from './ChipMesh';
+  import { onMount } from 'svelte';
+  import type { Mesh } from 'three';
 
-  export let color: string = DEFAULT_PROPS.color;
-  export let radialSegments: number = DEFAULT_PROPS.radialSegments;
-  export let pathSegments: number = DEFAULT_PROPS.pathSegments;
-  export let slotInnerRadius: number = DEFAULT_PROPS.slotInnerRadius;
-  export let slotWidth: number = DEFAULT_PROPS.slotWidth;
-  export let slotDepth: number = DEFAULT_PROPS.slotDepth;
-  export let filletRadius: number = DEFAULT_PROPS.filletRadius;
+  export let props: Partial<ChipProps> | undefined = undefined;
 
-  const diameter: number = 39;
-  const thickness: number = 3.5;
-  const radius = diameter / 2;
-
-  $: chip = ChipGeometry(
-    radius,
-    thickness,
-    slotInnerRadius,
-    slotWidth,
-    slotDepth,
-    filletRadius,
-    pathSegments,
-    radialSegments,
-  );
-
-  const textureStore = new ChipTextureStore({
-    color,
+  let chip: Mesh | undefined;
+  onMount(() => {
+    chip = ChipMesh(props);
   });
-  textureStore.setup();
-  $: console.log($textureStore.texture);
-  $: texturedMaterial = new MeshStandardMaterial({ map: $textureStore.texture, side: DoubleSide });
-  $: texturedMesh = new Mesh(chip, texturedMaterial);
 </script>
 
-<T is={texturedMesh} />
+{#if chip}
+  <T is={chip} />
+{/if}
