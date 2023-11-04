@@ -3,6 +3,9 @@ import { BufferGeometry, LatheGeometry, Path } from 'three';
 export const ChipGeometry = (
   radius: number,
   thickness: number,
+  slotInnerRadius: number,
+  slotWidth: number,
+  slotDepth: number,
   filletRadius: number,
   pathSegments: number,
   radialSegments: number,
@@ -12,10 +15,20 @@ export const ChipGeometry = (
 
   const path = new Path();
   path.moveTo(0, thickness / 2);
-  path.lineTo(faceRadius, sideHeight / 2);
+  path.lineTo(slotInnerRadius, thickness / 2);
+  path.lineTo(slotInnerRadius, thickness / 2 - slotDepth);
+  path.lineTo(slotInnerRadius + slotWidth, thickness / 2 - slotDepth);
+  path.lineTo(slotInnerRadius + slotWidth, thickness / 2);
+  path.lineTo(faceRadius, thickness / 2);
   path.arc(0, -filletRadius, filletRadius, Math.PI / 2, 0, true);
   path.lineTo(radius, -sideHeight / 2);
   path.arc(-filletRadius, 0, filletRadius, 0, -Math.PI / 2, true);
+
+  path.lineTo(slotInnerRadius + slotWidth, -thickness / 2);
+  path.lineTo(slotInnerRadius + slotWidth, -thickness / 2 + slotDepth);
+  path.lineTo(slotInnerRadius, -thickness / 2 + slotDepth);
+  path.lineTo(slotInnerRadius, -thickness / 2);
+
   path.lineTo(0, -thickness / 2);
 
   const points = path.getSpacedPoints(pathSegments);
