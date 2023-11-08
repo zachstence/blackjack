@@ -1,4 +1,14 @@
-import { BufferGeometry, CanvasTexture, Group, LinearFilter, Mesh, MeshStandardMaterial, PlaneGeometry } from 'three';
+import {
+  BufferGeometry,
+  CanvasTexture,
+  Group,
+  LinearFilter,
+  Mesh,
+  MeshStandardMaterial,
+  RepeatWrapping,
+  Shape,
+  ShapeGeometry,
+} from 'three';
 import {
   NUM_TABLE_SEATS,
   TABLE_ARC_ANGLE,
@@ -34,17 +44,31 @@ export const Table = (opts: TableOpts): Group => {
 };
 
 const createFeltGeometry = (opts: TableOpts): BufferGeometry => {
-  // TODO half-circle
-  const plane = new PlaneGeometry(TABLE_RADIUS * 2, TABLE_RADIUS);
-  plane.rotateX(-Math.PI / 2);
+  const shape = new Shape();
+  shape.arc(0, 0, TABLE_RADIUS, 0, Math.PI, true);
+  shape.lineTo(TABLE_RADIUS, 0);
 
-  return plane;
+  const geometry = new ShapeGeometry(shape);
+  geometry.rotateX(-Math.PI / 2);
+
+  return geometry;
 };
 
 const createFeltCanvasTexture = (opts: TableOpts): CanvasTexture => {
   const canvas = createFeltCanvas(opts);
+  const { width, height } = canvas;
+
   const texture = new CanvasTexture(canvas);
   texture.minFilter = LinearFilter;
+  texture.center.set(0.5, 0);
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+
+  const aspectRatio = width / height;
+  const repeatY = 1 / TABLE_RADIUS;
+  const repeatX = repeatY / aspectRatio;
+  texture.repeat.set(repeatX, repeatY);
+
   return texture;
 };
 
