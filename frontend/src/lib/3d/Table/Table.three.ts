@@ -60,6 +60,9 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   const arcStartAngle = Math.PI / 2 - TABLE_ARC_ANGLE / 2;
   const arcEndAngle = arcStartAngle + TABLE_ARC_ANGLE;
 
+  const arcCx = cx;
+  const arcCy = cy - arcInnerRadius;
+
   // Table base color
   ctx.fillStyle = opts.color;
   ctx.fillRect(0, 0, w, h);
@@ -69,12 +72,29 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
 
   // Inner arc
   ctx.beginPath();
-  ctx.arc(cx, cy - arcInnerRadius, arcInnerRadius, arcStartAngle, arcEndAngle);
+  ctx.arc(arcCx, arcCy, arcInnerRadius, arcStartAngle, arcEndAngle);
   ctx.stroke();
 
   // Outer arc
   ctx.beginPath();
-  ctx.arc(cx, cy - arcInnerRadius, arcOuterRadius, arcStartAngle, arcEndAngle);
+  ctx.arc(arcCx, arcCy, arcOuterRadius, arcStartAngle, arcEndAngle);
+  ctx.stroke();
+
+  const capRadius = arcThickness / 2;
+  const capCy = arcCy + (arcInnerRadius + capRadius) * Math.sin(arcStartAngle);
+  const capStartAngle = -Math.PI + arcEndAngle;
+  const capEndAngle = capStartAngle + Math.PI;
+
+  // Left cap
+  const leftCapCx = arcCx + (arcInnerRadius + capRadius) * Math.cos(arcEndAngle);
+  ctx.beginPath();
+  ctx.arc(leftCapCx, capCy, capRadius, capStartAngle, capEndAngle, true);
+  ctx.stroke();
+
+  // Right cap
+  const rightCapCx = arcCx + (arcInnerRadius + capRadius) * Math.cos(arcStartAngle);
+  ctx.beginPath();
+  ctx.arc(rightCapCx, capCy, capRadius, -capStartAngle, -capEndAngle, true);
   ctx.stroke();
 
   return canvas;
