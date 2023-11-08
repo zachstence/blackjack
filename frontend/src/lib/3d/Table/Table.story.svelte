@@ -17,6 +17,7 @@
 
   let canvasContainer: HTMLDivElement;
   onMount(() => {
+    if (!canvasContainer) return;
     const canvas = createFeltCanvas({ color, resolution });
     canvas.style.width = '100%';
     canvasContainer.append(canvas);

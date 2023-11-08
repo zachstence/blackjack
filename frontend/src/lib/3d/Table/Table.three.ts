@@ -7,6 +7,7 @@ import {
   TABLE_RADIUS,
 } from './Table.constants';
 import { onMount } from 'svelte';
+import { arcText } from './arcText';
 
 interface TableOpts {
   color: string;
@@ -57,6 +58,7 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   const arcInnerRadius = TABLE_ARC_INNER_RADIUS * opts.resolution;
   const arcThickness = TABLE_ARC_THICKNESS * opts.resolution;
   const arcOuterRadius = arcInnerRadius + arcThickness;
+  const arcCenterRadius = arcInnerRadius + arcThickness / 2;
   const arcStartAngle = Math.PI / 2 - TABLE_ARC_ANGLE / 2;
   const arcEndAngle = arcStartAngle + TABLE_ARC_ANGLE;
 
@@ -81,21 +83,28 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   ctx.stroke();
 
   const capRadius = arcThickness / 2;
-  const capCy = arcCy + (arcInnerRadius + capRadius) * Math.sin(arcStartAngle);
+  const capCy = arcCy + arcCenterRadius * Math.sin(arcStartAngle);
   const capStartAngle = -Math.PI + arcEndAngle;
   const capEndAngle = capStartAngle + Math.PI;
 
   // Left cap
-  const leftCapCx = arcCx + (arcInnerRadius + capRadius) * Math.cos(arcEndAngle);
+  const leftCapCx = arcCx + arcCenterRadius * Math.cos(arcEndAngle);
   ctx.beginPath();
   ctx.arc(leftCapCx, capCy, capRadius, capStartAngle, capEndAngle, true);
   ctx.stroke();
 
   // Right cap
-  const rightCapCx = arcCx + (arcInnerRadius + capRadius) * Math.cos(arcStartAngle);
+  const rightCapCx = arcCx + arcCenterRadius * Math.cos(arcStartAngle);
   ctx.beginPath();
   ctx.arc(rightCapCx, capCy, capRadius, -capStartAngle, -capEndAngle, true);
   ctx.stroke();
+
+  // Insurance text
+  ctx.fillStyle = 'yellow';
+  ctx.font = `${arcThickness / 2}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  arcText(ctx, 'INSURANCE PAYS 2:1', arcCx, arcCy, arcCenterRadius, arcEndAngle, arcStartAngle, true);
 
   return canvas;
 };
