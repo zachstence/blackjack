@@ -1,3 +1,5 @@
+import { polarToRectangular } from '../polar';
+
 export const arcText = (
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -29,8 +31,3 @@ export const arcText = (
     ctx.restore();
   }
 };
-
-const polarToRectangular = (r: number, a: number): { x: number; y: number } => ({
-  x: r * Math.cos(a),
-  y: r * Math.sin(a),
-});

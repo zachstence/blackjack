@@ -1,13 +1,17 @@
 import { BufferGeometry, CanvasTexture, Group, LinearFilter, Mesh, MeshStandardMaterial, PlaneGeometry } from 'three';
 import {
+  NUM_TABLE_SEATS,
   TABLE_ARC_ANGLE,
   TABLE_ARC_INNER_RADIUS,
   TABLE_ARC_THICKNESS,
+  TABLE_CARD_OUTLINE_SPACE,
   TABLE_OUTLINE_WIDTH,
   TABLE_RADIUS,
 } from './Table.constants';
 import { onMount } from 'svelte';
 import { arcText } from './arcText';
+import { polarToRectangular } from '../polar';
+import { CARD_HEIGHT, CARD_WIDTH } from '../Card/Card.constants';
 
 interface TableOpts {
   color: string;
@@ -100,11 +104,31 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   ctx.stroke();
 
   // Insurance text
-  ctx.fillStyle = 'yellow';
-  ctx.font = `${arcThickness / 2}px sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  arcText(ctx, 'INSURANCE PAYS 2:1', arcCx, arcCy, arcCenterRadius, arcEndAngle, arcStartAngle, true);
+  // ctx.fillStyle = 'yellow';
+  // ctx.font = `${arcThickness / 2}px sans-serif`;
+  // ctx.textAlign = 'center';
+  // ctx.textBaseline = 'middle';
+  // arcText(ctx, 'INSURANCE PAYS 2:1', arcCx, arcCy, arcCenterRadius, arcEndAngle, arcStartAngle, true);
+
+  // Card outline per each seat
+  const cardOutlineWidth = CARD_WIDTH * opts.resolution;
+  const cardOutlineHeight = CARD_HEIGHT * opts.resolution;
+  const cardOutlineSpace = TABLE_CARD_OUTLINE_SPACE * opts.resolution;
+  const cardOutlineRadius = arcOuterRadius + cardOutlineSpace;
+
+  const dAngle = Math.abs(arcEndAngle - arcStartAngle) / (NUM_TABLE_SEATS - 1);
+  for (let i = 0; i < NUM_TABLE_SEATS; i++) {
+    const a = arcStartAngle + dAngle * i;
+    const { x: relX, y: relY } = polarToRectangular(cardOutlineRadius, a);
+    const cardX = arcCx + relX;
+    const cardY = arcCy + relY;
+
+    ctx.save();
+    ctx.translate(cardX, cardY);
+    ctx.rotate(a - Math.PI / 2);
+    ctx.strokeRect(-cardOutlineWidth / 2, 0, cardOutlineWidth, cardOutlineHeight);
+    ctx.restore();
+  }
 
   return canvas;
 };

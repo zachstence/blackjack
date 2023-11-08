@@ -1,3 +1,5 @@
+import { CARD_HEIGHT } from '../Card/Card.constants';
+
 export const TABLE_RADIUS = 914.4;
 
 export const TABLE_OUTLINE_WIDTH = 12.7;
@@ -5,6 +7,8 @@ export const TABLE_OUTLINE_WIDTH = 12.7;
 export const TABLE_ARC_INNER_RADIUS = 304.8;
 
 export const TABLE_ARC_THICKNESS = 120;
+
+export const TABLE_CARD_OUTLINE_SPACE = CARD_HEIGHT;
 
 export const NUM_TABLE_SEATS = 7;
 
