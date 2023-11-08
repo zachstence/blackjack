@@ -31,7 +31,7 @@ export interface ChipOpts {
   canvasScale: number;
 }
 
-export const ChipMesh = (opts: ChipOpts): Mesh | undefined => {
+export const ChipMesh = (opts: ChipOpts): Mesh => {
   const path = createPath();
   const geometry = createGeometry(path, opts);
   const texture = createCanvasTexture(path, opts);
