@@ -1,9 +1,9 @@
 import { Rank, Suit } from 'blackjack-types';
 
-export const WIDTH = 63.5;
-export const HEIGHT = 88.9;
-export const THICKNESS = 2;
-export const CORNER_RADIUS = 2;
+export const CARD_WIDTH = 63.5;
+export const CARD_HEIGHT = 88.9;
+export const CARD_THICKNESS = 2;
+export const CARD_CORNER_RADIUS = 2;
 
 export const ColorBySuit: Record<Suit, string> = {
   [Suit.Clubs]: 'black',

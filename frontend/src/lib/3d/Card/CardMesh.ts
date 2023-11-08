@@ -12,7 +12,15 @@ import {
 } from 'three';
 
 import type { ICard } from 'blackjack-types';
-import { CORNER_RADIUS, ColorBySuit, HEIGHT, RankToString, SuitToString, THICKNESS, WIDTH } from './Card.constants';
+import {
+  CARD_CORNER_RADIUS,
+  ColorBySuit,
+  CARD_HEIGHT,
+  RankToString,
+  SuitToString,
+  CARD_THICKNESS,
+  CARD_WIDTH,
+} from './Card.constants';
 
 interface CardOpts {
   card: ICard;
@@ -31,7 +39,7 @@ export const CardMesh = (opts: CardOpts): Group => {
   const backMaterial = new MeshStandardMaterial({ color: 'black' });
 
   const frontMesh = new Mesh(front, [frontMaterial, sideMaterial]);
-  frontMesh.translateZ(THICKNESS / 2);
+  frontMesh.translateZ(CARD_THICKNESS / 2);
   const backMesh = new Mesh(back, [backMaterial, sideMaterial]);
 
   const group = new Group();
@@ -43,18 +51,18 @@ export const CardMesh = (opts: CardOpts): Group => {
 
 const createGeometries = (): { front: BufferGeometry; back: BufferGeometry } => {
   const shape = new Shape();
-  shape.moveTo(CORNER_RADIUS, 0);
-  shape.lineTo(WIDTH - CORNER_RADIUS, 0);
-  shape.arc(0, -CORNER_RADIUS, CORNER_RADIUS, Math.PI / 2, 0, true);
-  shape.lineTo(WIDTH, -(HEIGHT - CORNER_RADIUS));
-  shape.arc(-CORNER_RADIUS, 0, CORNER_RADIUS, 0, -Math.PI / 2, true);
-  shape.lineTo(CORNER_RADIUS, -HEIGHT);
-  shape.arc(0, CORNER_RADIUS, CORNER_RADIUS, -Math.PI / 2, Math.PI, true);
-  shape.lineTo(0, -CORNER_RADIUS);
-  shape.arc(CORNER_RADIUS, 0, CORNER_RADIUS, Math.PI, Math.PI / 2, true);
+  shape.moveTo(CARD_CORNER_RADIUS, 0);
+  shape.lineTo(CARD_WIDTH - CARD_CORNER_RADIUS, 0);
+  shape.arc(0, -CARD_CORNER_RADIUS, CARD_CORNER_RADIUS, Math.PI / 2, 0, true);
+  shape.lineTo(CARD_WIDTH, -(CARD_HEIGHT - CARD_CORNER_RADIUS));
+  shape.arc(-CARD_CORNER_RADIUS, 0, CARD_CORNER_RADIUS, 0, -Math.PI / 2, true);
+  shape.lineTo(CARD_CORNER_RADIUS, -CARD_HEIGHT);
+  shape.arc(0, CARD_CORNER_RADIUS, CARD_CORNER_RADIUS, -Math.PI / 2, Math.PI, true);
+  shape.lineTo(0, -CARD_CORNER_RADIUS);
+  shape.arc(CARD_CORNER_RADIUS, 0, CARD_CORNER_RADIUS, Math.PI, Math.PI / 2, true);
 
   const face = new ExtrudeGeometry(shape, {
-    depth: THICKNESS / 2,
+    depth: CARD_THICKNESS / 2,
     curveSegments: 16,
   });
 
@@ -69,8 +77,8 @@ const createFrontCanvasTexture = ({ card, pxPerMm }: CardOpts): CanvasTexture =>
   const ctx = canvas.getContext('2d');
   if (ctx === null) throw new Error('Canvas 2d context is null');
 
-  ctx.canvas.width = WIDTH * pxPerMm;
-  ctx.canvas.height = HEIGHT * pxPerMm;
+  ctx.canvas.width = CARD_WIDTH * pxPerMm;
+  ctx.canvas.height = CARD_HEIGHT * pxPerMm;
   const { width, height } = ctx.canvas;
 
   // No idea why this texture is so weird... But this setup seems to fit it correctly
