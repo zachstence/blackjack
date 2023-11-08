@@ -56,18 +56,13 @@ const createFeltGeometry = (opts: TableOpts): BufferGeometry => {
 
 const createFeltCanvasTexture = (opts: TableOpts): CanvasTexture => {
   const canvas = createFeltCanvas(opts);
-  const { width, height } = canvas;
 
   const texture = new CanvasTexture(canvas);
   texture.minFilter = LinearFilter;
   texture.center.set(0.5, 0);
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;
-
-  const aspectRatio = width / height;
-  const repeatY = 1 / TABLE_RADIUS;
-  const repeatX = repeatY / aspectRatio;
-  texture.repeat.set(repeatX, repeatY);
+  texture.repeat.set(1 / (TABLE_RADIUS * 2), 1 / TABLE_RADIUS);
 
   return texture;
 };

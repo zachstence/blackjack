@@ -81,14 +81,11 @@ const createFrontCanvasTexture = ({ card, pxPerMm }: CardOpts): CanvasTexture =>
   ctx.canvas.height = CARD_HEIGHT * pxPerMm;
   const { width, height } = ctx.canvas;
 
-  // No idea why this texture is so weird... But this setup seems to fit it correctly
   const texture = new CanvasTexture(canvas);
   texture.minFilter = LinearFilter;
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;
-  const xRepeat = 100 / width;
-  const aspectRatio = width / height;
-  texture.repeat.set(xRepeat, xRepeat * aspectRatio);
+  texture.repeat.set(1 / CARD_WIDTH, 1 / CARD_HEIGHT);
 
   // Fill card with white
   ctx.fillStyle = 'white';
