@@ -42,6 +42,7 @@ export const ChipMesh = (opts: ChipOpts): Mesh => {
   });
 
   const mesh = new Mesh(geometry, material);
+  mesh.translateY(THICKNESS / 2);
 
   return mesh;
 };

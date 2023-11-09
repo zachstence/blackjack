@@ -13,8 +13,10 @@ import {
   NUM_TABLE_SEATS,
   TABLE_ARC_ANGLE,
   TABLE_ARC_INNER_RADIUS,
-  TABLE_ARC_SEAT_BOX_PADDING,
+  TABLE_BET_BOX_PADDING,
   TABLE_ARC_THICKNESS,
+  TABLE_BET_BOX_HEIGHT,
+  TABLE_BET_BOX_WIDTH,
   TABLE_OUTLINE_WIDTH,
   TABLE_RADIUS,
 } from './Table.constants';
@@ -129,9 +131,9 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   // arcText(ctx, 'INSURANCE PAYS 2:1', arcCx, arcCy, arcCenterRadius, arcEndAngle, arcStartAngle, true);
 
   // Box per each seat
-  const boxWidth = CARD_WIDTH * opts.resolution;
-  const boxHeight = CARD_HEIGHT * opts.resolution;
-  const boxPadding = TABLE_ARC_SEAT_BOX_PADDING * opts.resolution;
+  const boxWidth = TABLE_BET_BOX_WIDTH * opts.resolution;
+  const boxHeight = TABLE_BET_BOX_HEIGHT * opts.resolution;
+  const boxPadding = TABLE_BET_BOX_PADDING * opts.resolution;
   const boxRadius = arcOuterRadius + boxPadding;
 
   const dAngle = Math.abs(arcEndAngle - arcStartAngle) / (NUM_TABLE_SEATS - 1);

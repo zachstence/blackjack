@@ -45,6 +45,7 @@ export const CardMesh = (opts: CardOpts): Group => {
   const group = new Group();
   group.add(frontMesh);
   group.add(backMesh);
+  group.rotateX(-Math.PI / 2);
 
   return group;
 };
@@ -64,6 +65,7 @@ const createGeometries = (): { front: BufferGeometry; back: BufferGeometry } => 
   const face = new ExtrudeGeometry(shape, {
     depth: CARD_THICKNESS / 2,
     curveSegments: 16,
+    bevelEnabled: false,
   });
 
   const front = face;

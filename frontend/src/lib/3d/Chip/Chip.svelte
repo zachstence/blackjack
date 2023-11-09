@@ -17,6 +17,4 @@
   });
 </script>
 
-{#if chip}
-  <T is={chip} />
-{/if}
+<T is={chip} />
