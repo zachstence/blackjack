@@ -20,6 +20,8 @@ import {
   SuitToString,
   CARD_THICKNESS,
   CARD_WIDTH,
+  CARD_CORNER_MARGIN,
+  CARD_ART_MARGIN,
 } from './Card.constants';
 import { onMount } from 'svelte';
 
@@ -108,11 +110,40 @@ export const createFrontCanvas = ({ card, pxPerMm }: CardOpts): HTMLCanvasElemen
 
   // Draw suit and rank
   ctx.fillStyle = ColorBySuit[card.suit];
-  ctx.font = '3000px sans-serif';
+  const fontSize = 6 * pxPerMm;
+  ctx.font = `bold ${fontSize}px sans-serif`;
+  const margin = CARD_CORNER_MARGIN * pxPerMm;
+  const suitStr = SuitToString[card.suit];
+  const rankStr = RankToString[card.rank];
+
+  // ... Top left
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const text = `${SuitToString[card.suit]}${RankToString[card.rank]}`;
-  ctx.fillText(text, width / 2, height / 2);
+  ctx.textBaseline = 'top';
+  const { width: rankWidth } = ctx.measureText(rankStr);
+  const { width: suitWidth } = ctx.measureText(suitStr);
+  const maxWidth = Math.max(rankWidth, suitWidth);
+  ctx.fillText(rankStr, margin + maxWidth / 2, margin);
+  ctx.fillText(suitStr, margin + maxWidth / 2, margin + fontSize);
+
+  // ... Upside-down in bottom right
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate(Math.PI);
+  ctx.translate(-width / 2, -height / 2);
+  ctx.fillText(rankStr, margin + maxWidth / 2, margin);
+  ctx.fillText(suitStr, margin + maxWidth / 2, margin + fontSize);
+  ctx.restore();
+
+  // Draw placeholder box for card art in the middle
+  ctx.strokeStyle = 'black';
+  const artOutlineStrokeWidth = 0.5 * pxPerMm;
+  ctx.lineWidth = artOutlineStrokeWidth;
+  const cardArtMargin = CARD_ART_MARGIN * pxPerMm;
+  const artOutlineX = cardArtMargin;
+  const artOutlineY = cardArtMargin;
+  const artOutlineWidth = width - cardArtMargin * 2;
+  const artOutlineHeight = height - cardArtMargin * 2;
+  ctx.strokeRect(artOutlineX, artOutlineY, artOutlineWidth, artOutlineHeight);
 
   return canvas;
 };
