@@ -1,7 +1,7 @@
 <script lang="ts">
   import { T } from '@threlte/core';
 
-  import { CardMesh } from './CardMesh';
+  import { CardMesh } from './Card.three';
   import type { ICard } from 'blackjack-types';
 
   export let card: ICard;
@@ -10,6 +10,4 @@
   $: group = CardMesh({ card, pxPerMm });
 </script>
 
-{#if group}
-  <T is={group} />
-{/if}
+<T is={group} />

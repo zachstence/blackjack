@@ -21,6 +21,7 @@ import {
   CARD_THICKNESS,
   CARD_WIDTH,
 } from './Card.constants';
+import { onMount } from 'svelte';
 
 interface CardOpts {
   card: ICard;
@@ -28,24 +29,27 @@ interface CardOpts {
 }
 
 export const CardMesh = (opts: CardOpts): Group => {
-  const { front, back } = createGeometries();
-
-  const frontTexture = createFrontCanvasTexture(opts);
-
-  const frontMaterial = new MeshStandardMaterial({
-    map: frontTexture,
-  });
-  const sideMaterial = new MeshStandardMaterial({ color: 'white', side: DoubleSide });
-  const backMaterial = new MeshStandardMaterial({ color: 'black' });
-
-  const frontMesh = new Mesh(front, [frontMaterial, sideMaterial]);
-  frontMesh.translateZ(CARD_THICKNESS / 2);
-  const backMesh = new Mesh(back, [backMaterial, sideMaterial]);
-
   const group = new Group();
-  group.add(frontMesh);
-  group.add(backMesh);
-  group.rotateX(-Math.PI / 2);
+
+  onMount(() => {
+    const { front, back } = createGeometries();
+
+    const frontTexture = createFrontCanvasTexture(opts);
+
+    const frontMaterial = new MeshStandardMaterial({
+      map: frontTexture,
+    });
+    const sideMaterial = new MeshStandardMaterial({ color: 'white', side: DoubleSide });
+    const backMaterial = new MeshStandardMaterial({ color: 'black' });
+
+    const frontMesh = new Mesh(front, [frontMaterial, sideMaterial]);
+    frontMesh.translateZ(CARD_THICKNESS / 2);
+    const backMesh = new Mesh(back, [backMaterial, sideMaterial]);
+
+    group.add(frontMesh);
+    group.add(backMesh);
+    group.rotateX(-Math.PI / 2);
+  });
 
   return group;
 };
@@ -74,7 +78,19 @@ const createGeometries = (): { front: BufferGeometry; back: BufferGeometry } => 
   return { front, back };
 };
 
-const createFrontCanvasTexture = ({ card, pxPerMm }: CardOpts): CanvasTexture => {
+export const createFrontCanvasTexture = (opts: CardOpts): CanvasTexture => {
+  const canvas = createFrontCanvas(opts);
+
+  const texture = new CanvasTexture(canvas);
+  texture.minFilter = LinearFilter;
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  texture.repeat.set(1 / CARD_WIDTH, 1 / CARD_HEIGHT);
+
+  return texture;
+};
+
+export const createFrontCanvas = ({ card, pxPerMm }: CardOpts): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (ctx === null) throw new Error('Canvas 2d context is null');
@@ -83,18 +99,12 @@ const createFrontCanvasTexture = ({ card, pxPerMm }: CardOpts): CanvasTexture =>
   ctx.canvas.height = CARD_HEIGHT * pxPerMm;
   const { width, height } = ctx.canvas;
 
-  const texture = new CanvasTexture(canvas);
-  texture.minFilter = LinearFilter;
-  texture.wrapS = RepeatWrapping;
-  texture.wrapT = RepeatWrapping;
-  texture.repeat.set(1 / CARD_WIDTH, 1 / CARD_HEIGHT);
-
   // Fill card with white
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, width, height);
 
   // Don't draw suit/rank on hidden cards
-  if (card.hidden) return texture;
+  if (card.hidden) return canvas;
 
   // Draw suit and rank
   ctx.fillStyle = ColorBySuit[card.suit];
@@ -104,5 +114,5 @@ const createFrontCanvasTexture = ({ card, pxPerMm }: CardOpts): CanvasTexture =>
   const text = `${SuitToString[card.suit]}${RankToString[card.rank]}`;
   ctx.fillText(text, width / 2, height / 2);
 
-  return texture;
+  return canvas;
 };

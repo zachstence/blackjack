@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { Hst } from '@histoire/plugin-svelte';
+  import { T } from '@threlte/core';
 
   import TestCanvas from '../TestCanvas.svelte';
   import TestScene from '../TestScene.svelte';
 
-  import Card from './Card.svelte';
   import { Rank, Suit } from 'blackjack-types';
+  import { CardMesh, createFrontCanvas } from './Card.three';
 
   export let Hst: Hst;
 
@@ -15,7 +16,21 @@
   const ranks = Object.values(Rank);
   let rank = ranks[0];
 
-  $: card = { hidden: false, suit, rank };
+  $: opts = {
+    card: { hidden: false, suit, rank },
+    pxPerMm: 100,
+  };
+
+  $: card = CardMesh(opts);
+
+  let canvasContainer: HTMLDivElement;
+  $: {
+    if (canvasContainer) {
+      const canvas = createFrontCanvas(opts);
+      canvas.style.width = '100%';
+      canvasContainer.replaceChildren(canvas);
+    }
+  }
 </script>
 
 <Hst.Story>
@@ -27,8 +42,12 @@
   <Hst.Variant title="Card">
     <TestCanvas>
       <TestScene>
-        <Card {card} />
+        <T is={card} />
       </TestScene>
     </TestCanvas>
+  </Hst.Variant>
+
+  <Hst.Variant title="Front Canvas">
+    <div bind:this={canvasContainer} />
   </Hst.Variant>
 </Hst.Story>
