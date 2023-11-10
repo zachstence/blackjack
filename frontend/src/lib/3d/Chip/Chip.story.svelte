@@ -11,9 +11,6 @@
 
   let denominationStr = '1';
   $: denomination = parseInt(denominationStr) as Denomination;
-  let radialResolution = 128;
-  let pathResolution = 256;
-  let canvasScale = 4;
 </script>
 
 <Hst.Story>
@@ -24,7 +21,7 @@
   <Hst.Variant title="Chip">
     <TestCanvas>
       <TestScene>
-        <Chip {denomination} {radialResolution} {pathResolution} {canvasScale} />
+        <Chip {denomination} />
       </TestScene>
     </TestCanvas>
   </Hst.Variant>

@@ -1,4 +1,4 @@
-import type { Denomination } from './Chip.types';
+import type { ChipLODSpec, Denomination } from './Chip.types';
 
 export const DIAMETER = 39;
 export const CIRCUMFERENCE = Math.PI * DIAMETER;
@@ -27,3 +27,66 @@ export const ColorByDenomination: Record<Denomination, string> = {
   [25_000]: 'gray',
   [100_000]: 'black',
 };
+
+export const CHIP_LODS: ChipLODSpec[] = [
+  {
+    distance: 0,
+    pathResolution: 250,
+    radialResolution: 60,
+    textureResolution: 10,
+  },
+  {
+    distance: 50,
+    pathResolution: 200,
+    radialResolution: 40,
+    textureResolution: 5,
+  },
+  {
+    distance: 100,
+    pathResolution: 175,
+    radialResolution: 35,
+    textureResolution: 4,
+  },
+  {
+    distance: 150,
+    pathResolution: 150,
+    radialResolution: 30,
+    textureResolution: 4,
+  },
+  {
+    distance: 200,
+    pathResolution: 125,
+    radialResolution: 25,
+    textureResolution: 3,
+  },
+  {
+    distance: 250,
+    pathResolution: 100,
+    radialResolution: 20,
+    textureResolution: 2,
+  },
+  {
+    distance: 300,
+    pathResolution: 80,
+    radialResolution: 20,
+    textureResolution: 2,
+  },
+  {
+    distance: 350,
+    pathResolution: 80,
+    radialResolution: 19,
+    textureResolution: 2,
+  },
+  {
+    distance: 400,
+    pathResolution: 80,
+    radialResolution: 18,
+    textureResolution: 2,
+  },
+  {
+    distance: 500,
+    pathResolution: 60,
+    radialResolution: 16,
+    textureResolution: 1,
+  },
+];

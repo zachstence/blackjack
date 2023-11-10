@@ -5,15 +5,9 @@
   import { ChipMesh } from './ChipMesh';
 
   export let denomination: Denomination;
-  export let radialResolution: number = 128;
-  export let pathResolution: number = 256;
-  export let canvasScale: number = 4;
 
   $: chip = ChipMesh({
     denomination,
-    radialResolution,
-    pathResolution,
-    canvasScale,
   });
 </script>
 

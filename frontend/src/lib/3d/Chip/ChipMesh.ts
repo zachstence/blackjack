@@ -2,6 +2,7 @@ import {
   BufferGeometry,
   CanvasTexture,
   DoubleSide,
+  LOD,
   LatheGeometry,
   LinearFilter,
   Mesh,
@@ -9,8 +10,9 @@ import {
   Path,
 } from 'three';
 
-import type { Denomination } from './Chip.types';
+import type { ChipLODSpec, Denomination } from './Chip.types';
 import {
+  CHIP_LODS,
   CIRCUMFERENCE,
   ColorByDenomination,
   FILLET_RADIUS,
@@ -26,25 +28,29 @@ import {
 
 export interface ChipOpts {
   denomination: Denomination;
-  radialResolution: number;
-  pathResolution: number;
-  canvasScale: number;
 }
 
-export const ChipMesh = (opts: ChipOpts): Mesh => {
+export const ChipMesh = (opts: ChipOpts): LOD => {
+  const lod = new LOD();
+
   const path = createPath();
-  const geometry = createGeometry(path, opts);
-  const texture = createCanvasTexture(path, opts);
 
-  const material = new MeshStandardMaterial({
-    map: texture,
-    side: DoubleSide,
-  });
+  for (const lodSpec of CHIP_LODS) {
+    const geometry = createGeometry(path, lodSpec);
+    const texture = createCanvasTexture(path, opts, lodSpec);
 
-  const mesh = new Mesh(geometry, material);
-  mesh.translateY(THICKNESS / 2);
+    const material = new MeshStandardMaterial({
+      map: texture,
+      side: DoubleSide,
+    });
 
-  return mesh;
+    const mesh = new Mesh(geometry, material);
+    mesh.translateY(THICKNESS / 2);
+
+    lod.addLevel(mesh, lodSpec.distance);
+  }
+
+  return lod;
 };
 
 const createPath = (): Path => {
@@ -70,24 +76,21 @@ const createPath = (): Path => {
   return path;
 };
 
-const createGeometry = (path: Path, { pathResolution, radialResolution }: ChipOpts): BufferGeometry => {
-  const points = path.getSpacedPoints(pathResolution);
-  const geometry = new LatheGeometry(points, radialResolution);
+const createGeometry = (path: Path, lodSpec: ChipLODSpec): BufferGeometry => {
+  const points = path.getSpacedPoints(lodSpec.pathResolution);
+  const geometry = new LatheGeometry(points, lodSpec.radialResolution);
   return geometry;
 };
 
-const createCanvasTexture = (
-  path: Path,
-  { denomination, radialResolution, pathResolution, canvasScale }: ChipOpts,
-): CanvasTexture => {
+const createCanvasTexture = (path: Path, { denomination }: ChipOpts, lodSpec: ChipLODSpec): CanvasTexture => {
   const pathLength = path.getLength();
 
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (ctx === null) throw new Error('Canvas 2d context is null');
 
-  ctx.canvas.width = radialResolution * canvasScale;
-  ctx.canvas.height = pathResolution * canvasScale;
+  ctx.canvas.width = CIRCUMFERENCE * lodSpec.textureResolution;
+  ctx.canvas.height = pathLength * lodSpec.textureResolution;
   const { width, height } = ctx.canvas;
 
   const stripeWidthPx = (STRIPE_WIDTH / CIRCUMFERENCE) * width;
