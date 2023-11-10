@@ -39,7 +39,7 @@ export const BET_BOXES: { position: Vector3; rotationY: number }[] = Array.from(
     const { x, y: z } = polarToRectangular(TABLE_BET_BOX_RADIUS, a);
     return {
       position: new Vector3(x + TABLE_ARC_CENTER_X, 0, z + TABLE_ARC_CENTER_Z),
-      rotationY: a,
+      rotationY: a - Math.PI / 2,
     };
   },
 );

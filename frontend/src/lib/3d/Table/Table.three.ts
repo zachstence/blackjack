@@ -133,7 +133,6 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   // Box per each seat
   const boxWidth = TABLE_BET_BOX_WIDTH * opts.resolution;
   const boxHeight = TABLE_BET_BOX_HEIGHT * opts.resolution;
-  const boxPadding = TABLE_BET_BOX_PADDING * opts.resolution;
 
   for (const { position, rotationY } of BET_BOXES) {
     const x = position.x * opts.resolution + w / 2;
@@ -141,7 +140,7 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
 
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(rotationY - Math.PI / 2);
+    ctx.rotate(rotationY);
     ctx.strokeRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight);
     ctx.restore();
   }
