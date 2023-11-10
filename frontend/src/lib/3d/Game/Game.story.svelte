@@ -35,7 +35,7 @@
     shoe: [],
     dealer: {
       hand: {
-        cards: [],
+        cards: [{ hidden: true }, { hidden: false, suit: Suit.Clubs, rank: Rank.Two }],
         status: HandStatus.Hitting,
         value: { soft: null, hard: 0 },
       },
