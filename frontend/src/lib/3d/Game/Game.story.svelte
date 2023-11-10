@@ -20,8 +20,10 @@
     winnings: null,
 
     cards: [
-      { hidden: false, suit: Suit.Spades, rank: Rank.Ten },
-      { hidden: false, suit: Suit.Hearts, rank: Rank.Ten },
+      { hidden: false, suit: Suit.Diamonds, rank: Rank.Ace },
+      { hidden: false, suit: Suit.Clubs, rank: Rank.Two },
+      { hidden: false, suit: Suit.Hearts, rank: Rank.Three },
+      { hidden: false, suit: Suit.Spades, rank: Rank.Four },
     ],
     status: HandStatus.Hitting,
     value: { soft: null, hard: 20 },
