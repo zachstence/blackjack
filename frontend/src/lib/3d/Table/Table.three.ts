@@ -11,7 +11,6 @@ import {
 } from 'three';
 import {
   NUM_TABLE_SEATS,
-  TABLE_ARC_ANGLE,
   TABLE_ARC_INNER_RADIUS,
   TABLE_BET_BOX_PADDING,
   TABLE_ARC_THICKNESS,
@@ -19,10 +18,13 @@ import {
   TABLE_BET_BOX_WIDTH,
   TABLE_OUTLINE_WIDTH,
   TABLE_RADIUS,
+  TABLE_ARC_START_ANGLE,
+  TABLE_ARC_END_ANGLE,
+  TABLE_ARC_BET_BOX_D_ANGLE,
+  BET_BOXES,
 } from './Table.constants';
 import { onMount } from 'svelte';
 import { polarToRectangular } from '../polar';
-import { CARD_HEIGHT, CARD_WIDTH } from '../Card/Card.constants';
 
 interface TableOpts {
   color: string;
@@ -83,8 +85,6 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   const arcThickness = TABLE_ARC_THICKNESS * opts.resolution;
   const arcOuterRadius = arcInnerRadius + arcThickness;
   const arcCenterRadius = arcInnerRadius + arcThickness / 2;
-  const arcStartAngle = Math.PI / 2 - TABLE_ARC_ANGLE / 2;
-  const arcEndAngle = arcStartAngle + TABLE_ARC_ANGLE;
 
   const arcCx = cx;
   const arcCy = cy - arcInnerRadius;
@@ -98,27 +98,27 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
 
   // Inner arc
   ctx.beginPath();
-  ctx.arc(arcCx, arcCy, arcInnerRadius, arcStartAngle, arcEndAngle);
+  ctx.arc(arcCx, arcCy, arcInnerRadius, TABLE_ARC_START_ANGLE, TABLE_ARC_END_ANGLE);
   ctx.stroke();
 
   // Outer arc
   ctx.beginPath();
-  ctx.arc(arcCx, arcCy, arcOuterRadius, arcStartAngle, arcEndAngle);
+  ctx.arc(arcCx, arcCy, arcOuterRadius, TABLE_ARC_START_ANGLE, TABLE_ARC_END_ANGLE);
   ctx.stroke();
 
   const capRadius = arcThickness / 2;
-  const capCy = arcCy + arcCenterRadius * Math.sin(arcStartAngle);
-  const capStartAngle = -Math.PI + arcEndAngle;
+  const capCy = arcCy + arcCenterRadius * Math.sin(TABLE_ARC_START_ANGLE);
+  const capStartAngle = -Math.PI + TABLE_ARC_END_ANGLE;
   const capEndAngle = capStartAngle + Math.PI;
 
   // Left cap
-  const leftCapCx = arcCx + arcCenterRadius * Math.cos(arcEndAngle);
+  const leftCapCx = arcCx + arcCenterRadius * Math.cos(TABLE_ARC_END_ANGLE);
   ctx.beginPath();
   ctx.arc(leftCapCx, capCy, capRadius, capStartAngle, capEndAngle, true);
   ctx.stroke();
 
   // Right cap
-  const rightCapCx = arcCx + arcCenterRadius * Math.cos(arcStartAngle);
+  const rightCapCx = arcCx + arcCenterRadius * Math.cos(TABLE_ARC_START_ANGLE);
   ctx.beginPath();
   ctx.arc(rightCapCx, capCy, capRadius, -capStartAngle, -capEndAngle, true);
   ctx.stroke();
@@ -128,25 +128,21 @@ export const createFeltCanvas = (opts: TableOpts): HTMLCanvasElement => {
   // ctx.font = `${arcThickness / 2}px sans-serif`;
   // ctx.textAlign = 'center';
   // ctx.textBaseline = 'middle';
-  // arcText(ctx, 'INSURANCE PAYS 2:1', arcCx, arcCy, arcCenterRadius, arcEndAngle, arcStartAngle, true);
+  // arcText(ctx, 'INSURANCE PAYS 2:1', arcCx, arcCy, arcCenterRadius, TABLE_ARC_END_ANGLE, TABLE_ARC_START_ANGLE, true);
 
   // Box per each seat
   const boxWidth = TABLE_BET_BOX_WIDTH * opts.resolution;
   const boxHeight = TABLE_BET_BOX_HEIGHT * opts.resolution;
   const boxPadding = TABLE_BET_BOX_PADDING * opts.resolution;
-  const boxRadius = arcOuterRadius + boxPadding;
 
-  const dAngle = Math.abs(arcEndAngle - arcStartAngle) / (NUM_TABLE_SEATS - 1);
-  for (let i = 0; i < NUM_TABLE_SEATS; i++) {
-    const a = arcStartAngle + dAngle * i;
-    const { x: relX, y: relY } = polarToRectangular(boxRadius, a);
-    const cardX = arcCx + relX;
-    const cardY = arcCy + relY;
+  for (const { position, rotationY } of BET_BOXES) {
+    const x = position.x * opts.resolution + w / 2;
+    const y = position.z * opts.resolution;
 
     ctx.save();
-    ctx.translate(cardX, cardY);
-    ctx.rotate(a - Math.PI / 2);
-    ctx.strokeRect(-boxWidth / 2, 0, boxWidth, boxHeight);
+    ctx.translate(x, y);
+    ctx.rotate(rotationY - Math.PI / 2);
+    ctx.strokeRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight);
     ctx.restore();
   }
 
