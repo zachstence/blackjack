@@ -4,18 +4,25 @@
   import TestCanvas from '../TestCanvas.svelte';
   import TestScene from '../TestScene.svelte';
   import Hand from './PlayerHand.svelte';
-  import { Suit, Rank, HandStatus, type IPlayerHand } from 'blackjack-types';
+  import { Suit, Rank, HandStatus, type IPlayerHand, HandAction } from 'blackjack-types';
 
   export let Hst: Hst;
 
   let bet = 123;
 
+  const onBet = (amount: number) => console.log(`onBet(${amount})`);
+  const onStand = () => console.log('onStand()');
+  const onHit = () => console.log('onHit()');
+  const onDouble = () => console.log('onDouble()');
+  const onSplit = () => console.log('onSplit()');
+
+  let hand: IPlayerHand;
   $: hand = {
     id: 'id',
     playerId: 'playerId',
     bet,
     insurance: null,
-    actions: [],
+    actions: Object.values(HandAction),
     settleStatus: null,
     winnings: null,
 
@@ -36,7 +43,7 @@
   <Hst.Variant title="PlayerHand">
     <TestCanvas>
       <TestScene>
-        <Hand {hand} />
+        <Hand {hand} {onBet} {onStand} {onHit} {onDouble} {onSplit} showActions />
       </TestScene>
     </TestCanvas>
   </Hst.Variant>
