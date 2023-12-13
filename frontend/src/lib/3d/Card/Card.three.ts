@@ -111,7 +111,7 @@ export const createFrontCanvas = ({ card, pxPerMm }: CardOpts): HTMLCanvasElemen
 
   // Draw suit and rank
   ctx.fillStyle = ColorBySuit[card.suit];
-  const fontSize = 6 * pxPerMm;
+  const fontSize = 10 * pxPerMm;
   ctx.font = `bold ${fontSize}px sans-serif`;
   const margin = CARD_CORNER_MARGIN * pxPerMm;
   const suitStr = SuitToString[card.suit];
