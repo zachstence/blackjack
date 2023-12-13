@@ -11,7 +11,7 @@ import {
   Shape,
 } from 'three';
 
-import type { ICard } from 'blackjack-types';
+import { Rank, type ICard, Suit } from 'blackjack-types';
 import {
   CARD_CORNER_RADIUS,
   ColorBySuit,
@@ -36,7 +36,12 @@ export const CardMesh = (opts: CardOpts): Group => {
   onMount(() => {
     const { front, back } = createGeometries();
 
-    const frontTexture = createFrontCanvasTexture(opts);
+    let frontTexture: CanvasTexture;
+    if (opts.card.hidden) {
+      frontTexture = HIDDEN_CARD_TEXTURE;
+    } else {
+      frontTexture = CARD_TEXTURES[opts.card.suit][opts.card.rank];
+    }
 
     const frontMaterial = new MeshStandardMaterial({
       map: frontTexture,
@@ -148,3 +153,12 @@ export const createFrontCanvas = ({ card }: CardOpts): HTMLCanvasElement => {
 
   return canvas;
 };
+
+const CARD_TEXTURES = {} as Record<Suit, Record<Rank, CanvasTexture>>;
+Object.values(Suit).forEach((suit) => {
+  CARD_TEXTURES[suit] = {} as Record<Rank, CanvasTexture>;
+  Object.values(Rank).forEach((rank) => {
+    CARD_TEXTURES[suit][rank] = createFrontCanvasTexture({ card: { hidden: false, suit, rank } });
+  });
+});
+const HIDDEN_CARD_TEXTURE = createFrontCanvasTexture({ card: { hidden: true } });
