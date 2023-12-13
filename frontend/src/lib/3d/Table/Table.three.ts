@@ -2,7 +2,7 @@ import {
   BufferGeometry,
   CanvasTexture,
   Group,
-  LinearFilter,
+  NearestFilter,
   Mesh,
   MeshStandardMaterial,
   RepeatWrapping,
@@ -61,7 +61,8 @@ const createFeltCanvasTexture = (opts: TableOpts): CanvasTexture => {
   const canvas = createFeltCanvas(opts);
 
   const texture = new CanvasTexture(canvas);
-  texture.minFilter = LinearFilter;
+  texture.minFilter = NearestFilter;
+  texture.generateMipmaps = false;
   texture.center.set(0.5, 0);
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;

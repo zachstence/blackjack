@@ -4,9 +4,9 @@ import {
   DoubleSide,
   ExtrudeGeometry,
   Group,
-  LinearFilter,
   Mesh,
   MeshStandardMaterial,
+  NearestFilter,
   RepeatWrapping,
   Shape,
 } from 'three';
@@ -84,7 +84,8 @@ export const createFrontCanvasTexture = (opts: CardOpts): CanvasTexture => {
   const canvas = createFrontCanvas(opts);
 
   const texture = new CanvasTexture(canvas);
-  texture.minFilter = LinearFilter;
+  texture.minFilter = NearestFilter;
+  texture.generateMipmaps = false;
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;
   texture.repeat.set(1 / CARD_WIDTH, 1 / CARD_HEIGHT);

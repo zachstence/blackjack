@@ -4,9 +4,9 @@ import {
   DoubleSide,
   LOD,
   LatheGeometry,
-  LinearFilter,
   Mesh,
   MeshStandardMaterial,
+  NearestFilter,
   Path,
 } from 'three';
 
@@ -111,7 +111,8 @@ const createCanvasTexture = (path: Path, { denomination }: ChipOpts, lodSpec: Ch
   }
 
   const texture = new CanvasTexture(canvas);
-  texture.minFilter = LinearFilter;
+  texture.minFilter = NearestFilter;
+  texture.generateMipmaps = false;
 
   return texture;
 };
