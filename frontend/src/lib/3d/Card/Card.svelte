@@ -5,9 +5,8 @@
   import type { ICard } from 'blackjack-types';
 
   export let card: ICard;
-  export let pxPerMm: number = 100;
 
-  $: group = CardMesh({ card, pxPerMm });
+  $: group = CardMesh({ card });
 </script>
 
 <T is={group} />

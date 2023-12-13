@@ -18,7 +18,6 @@
 
   $: opts = {
     card: { hidden: false, suit, rank },
-    pxPerMm: 100,
   };
 
   $: card = CardMesh(opts);

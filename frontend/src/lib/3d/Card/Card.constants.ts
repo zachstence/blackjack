@@ -6,6 +6,7 @@ export const CARD_THICKNESS = 0.2;
 export const CARD_CORNER_RADIUS = 2;
 export const CARD_CORNER_MARGIN = 4;
 export const CARD_ART_MARGIN = 15;
+export const PX_PER_MM = 100;
 
 export const ColorBySuit: Record<Suit, string> = {
   [Suit.Clubs]: 'black',

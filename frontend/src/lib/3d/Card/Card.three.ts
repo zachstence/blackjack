@@ -22,12 +22,12 @@ import {
   CARD_WIDTH,
   CARD_CORNER_MARGIN,
   CARD_ART_MARGIN,
+  PX_PER_MM,
 } from './Card.constants';
 import { onMount } from 'svelte';
 
 interface CardOpts {
   card: ICard;
-  pxPerMm: number;
 }
 
 export const CardMesh = (opts: CardOpts): Group => {
@@ -93,13 +93,13 @@ export const createFrontCanvasTexture = (opts: CardOpts): CanvasTexture => {
   return texture;
 };
 
-export const createFrontCanvas = ({ card, pxPerMm }: CardOpts): HTMLCanvasElement => {
+export const createFrontCanvas = ({ card }: CardOpts): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (ctx === null) throw new Error('Canvas 2d context is null');
 
-  ctx.canvas.width = CARD_WIDTH * pxPerMm;
-  ctx.canvas.height = CARD_HEIGHT * pxPerMm;
+  ctx.canvas.width = CARD_WIDTH * PX_PER_MM;
+  ctx.canvas.height = CARD_HEIGHT * PX_PER_MM;
   const { width, height } = ctx.canvas;
 
   // Fill card with white
@@ -111,9 +111,9 @@ export const createFrontCanvas = ({ card, pxPerMm }: CardOpts): HTMLCanvasElemen
 
   // Draw suit and rank
   ctx.fillStyle = ColorBySuit[card.suit];
-  const fontSize = 10 * pxPerMm;
+  const fontSize = 10 * PX_PER_MM;
   ctx.font = `bold ${fontSize}px sans-serif`;
-  const margin = CARD_CORNER_MARGIN * pxPerMm;
+  const margin = CARD_CORNER_MARGIN * PX_PER_MM;
   const suitStr = SuitToString[card.suit];
   const rankStr = RankToString[card.rank];
 
@@ -137,9 +137,9 @@ export const createFrontCanvas = ({ card, pxPerMm }: CardOpts): HTMLCanvasElemen
 
   // Draw placeholder box for card art in the middle
   ctx.strokeStyle = 'black';
-  const artOutlineStrokeWidth = 0.5 * pxPerMm;
+  const artOutlineStrokeWidth = 0.5 * PX_PER_MM;
   ctx.lineWidth = artOutlineStrokeWidth;
-  const cardArtMargin = CARD_ART_MARGIN * pxPerMm;
+  const cardArtMargin = CARD_ART_MARGIN * PX_PER_MM;
   const artOutlineX = cardArtMargin;
   const artOutlineY = cardArtMargin;
   const artOutlineWidth = width - cardArtMargin * 2;
