@@ -17,6 +17,13 @@
       webSocketEstablished = true;
       console.log('[websocket] connection open', event);
       logEvent('[websocket] connection open');
+
+      ws?.send(
+        JSON.stringify({
+          type: 'Test',
+          data: 'Event from client!',
+        }),
+      );
     });
     ws.addEventListener('close', (event) => {
       console.log('[websocket] connection closed', event);
