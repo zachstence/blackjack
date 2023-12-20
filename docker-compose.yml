@@ -1,13 +1,33 @@
 version: "3.9"
 
 services:
+  frontend:
+    image: node
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - 5173:5173
+    command: bash -c "cd /app/frontend && npm run dev -- --host"
+
+  server:
+    image: node
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - 3001:3001
+    command: bash -c "cd /app/server && npm run dev"
+
   db:
     image: postgres
     restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: password123
     ports:
       - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: password123
 
   adminer:
     image: adminer
