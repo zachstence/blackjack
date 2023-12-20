@@ -16,6 +16,8 @@
 
 # Technical
 
+- Store game state in Redis instead of in memory
+- Consolidate websocket server to SvelteKit application
 - Tests to prevent regressions
 - Error handling, don't crash server on errors
 - Don't give player or dealer a hand until they bet. Betting is what creates the hand.
