@@ -1,20 +1,24 @@
 import { parse } from 'url';
+import { WebSocketServer } from 'ws';
 import { nanoid } from 'nanoid';
-import WS, { WebSocketServer as WSWebSocketServer } from 'ws';
+import type { Server, WebSocket as WebSocketBase } from 'ws';
 import type { IncomingMessage } from 'http';
 import type { Duplex } from 'stream';
 
 export const GlobalThisWSS = Symbol.for('sveltekit.wss');
 
-export interface WebSocket extends WS.WebSocket {
+export interface ExtendedWebSocket extends WebSocketBase {
   socketId: string;
   // userId: string;
 }
 
-export type WebSocketServer = WS.Server<WebSocket>
+// You can define server-wide functions or class instances here
+// export interface ExtendedServer extends Server<ExtendedWebSocket> {};
+
+export type ExtendedWebSocketServer = Server<ExtendedWebSocket>;
 
 export type ExtendedGlobal = typeof globalThis & {
-  [GlobalThisWSS]: WebSocketServer;
+  [GlobalThisWSS]: ExtendedWebSocketServer;
 };
 
 export const onHttpServerUpgrade = (req: IncomingMessage, sock: Duplex, head: Buffer) => {
@@ -30,7 +34,7 @@ export const onHttpServerUpgrade = (req: IncomingMessage, sock: Duplex, head: Bu
 };
 
 export const createWSSGlobalInstance = () => {
-  const wss = new WSWebSocketServer({ noServer: true }) as WebSocketServer;
+  const wss = new WebSocketServer({ noServer: true }) as ExtendedWebSocketServer;
 
   (globalThis as ExtendedGlobal)[GlobalThisWSS] = wss;
 
