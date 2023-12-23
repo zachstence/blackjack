@@ -1,9 +1,4 @@
-let clients: { [clientId: string]: ReadableStreamDefaultController };
-
-export const initialize = () => {
-  console.log('[sse] Initializing SSE');
-  clients = {};
-};
+const clients: { [clientId: string]: ReadableStreamDefaultController } = {};
 
 export const addClient = (id: string, controller: ReadableStreamDefaultController): void => {
   console.log(`[sse] Adding client with ID ${id}`);
@@ -11,13 +6,6 @@ export const addClient = (id: string, controller: ReadableStreamDefaultControlle
     throw new Error(`[sse] Client with ID ${id} is already connected`);
   }
   clients[id] = controller;
-
-  setInterval(() => {
-    const data = {
-      now: new Date().getTime(),
-    };
-    sendDataToController(data, controller);
-  }, 1000);
 };
 
 export const removeClient = (id: string): void => {
@@ -33,8 +21,12 @@ export const getClients = (): readonly [string, ReadableStreamDefaultController]
   return Object.entries(clients);
 };
 
-const sendDataToController = (data: Record<string, unknown>, controller: ReadableStreamDefaultController): void => {
-  console.log('sending data', data);
+export const send = (clientId: string, data: Record<string, unknown>): void => {
+  const controller = clients[clientId];
+  if (!controller) {
+    console.debug(`Client ${clientId} not connected, can't send event`);
+    return;
+  }
 
   const encoder = new TextEncoder();
   const chunk = encoder.encode(`data: ${JSON.stringify(data)}\n\n`);
