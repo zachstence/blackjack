@@ -1,7 +1,14 @@
 <script lang="ts">
-  import type { PageData } from '../$types';
+  import { enhance } from '$app/forms';
+  import { goto } from '$app/navigation';
+  import type { PageData, ActionData } from './$types';
 
   export let data: PageData;
+  export let form: ActionData;
+
+  $: if (form?.table) {
+    goto(`/tables/${form?.table.id}`);
+  }
 </script>
 
 <table>
@@ -23,3 +30,8 @@
     {/each}
   </tbody>
 </table>
+
+<form method="POST" use:enhance action="?/createTable">
+  <!-- TODO form fields to create a table -->
+  <button type="submit">Create Table</button>
+</form>
