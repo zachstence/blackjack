@@ -6,6 +6,9 @@
   const tableStore = new TableStore($page.params.tableId);
   onMount(() => {
     tableStore.connect();
+    return () => {
+      tableStore.disconnect();
+    };
   });
 </script>
 
