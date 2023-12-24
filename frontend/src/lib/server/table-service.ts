@@ -18,14 +18,26 @@ export const create = async (): Promise<Table> => {
   return table;
 };
 
+const getByKey = (key: string): Promise<Table> => {
+  return redisService.getJson(key, TableSchema);
+};
+
 export const getById = async (id: string): Promise<Table> => {
   const key = buildKey(id);
-  return redisService.getJson(key, TableSchema);
+  return getByKey(key);
+};
+
+// TODO pagination
+export const list = async (): Promise<Table[]> => {
+  const keys = await redisService.listKeys(buildKey('*'));
+  console.log('tableService.list', keys);
+  const tables = await Promise.all(keys.map((key) => getByKey(key)));
+  return tables;
 };
 
 export const addPlayer = async (tableId: string, player: Player): Promise<Table> => {
   const key = buildKey(tableId);
-  const table = await redisService.getJson(key, TableSchema);
+  const table = await getByKey(key);
   table.players.push(player);
   await redisService.setJson(key, table, TableSchema);
 
@@ -34,7 +46,7 @@ export const addPlayer = async (tableId: string, player: Player): Promise<Table>
 
 export const removePlayer = async (tableId: string, playerId: string): Promise<void> => {
   const key = buildKey(tableId);
-  const table = await redisService.getJson(key, TableSchema);
+  const table = await getByKey(key);
   table.players = table.players.filter((p) => p.id !== playerId);
   await redisService.setJson(key, table, TableSchema);
 };

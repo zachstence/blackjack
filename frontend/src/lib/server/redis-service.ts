@@ -26,3 +26,7 @@ export const getJson = async <S extends ZodSchema>(key: string, schema: S): Prom
   const value = JSON.parse(raw);
   return schema.parse(value);
 };
+
+export const listKeys = async (pattern: string): Promise<string[]> => {
+  return ioredis.keys(pattern);
+};
