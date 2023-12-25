@@ -2,13 +2,15 @@ import { nanoid } from 'nanoid';
 
 import { redisService } from '$lib/server';
 import { type Player, TableSchema, type Table } from '$lib/types/realtime';
+import type { ChatMessage } from '$lib/types/realtime/chat-message.types';
 
 const buildKey = (id: string) => `table-${id}`;
 
 export const create = async (): Promise<Table> => {
   const id = nanoid();
-  const table = {
+  const table: Table = {
     id,
+    chatMessages: [],
     players: [],
   };
   const key = buildKey(id);
@@ -49,4 +51,13 @@ export const removePlayer = async (tableId: string, playerId: string): Promise<v
   const table = await getByKey(key);
   table.players = table.players.filter((p) => p.id !== playerId);
   await redisService.setJson(key, table, TableSchema);
+};
+
+export const addChatMessage = async (tableId: string, chatMessage: ChatMessage): Promise<Table> => {
+  const key = buildKey(tableId);
+  const table = await getByKey(key);
+  table.chatMessages.push(chatMessage);
+  await redisService.setJson(key, table, TableSchema);
+
+  return table;
 };

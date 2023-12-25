@@ -3,12 +3,19 @@ import type { RequestHandler } from './$types';
 
 import { sseService, tableService } from '$lib/server';
 import type { Player } from '$lib/types/realtime';
+import { redirect } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
+  const session = await locals.auth.validate();
+  if (!session) throw redirect(302, '/login');
+  const { user } = session;
+
   const player: Player = {
     id: nanoid(),
+    userId: user.userId,
     sseClientId: nanoid(),
     tableId: params.tableId,
+    name: user.username,
   };
 
   const response = new Response(
