@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { zfd } from 'zod-form-data';
 
 import type { Actions } from './$types';
@@ -12,19 +12,16 @@ const SendChatSchema = zfd.formData({
 export const actions: Actions = {
   sendChat: async ({ request, locals, params }) => {
     const session = await locals.auth.validate();
-    if (!session) throw redirect(302, '/login');
-    const userId = session.user.userId;
+    if (!session) throw error(401);
 
     const table = await tableService.getById(params.tableId);
-    const player = table.players.find((player) => player.userId === userId);
-    if (!player) throw error(403, { message: 'Player is not in table' });
 
     const formData = await request.formData();
     const { content } = SendChatSchema.parse(formData);
 
     const path = `chatMessages.${table.chatMessages.length}`;
     const message: ChatMessage = {
-      name: player.name,
+      name: session.user.username,
       content,
       timestamp: new Date().toISOString(),
     };

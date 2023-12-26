@@ -1,22 +1,33 @@
 import { nanoid } from 'nanoid';
+import { faker } from '@faker-js/faker';
 import type { RequestHandler } from './$types';
 
 import { sseService, tableService } from '$lib/server';
 import type { Player } from '$lib/types/realtime';
-import { redirect } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const session = await locals.auth.validate();
-  if (!session) throw redirect(302, '/login');
-  const { user } = session;
 
-  const player: Player = {
-    id: nanoid(),
-    userId: user.userId,
-    sseClientId: nanoid(),
-    tableId: params.tableId,
-    name: user.username,
-  };
+  let player: Player;
+  if (session) {
+    const { user } = session;
+    player = {
+      id: nanoid(),
+      playerType: 'user',
+      userId: user.userId,
+      sseClientId: nanoid(),
+      tableId: params.tableId,
+      name: user.username,
+    };
+  } else {
+    player = {
+      id: nanoid(),
+      playerType: 'guest',
+      sseClientId: nanoid(),
+      tableId: params.tableId,
+      name: generateGuestName(),
+    };
+  }
 
   const response = new Response(
     new ReadableStream({
@@ -67,3 +78,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
   return response;
 };
+
+const generateGuestName = (): string =>
+  `${faker.word.adjective()}-${faker.word.noun()}-${faker.number.int({ min: 10, max: 99 })}`.toLowerCase();
