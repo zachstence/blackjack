@@ -51,11 +51,12 @@ export const addPlayer = async (tableId: string, player: Player): Promise<Table>
   return table;
 };
 
-export const removePlayer = async (tableId: string, playerId: string): Promise<void> => {
+export const removePlayer = async (tableId: string, playerId: string): Promise<Table> => {
   const key = buildKey(tableId);
   const table = await getByKey(key);
   table.players = table.players.filter((p) => p.id !== playerId);
   await redisService.setJson(key, table, TableSchema);
+  return table;
 };
 
 export const addChatMessage = async (tableId: string, chatMessage: ChatMessage): Promise<Table> => {

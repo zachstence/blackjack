@@ -40,15 +40,20 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       },
       cancel: async () => {
         sseService.removeClient(player.sseClientId);
-        await tableService.removePlayer(params.tableId, player.id);
+        const table = await tableService.removePlayer(params.tableId, player.id);
 
-        const table = await tableService.getById(params.tableId);
-        table.players.forEach((p) => {
-          sseService.send(p.sseClientId, {
-            path: 'players',
-            value: table.players,
+        if (table.players.length === 0) {
+          // Delete table if no more players
+          await tableService.remove(params.tableId);
+        } else {
+          // Otherwise update table state
+          table.players.forEach((p) => {
+            sseService.send(p.sseClientId, {
+              path: 'players',
+              value: table.players,
+            });
           });
-        });
+        }
       },
     }),
     {
