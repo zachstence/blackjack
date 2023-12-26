@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import { Chat } from './Chat';
+  import { Chat, Game } from './_components';
   import { TableStore } from './TableStore/table.store';
   import { setTableStoreContext } from './TableStore';
 
@@ -18,6 +18,6 @@
 </script>
 
 <div class="w-full h-full flex flex-row gap-4">
-  <pre class="flex-1">{JSON.stringify($tableStore, null, 2)}</pre>
-  <Chat />
+  <Game class="flex-1" />
+  <Chat class="flex-shrink-0" />
 </div>

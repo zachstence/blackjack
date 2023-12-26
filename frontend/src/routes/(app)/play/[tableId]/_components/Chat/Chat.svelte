@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
 
-  import { getTableStoreContext } from '../TableStore';
+  import { getTableStoreContext } from '../../TableStore';
   import Message from './Message.svelte';
 
   let clazz: string = '';
