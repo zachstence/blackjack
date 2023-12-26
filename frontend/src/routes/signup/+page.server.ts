@@ -22,6 +22,7 @@ export const actions: Actions = {
         },
         attributes: {
           username,
+          is_guest: false,
         },
       });
 
