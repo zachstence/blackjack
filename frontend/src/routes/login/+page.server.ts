@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { LuciaError } from 'lucia';
 
-import { authService } from '$lib/server/lucia';
+import { auth } from '$lib/server/lucia';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -15,8 +15,8 @@ export const actions: Actions = {
     }
 
     try {
-      const key = await authService.useKey('username', username, password);
-      const session = await authService.createSession({
+      const key = await auth.useKey('username', username, password);
+      const session = await auth.createSession({
         userId: key.userId,
         attributes: {},
       });
