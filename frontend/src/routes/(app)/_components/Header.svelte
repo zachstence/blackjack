@@ -3,7 +3,6 @@
   import type { User } from 'lucia';
 
   export let user: User | undefined;
-  $: console.log(user);
 </script>
 
 <header class="navbar min-h-0 gap-2">
