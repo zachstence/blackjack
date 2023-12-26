@@ -7,10 +7,10 @@
 </script>
 
 <header class="navbar min-h-0 gap-2">
-  <div class="navbar-start gap-2">
+  <a class="navbar-start gap-2" href="/">
     <img class="h-7" src="/favicon.svg" alt="" />
     <h1 class="font-bold font-mono hidden sm:block">blackjack.stence.dev</h1>
-  </div>
+  </a>
 
   <div class="navbar-end gap-2">
     <a class="nav-link-primary" href="/play">Play</a>
