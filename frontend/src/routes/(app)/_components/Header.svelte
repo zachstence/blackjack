@@ -1,3 +1,11 @@
+<script lang="ts">
+  import UserMenu from '$lib/components/UserMenu.svelte';
+  import type { User } from 'lucia';
+
+  export let user: User | undefined;
+  $: console.log(user);
+</script>
+
 <header class="navbar min-h-0 gap-2">
   <div class="navbar-start gap-2">
     <img class="h-7" src="/favicon.svg" alt="" />
@@ -6,17 +14,21 @@
 
   <div class="navbar-end gap-2">
     <a class="nav-link-primary" href="/play">Play</a>
-    <a class="nav-link" href="/sign-in">Sign In</a>
-    <a class="nav-link" href="/sign-up">Sign Up</a>
+    {#if user}
+      <UserMenu {user} />
+    {:else}
+      <a class="nav-link" href="/sign-in">Sign In</a>
+      <a class="nav-link" href="/sign-up">Sign Up</a>
+    {/if}
   </div>
 </header>
 
 <style>
   .nav-link {
-    @apply btn btn-xs btn-ghost leading-tight;
+    @apply btn btn-sm btn-ghost leading-tight;
   }
 
   .nav-link-primary {
-    @apply btn btn-xs btn-primary leading-tight;
+    @apply btn btn-sm btn-primary leading-tight;
   }
 </style>

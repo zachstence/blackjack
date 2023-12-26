@@ -1,8 +1,11 @@
 <script lang="ts">
+  import type { PageData } from './$types';
   import Header from './_components/Header.svelte';
+
+  export let data: PageData;
 </script>
 
-<Header />
+<Header user={data.user} />
 
 <slot />
 
