@@ -11,6 +11,6 @@ export const actions: Actions = {
     }
     locals.auth.setSession(null);
 
-    throw redirect(302, '/login');
+    throw redirect(302, '/sign-in');
   },
 };

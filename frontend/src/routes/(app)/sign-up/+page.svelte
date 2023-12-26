@@ -2,7 +2,7 @@
   import { enhance } from '$app/forms';
 </script>
 
-<h1>Log in</h1>
+<h1>Sign Up</h1>
 <form method="post" use:enhance>
   <label for="username">Username</label>
   <input name="username" id="username" />
@@ -13,4 +13,4 @@
   <input type="submit" />
 </form>
 
-<a href="/signup">Sign up</a>
+<a href="/sign-in">Sign In</a>
