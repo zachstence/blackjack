@@ -25,6 +25,11 @@ export const remove = async (tableId: string): Promise<void> => {
   await redisService.remove(key);
 };
 
+export const exists = async (tableId: string): Promise<boolean> => {
+  const key = buildKey(tableId);
+  return redisService.exists(key);
+};
+
 const getByKey = (key: string): Promise<Table> => {
   return redisService.getJson(key, TableSchema);
 };

@@ -34,3 +34,7 @@ export const listKeys = async (pattern: string): Promise<string[]> => {
 export const remove = async (key: string): Promise<void> => {
   await ioredis.del(key);
 };
+
+export const exists = async (key: string): Promise<boolean> => {
+  return Boolean(await ioredis.exists(key));
+};

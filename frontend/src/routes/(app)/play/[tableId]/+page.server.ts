@@ -1,9 +1,14 @@
 import { error } from '@sveltejs/kit';
 import { zfd } from 'zod-form-data';
 
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { sseService, tableService } from '$lib/server';
 import type { ChatMessage } from '$lib/types/realtime/chat-message.types';
+
+export const load: PageServerLoad = async ({ params }) => {
+  const tableExists = await tableService.exists(params.tableId);
+  if (!tableExists) throw error(404);
+};
 
 const SendChatSchema = zfd.formData({
   content: zfd.text(),
