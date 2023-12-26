@@ -16,6 +16,7 @@
 
 # Technical
 
+- Create a batch job that deletes Guest users with no valid sessions
 - Store game state in Redis instead of in memory
 - Consolidate websocket server to SvelteKit application
 - Tests to prevent regressions
