@@ -20,6 +20,11 @@ export const create = async (): Promise<Table> => {
   return table;
 };
 
+export const remove = async (tableId: string): Promise<void> => {
+  const key = buildKey(tableId);
+  await redisService.remove(key);
+};
+
 const getByKey = (key: string): Promise<Table> => {
   return redisService.getJson(key, TableSchema);
 };

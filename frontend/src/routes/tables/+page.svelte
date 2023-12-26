@@ -26,6 +26,12 @@
         <td>
           <a href={`/tables/${table.id}`}>Join</a>
         </td>
+        <td>
+          <form method="POST" action="?/deleteTable" use:enhance>
+            <input name="tableId" value={table.id} class="hidden" />
+            <button type="submit">Delete</button>
+          </form>
+        </td>
       </tr>
     {/each}
   </tbody>

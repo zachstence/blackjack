@@ -1,4 +1,5 @@
 import { tableService } from '$lib/server';
+import { zfd } from 'zod-form-data';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
@@ -6,9 +7,18 @@ export const load: PageServerLoad = async () => {
   return { tables };
 };
 
+const DeleteTableSchema = zfd.formData({
+  tableId: zfd.text(),
+});
+
 export const actions: Actions = {
   createTable: async () => {
     const table = await tableService.create();
     return { table };
+  },
+  deleteTable: async ({ request }) => {
+    const formData = await request.formData();
+    const { tableId } = DeleteTableSchema.parse(formData);
+    await tableService.remove(tableId);
   },
 };

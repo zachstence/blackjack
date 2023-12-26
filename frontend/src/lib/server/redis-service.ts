@@ -30,3 +30,7 @@ export const getJson = async <S extends ZodSchema>(key: string, schema: S): Prom
 export const listKeys = async (pattern: string): Promise<string[]> => {
   return ioredis.keys(pattern);
 };
+
+export const remove = async (key: string): Promise<void> => {
+  await ioredis.del(key);
+};
