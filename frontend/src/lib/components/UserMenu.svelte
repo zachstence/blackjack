@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import type { User } from 'lucia';
 
   export let user: User;
+
+  const LOGOUT_FORM_ID = 'LOGOUT_FORM_ID';
 </script>
 
 <div class="dropdown dropdown-end">
@@ -12,10 +15,9 @@
   </div>
   <ul class="dropdown-content menu mt-1 w-40 z-[1] bg-base-200 rounded-box shadow">
     <li><a href="/{user.username}">Profile</a></li>
-    <li>
-      <form method="POST" action="/?/logout">
-        <button type="submit">Sign Out</button>
-      </form>
-    </li>
+    <li><button type="submit" form={LOGOUT_FORM_ID}>Sign Out</button></li>
   </ul>
 </div>
+
+<!-- <form /> inside <li /> wasn't working -->
+<form id={LOGOUT_FORM_ID} method="POST" action="/?/logout" use:enhance class="hidden" />
