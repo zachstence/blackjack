@@ -12,12 +12,7 @@ export const auth = lucia({
   middleware: sveltekit(),
   adapter: prisma(client),
 
-  getUserAttributes: (data) => {
-    return {
-      username: data.username,
-      isGuest: data.is_guest,
-    };
-  },
+  getUserAttributes: (data) => data,
 });
 
 export type Auth = typeof auth;

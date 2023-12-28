@@ -26,6 +26,7 @@ export const actions: Actions = {
 
     const path = `chatMessages.${table.chatMessages.length}`;
     const message: ChatMessage = {
+      userId: session.user.userId,
       name: session.user.username,
       content,
       timestamp: new Date().toISOString(),

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { getMeStoreContext } from '../../../me.store';
 
   import { getTableStoreContext } from '../../TableStore';
   import Message from './Message.svelte';
@@ -8,6 +9,7 @@
   export { clazz as class };
 
   const tableStore = getTableStoreContext();
+  const me = getMeStoreContext();
 
   // Automatically scroll to bottom of chat
   let scrollElement: HTMLDivElement | undefined;
@@ -22,8 +24,8 @@
 
 <div bind:this={scrollElement} class="max-h-full flex flex-col border border-black {clazz}">
   <div class="flex-1 flex flex-col overflow-y-auto">
-    {#each $tableStore.chatMessages as message, i}
-      <Message class="{i % 2 === 0 ? 'bg-slate-200' : 'bg-slate-300'} border-b border-black" {message} />
+    {#each $tableStore.chatMessages as message}
+      <Message {message} me={message.userId === $me.id} />
     {/each}
   </div>
 

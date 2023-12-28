@@ -7,6 +7,7 @@
   let clazz = '';
   export { clazz as class };
   export let message: ChatMessage;
+  export let me: boolean;
 
   $: date = new Date(message.timestamp);
   $: relativeTime = formatDistanceToNow(date, { addSuffix: true });
@@ -21,15 +22,17 @@
   });
 </script>
 
-<div class="{clazz} max-w-full flex flex-col gap-1 px-4 py-2">
-  <div class="flex flex-row items-end justify-between gap-1">
-    <div
-      class="flex-1 min-w-0 font-semibold leading-tight overflow-hidden whitespace-nowrap text-ellipsis"
-      title={message.name}
-    >
-      {message.name}
-    </div>
+<div class="{clazz} chat {me ? 'chat-end' : 'chat-start'}">
+  <!-- TODO add avatars? -->
+  <div class="chat-header">
+    {message.name}
+  </div>
+
+  <div class="chat-bubble">
+    {message.content}
+  </div>
+
+  <div class="chat-footer">
     <time class="text-xs italic" datetime={date.toTimeString()} title={date.toLocaleTimeString()}>{relativeTime}</time>
   </div>
-  <div class="text-xs">{message.content}</div>
 </div>
