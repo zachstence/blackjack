@@ -1,5 +1,10 @@
-export * as redisService from './redis-service';
-export * as lucia from './lucia';
-export * as sseService from './sse-service';
-export * as tableService from './table-service';
-export * as userService from './user-service';
+import { prisma } from './prisma';
+import { RedisService, SSEService, TableService, UserService } from './services';
+
+const redisService = new RedisService();
+
+export const sseService = new SSEService();
+
+export const tableService = new TableService(redisService);
+
+export const userService = new UserService(prisma);

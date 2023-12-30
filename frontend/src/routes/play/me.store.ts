@@ -1,6 +1,7 @@
-import type { User } from '@prisma/client';
 import { getContext, setContext } from 'svelte';
 import { writable, type Writable } from 'svelte/store';
+
+import type { User } from '$lib/types/db';
 
 const ME_STORE_CONTEXT = 'ME_STORE_CONTEXT';
 
