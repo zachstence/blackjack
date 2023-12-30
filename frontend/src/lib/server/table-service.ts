@@ -53,8 +53,8 @@ export const getById = async (id: string): Promise<Table> => {
 
 // TODO pagination
 export const list = async (): Promise<Table[]> => {
-  const keys = await redisService.listKeys(buildKey('*'));
-  console.log('tableService.list', keys);
+  const keyPattern = buildKey('*');
+  const keys = await redisService.listKeys(keyPattern);
   const tables = await Promise.all(keys.map((key) => getByKey(key)));
   return tables;
 };
