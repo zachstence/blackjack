@@ -10,8 +10,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   if (!session) throw error(400);
 
   const player: Player = {
-    id: nanoid(),
-    userId: session.user.userId,
+    id: session.user.userId,
     sseClientId: nanoid(),
     tableId: params.tableId,
     name: session.user.username,
