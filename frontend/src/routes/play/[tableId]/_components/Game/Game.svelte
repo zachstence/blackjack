@@ -13,8 +13,8 @@
   const table = getTableStoreContext();
   $: players = Object.values($table.players);
   $: playerHands = Object.values($table.playerHands);
-  $: myHands = playerHands.filter((hand) => hand.userId === $me.id);
-  $: otherHands = playerHands.filter((hand) => hand.userId !== $me.id);
+  $: myHands = playerHands.filter((hand) => hand.playerId === $me.id);
+  $: otherHands = playerHands.filter((hand) => hand.playerId !== $me.id);
 </script>
 
 <div class="{clazz} flex flex-row gap-4 p-4">

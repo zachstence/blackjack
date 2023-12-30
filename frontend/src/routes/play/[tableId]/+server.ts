@@ -25,6 +25,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         path: 'players',
         value: table.players,
       });
+      sseService.send(p.sseClientId, {
+        path: 'playerHands',
+        value: table.playerHands,
+      });
     });
   };
 
@@ -39,6 +43,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         sseService.send(p.sseClientId, {
           path: 'players',
           value: table.players,
+        });
+        sseService.send(p.sseClientId, {
+          path: 'playerHands',
+          value: table.playerHands,
         });
       });
     }

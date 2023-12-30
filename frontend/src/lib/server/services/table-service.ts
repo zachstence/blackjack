@@ -1,6 +1,14 @@
 import { nanoid } from 'nanoid';
 
-import { type Player, TableSchema, type Table, RoundState, HandStatus, type ChatMessage } from '$lib/types/realtime';
+import {
+  type Player,
+  TableSchema,
+  type Table,
+  RoundState,
+  HandStatus,
+  type ChatMessage,
+  type PlayerHand,
+} from '$lib/types/realtime';
 import type { RedisService } from './redis-service';
 
 export class TableService {
@@ -65,7 +73,27 @@ export class TableService {
   addPlayer = async (tableId: string, player: Player): Promise<Table> => {
     const key = this.buildKey(tableId);
     const table = await this.getByKey(key);
+
     table.players[player.id] = player;
+
+    const hand: PlayerHand = {
+      cards: [],
+      value: {
+        hard: 0,
+        soft: null,
+      },
+      status: HandStatus.Hitting,
+      id: nanoid(),
+      isRootHand: true,
+      playerId: player.id,
+      bet: undefined,
+      insurance: null,
+      actions: [],
+      settleStatus: null,
+      winnings: null,
+    };
+    table.playerHands[hand.id] = hand;
+
     await this.redisService.setJson(key, table, TableSchema);
 
     return table;
@@ -74,7 +102,17 @@ export class TableService {
   removePlayer = async (tableId: string, playerId: string): Promise<Table> => {
     const key = this.buildKey(tableId);
     const table = await this.getByKey(key);
+
+    // Remove player
     delete table.players[playerId];
+
+    // Remove player hands
+    Object.values(table.playerHands)
+      .filter((hand) => hand.playerId === playerId)
+      .forEach((hand) => {
+        delete table.playerHands[hand.id];
+      });
+
     await this.redisService.setJson(key, table, TableSchema);
     return table;
   };

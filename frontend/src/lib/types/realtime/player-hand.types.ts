@@ -20,7 +20,8 @@ export enum HandSettleStatus {
 
 export const PlayerHandSchema = HandSchema.extend({
   id: z.string(),
-  userId: z.string(),
+  isRootHand: z.boolean(),
+  playerId: z.string(),
   bet: z.number().optional(),
   insurance: InsuranceSchema.nullable(),
   actions: z.array(z.nativeEnum(HandAction)),

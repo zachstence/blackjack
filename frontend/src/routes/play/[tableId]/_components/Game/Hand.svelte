@@ -15,8 +15,8 @@
   const me = getMeStoreContext();
   const table = getTableStoreContext();
 
-  $: player = $table.players[hand.userId];
-  $: showActions = hand.userId === $me.id;
+  $: player = $table.players[hand.playerId];
+  $: showActions = hand.playerId === $me.id;
 
   $: playing = $table.roundState === RoundState.PlayersPlaying;
 
