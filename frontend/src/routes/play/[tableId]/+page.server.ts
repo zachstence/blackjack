@@ -8,6 +8,9 @@ import type { ChatMessage } from '$lib/types/realtime/chat-message.types';
 export const load: PageServerLoad = async ({ params }) => {
   const tableExists = await tableService.exists(params.tableId);
   if (!tableExists) throw error(404);
+
+  const table = await tableService.getById(params.tableId);
+  return { table };
 };
 
 const SendChatSchema = zfd.formData({

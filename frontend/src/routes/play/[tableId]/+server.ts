@@ -28,16 +28,10 @@ const createEventStreamResponse = (tableId: string, player: Player): Response =>
       const table = await tableService.addPlayer(tableId, player);
 
       Object.values(table.players).forEach((p) => {
-        if (p.id === player.id) {
-          sseService.send(p.sseClientId, {
-            value: table,
-          });
-        } else {
-          sseService.send(p.sseClientId, {
-            path: 'players',
-            value: table.players,
-          });
-        }
+        sseService.send(p.sseClientId, {
+          path: 'players',
+          value: table.players,
+        });
       });
     },
     cancel: async () => {

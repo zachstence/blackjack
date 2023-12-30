@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const ServerEventSchema = z.object({
-  path: z.string().optional(),
+  path: z.string(),
   value: z.unknown(),
 });
 

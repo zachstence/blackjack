@@ -1,12 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
 
   import { Chat, Game } from './_components';
   import { TableStore } from './TableStore/table.store';
   import { setTableStoreContext } from './TableStore';
+  import type { PageData } from './$types';
 
-  const tableStore = new TableStore($page.params.tableId);
+  export let data: PageData;
+
+  const tableStore = new TableStore(data.table);
   setTableStoreContext(tableStore);
 
   onMount(() => {
