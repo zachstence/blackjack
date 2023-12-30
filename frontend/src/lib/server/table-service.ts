@@ -1,8 +1,7 @@
 import { nanoid } from 'nanoid';
 
 import { redisService } from '$lib/server';
-import { type Player, TableSchema, type Table } from '$lib/types/realtime';
-import type { ChatMessage } from '$lib/types/realtime/chat-message.types';
+import { type Player, TableSchema, type Table, RoundState, HandStatus, type ChatMessage } from '$lib/types/realtime';
 
 const buildKey = (id: string) => `table-${id}`;
 
@@ -11,7 +10,20 @@ export const create = async (): Promise<Table> => {
   const table: Table = {
     id,
     chatMessages: [],
+    roundState: RoundState.PlayersReadying,
+    shoe: [],
+    dealer: {
+      hand: {
+        cards: [],
+        status: HandStatus.Hitting,
+        value: {
+          hard: 0,
+          soft: null,
+        },
+      },
+    },
     players: {},
+    playerHands: {},
   };
   const key = buildKey(id);
 

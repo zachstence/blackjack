@@ -1,0 +1,49 @@
+import { z } from 'zod';
+
+export enum Suit {
+  Diamonds = 'Diamonds',
+  Clubs = 'Clubs',
+  Hearts = 'Hearts',
+  Spades = 'Spades',
+}
+
+export enum Rank {
+  Ace = 'Ace',
+  Two = 'Two',
+  Three = 'Three',
+  Four = 'Four',
+  Five = 'Five',
+  Six = 'Six',
+  Seven = 'Seven',
+  Eight = 'Eight',
+  Nine = 'Nine',
+  Ten = 'Ten',
+  Jack = 'Jack',
+  Queen = 'Queen',
+  King = 'King',
+}
+
+// TODO move this somewhere else. Maybe to card-service?
+export const RankValue: Record<Rank, number> = {
+  [Rank.Ace]: 1,
+  [Rank.Two]: 2,
+  [Rank.Three]: 3,
+  [Rank.Four]: 4,
+  [Rank.Five]: 5,
+  [Rank.Six]: 6,
+  [Rank.Seven]: 7,
+  [Rank.Eight]: 8,
+  [Rank.Nine]: 9,
+  [Rank.Ten]: 10,
+  [Rank.Jack]: 10,
+  [Rank.Queen]: 10,
+  [Rank.King]: 10,
+};
+
+// TODO how to handle hiding suit/rank when sending to client?
+export const CardSchema = z.object({
+  hidden: z.boolean(),
+  suit: z.nativeEnum(Suit),
+  rank: z.nativeEnum(Rank),
+});
+export type Card = z.infer<typeof CardSchema>;
