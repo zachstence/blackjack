@@ -20,11 +20,11 @@ export enum HandSettleStatus {
 
 export const PlayerHandSchema = HandSchema.extend({
   id: z.string(),
-  playerId: z.string(),
+  userId: z.string(),
   bet: z.number().optional(),
   insurance: InsuranceSchema.nullable(),
   actions: z.array(z.nativeEnum(HandAction)),
   settleStatus: z.nativeEnum(HandSettleStatus).nullable(),
-  winings: z.number().int().nullable(),
+  winnings: z.number().int().nullable(),
 });
 export type PlayerHand = z.infer<typeof PlayerHandSchema>;
