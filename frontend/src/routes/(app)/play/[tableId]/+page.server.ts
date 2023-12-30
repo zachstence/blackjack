@@ -33,7 +33,7 @@ export const actions: Actions = {
     };
     await tableService.addChatMessage(params.tableId, message);
 
-    table.players.forEach((player) => {
+    Object.values(table.players).forEach((player) => {
       sseService.send(player.sseClientId, {
         path,
         value: message,

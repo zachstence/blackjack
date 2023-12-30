@@ -27,7 +27,7 @@ const createEventStreamResponse = (tableId: string, player: Player): Response =>
 
       const table = await tableService.addPlayer(tableId, player);
 
-      table.players.forEach((p) => {
+      Object.values(table.players).forEach((p) => {
         if (p.id === player.id) {
           sseService.send(p.sseClientId, {
             value: table,
@@ -44,12 +44,12 @@ const createEventStreamResponse = (tableId: string, player: Player): Response =>
       sseService.removeClient(player.sseClientId);
       const table = await tableService.removePlayer(tableId, player.id);
 
-      if (table.players.length === 0) {
+      if (Object.values(table.players).length === 0) {
         // Delete table if no more players
         await tableService.remove(tableId);
       } else {
         // Otherwise update table state
-        table.players.forEach((p) => {
+        Object.values(table.players).forEach((p) => {
           sseService.send(p.sseClientId, {
             path: 'players',
             value: table.players,

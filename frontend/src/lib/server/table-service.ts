@@ -11,7 +11,7 @@ export const create = async (): Promise<Table> => {
   const table: Table = {
     id,
     chatMessages: [],
-    players: [],
+    players: {},
   };
   const key = buildKey(id);
 
@@ -50,7 +50,7 @@ export const list = async (): Promise<Table[]> => {
 export const addPlayer = async (tableId: string, player: Player): Promise<Table> => {
   const key = buildKey(tableId);
   const table = await getByKey(key);
-  table.players.push(player);
+  table.players[player.id] = player;
   await redisService.setJson(key, table, TableSchema);
 
   return table;
@@ -59,7 +59,7 @@ export const addPlayer = async (tableId: string, player: Player): Promise<Table>
 export const removePlayer = async (tableId: string, playerId: string): Promise<Table> => {
   const key = buildKey(tableId);
   const table = await getByKey(key);
-  table.players = table.players.filter((p) => p.id !== playerId);
+  delete table.players[playerId];
   await redisService.setJson(key, table, TableSchema);
   return table;
 };

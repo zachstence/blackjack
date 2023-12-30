@@ -8,7 +8,7 @@ export const TableSchema = z.object({
 
   chatMessages: z.array(ChatMessageSchema),
 
-  players: z.array(PlayerSchema),
+  players: z.record(z.string(), PlayerSchema),
 });
 
 export type Table = z.infer<typeof TableSchema>;

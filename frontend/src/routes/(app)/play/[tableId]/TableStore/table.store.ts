@@ -9,7 +9,7 @@ export class TableStore implements Readable<Table> {
   private _store = writable<Table>({
     id: '',
     chatMessages: [],
-    players: [],
+    players: {},
   });
 
   constructor(readonly id: string) {}

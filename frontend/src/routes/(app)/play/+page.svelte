@@ -5,7 +5,7 @@
   export let data: PageData;
 </script>
 
-<div class="text-2xl font-bold">{data.user.username}{data.user.isGuest ? ' (Guest)' : ''}</div>
+<div class="text-2xl font-bold">{data.user.username}{data.user.is_guest ? ' (Guest)' : ''}</div>
 
 <table>
   <thead>
@@ -18,7 +18,7 @@
     {#each data.tables as table}
       <tr>
         <td>{table.id}</td>
-        <td>{table.players.length}</td>
+        <td>{Object.values(table.players).length}</td>
         <td>
           <a href={`/play/${table.id}`}>Join</a>
         </td>
