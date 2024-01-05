@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { dev } from '$app/environment';
 
   import { Chat, Game } from './_components';
   import { TableStore } from './TableStore/table.store';
@@ -10,6 +11,12 @@
 
   const tableStore = new TableStore(data.table);
   setTableStoreContext(tableStore);
+
+  $: {
+    if (dev && typeof window !== 'undefined') {
+      (window as any).table = $tableStore;
+    }
+  }
 
   onMount(() => {
     tableStore.connect();
