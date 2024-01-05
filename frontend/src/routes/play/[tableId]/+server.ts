@@ -19,36 +19,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       name: user.username,
     };
 
-    const table = await tableService.addPlayer(tableId, player);
-    Object.values(table.players).forEach((p) => {
-      sseService.send(p.sseClientId, {
-        path: 'players',
-        value: table.players,
-      });
-      sseService.send(p.sseClientId, {
-        path: 'playerHands',
-        value: table.playerHands,
-      });
-    });
+    await tableService.addPlayer(tableId, player);
   };
 
   const onDisconnect = async (): Promise<void> => {
     const table = await tableService.removePlayer(tableId, user.userId);
     if (Object.values(table.players).length === 0) {
       // Delete table if no more players
-      await tableService.remove(tableId);
-    } else {
-      // Otherwise update table state
-      Object.values(table.players).forEach((p) => {
-        sseService.send(p.sseClientId, {
-          path: 'players',
-          value: table.players,
-        });
-        sseService.send(p.sseClientId, {
-          path: 'playerHands',
-          value: table.playerHands,
-        });
-      });
+      await tableService.delete(tableId);
     }
   };
 

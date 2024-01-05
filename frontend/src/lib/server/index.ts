@@ -5,6 +5,6 @@ const redisService = new RedisService();
 
 export const sseService = new SSEService();
 
-export const tableService = new TableService(redisService);
+export const tableService = new TableService(redisService, sseService);
 
 export const userService = new UserService(prisma);

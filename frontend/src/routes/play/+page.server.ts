@@ -20,6 +20,6 @@ export const actions: Actions = {
   deleteTable: async ({ request }) => {
     const formData = await request.formData();
     const { tableId } = DeleteTableSchema.parse(formData);
-    await tableService.remove(tableId);
+    await tableService.delete(tableId);
   },
 };

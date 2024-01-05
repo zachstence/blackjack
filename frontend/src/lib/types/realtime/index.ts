@@ -5,5 +5,4 @@ export * from './hand.types';
 export * from './insurance.types';
 export * from './player-hand.types';
 export * from './player.types';
-export * from './server-event.types';
 export * from './table.types';

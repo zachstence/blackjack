@@ -1,7 +1,8 @@
-import ReconnectingEventSource from 'reconnecting-eventsource';
 import { writable, type Readable, type Writable } from 'svelte/store';
-import { set } from 'lodash';
-import { ServerEventSchema, type ServerEvent, type Table } from '$lib/types/realtime';
+import ReconnectingEventSource from 'reconnecting-eventsource';
+
+import { TableUpdateSchema, type Table, type TableUpdate } from '$lib/types/realtime';
+import { applyTableUpdate } from '$lib/apply-table-update';
 
 export class TableStore implements Readable<Table> {
   private eventSource?: ReconnectingEventSource;
@@ -12,19 +13,25 @@ export class TableStore implements Readable<Table> {
     this._store = writable(initialState);
   }
 
-  private handleServerEvent = (event: ServerEvent): void => {
-    const { path, value } = ServerEventSchema.parse(event);
-    this._store.update((store) => {
-      set(store, path, value);
-      return store;
+  private handleTableUpdate = (update: TableUpdate): void => {
+    // TODO handle parse errors
+    this._store.update((value) => {
+      console.log('before update', { value, update });
+      applyTableUpdate(value, update);
+      console.log('after update', { value });
+      return value;
     });
   };
 
   connect = (): void => {
     this.eventSource = new ReconnectingEventSource(window.location.pathname);
     this.eventSource.onmessage = (message) => {
-      const event = ServerEventSchema.parse(JSON.parse(message.data));
-      this.handleServerEvent(event);
+      const update = TableUpdateSchema.safeParse(JSON.parse(message.data));
+      if (update.success) {
+        this.handleTableUpdate(JSON.parse(message.data));
+      } else {
+        console.debug(`Ignoring invalid server event`, message);
+      }
     };
     this.eventSource.onerror = (e) => {
       console.error(e);

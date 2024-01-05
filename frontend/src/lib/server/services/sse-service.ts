@@ -1,4 +1,3 @@
-import type { ServerEvent } from '$lib/types/realtime';
 import { nanoid } from 'nanoid';
 
 export type AddClientArgs = {
@@ -43,7 +42,7 @@ export class SSEService {
     return { clientId, response };
   };
 
-  send = (clientId: string, data: ServerEvent): void => {
+  send = (clientId: string, data: unknown): void => {
     const controller = this.clients[clientId];
     if (!controller) {
       console.debug(`Client ${clientId} not connected, can't send event`);
@@ -52,6 +51,8 @@ export class SSEService {
 
     const encoder = new TextEncoder();
     const chunk = encoder.encode(`data: ${JSON.stringify(data)}\n\n`);
+
+    console.debug(`[sse] send to ${clientId}`, data);
 
     controller.enqueue(chunk);
   };

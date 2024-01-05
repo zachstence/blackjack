@@ -8,11 +8,15 @@ import {
   HandStatus,
   type ChatMessage,
   type PlayerHand,
+  type TableUpdate,
 } from '$lib/types/realtime';
+import { applyTableUpdate } from '$lib/apply-table-update';
+
 import type { RedisService } from './redis-service';
+import type { SSEService } from './sse-service';
 
 export class TableService {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(private readonly redisService: RedisService, private readonly sseService: SSEService) {}
 
   private buildKey = (id: string) => `table-${id}`;
 
@@ -47,11 +51,6 @@ export class TableService {
     return table;
   };
 
-  remove = async (tableId: string): Promise<void> => {
-    const key = this.buildKey(tableId);
-    await this.redisService.remove(key);
-  };
-
   exists = async (tableId: string): Promise<boolean> => {
     const key = this.buildKey(tableId);
     return this.redisService.exists(key);
@@ -62,6 +61,11 @@ export class TableService {
     return this.getByKey(key);
   };
 
+  setById = async (id: string, value: Table): Promise<void> => {
+    const key = this.buildKey(id);
+    return this.redisService.setJson(key, value, TableSchema);
+  };
+
   // TODO pagination
   list = async (): Promise<Table[]> => {
     const keyPattern = this.buildKey('*');
@@ -70,12 +74,32 @@ export class TableService {
     return tables;
   };
 
-  addPlayer = async (tableId: string, player: Player): Promise<Table> => {
+  private update = async (tableOrTableId: string | Table, update: TableUpdate): Promise<Table> => {
+    const table = typeof tableOrTableId === 'string' ? await this.getById(tableOrTableId) : tableOrTableId;
+    const tableId = table.id;
+
+    try {
+      // Update table in Redis
+      applyTableUpdate(table, update);
+      await this.setById(tableId, table);
+
+      // Broadcast changes to users
+      await Promise.all(Object.values(table.players).map((p) => this.sseService.send(p.sseClientId, update)));
+
+      return table;
+    } catch (e) {
+      // TODO handle errors better
+      console.error(e);
+      throw e;
+    }
+  };
+
+  delete = async (tableId: string): Promise<void> => {
     const key = this.buildKey(tableId);
-    const table = await this.getByKey(key);
+    await this.redisService.remove(key);
+  };
 
-    table.players[player.id] = player;
-
+  addPlayer = async (tableId: string, player: Player): Promise<Table> => {
     const hand: PlayerHand = {
       cards: [],
       value: {
@@ -92,37 +116,39 @@ export class TableService {
       settleStatus: null,
       winnings: null,
     };
-    table.playerHands[hand.id] = hand;
 
-    await this.redisService.setJson(key, table, TableSchema);
+    const update: TableUpdate = {
+      set: {
+        [`players.${player.id}`]: player,
+        [`playerHands.${hand.id}`]: hand,
+      },
+    };
 
-    return table;
+    return this.update(tableId, update);
   };
 
   removePlayer = async (tableId: string, playerId: string): Promise<Table> => {
-    const key = this.buildKey(tableId);
-    const table = await this.getByKey(key);
+    const table = await this.getById(tableId);
 
-    // Remove player
-    delete table.players[playerId];
-
-    // Remove player hands
-    Object.values(table.playerHands)
+    const playerHandIds = Object.values(table.playerHands)
       .filter((hand) => hand.playerId === playerId)
-      .forEach((hand) => {
-        delete table.playerHands[hand.id];
-      });
+      .map((hand) => hand.id);
 
-    await this.redisService.setJson(key, table, TableSchema);
-    return table;
+    const update: TableUpdate = {
+      unset: [`players.${playerId}`, ...playerHandIds.map((handId) => `playerHands.${handId}`)],
+    };
+    return this.update(table, update);
   };
 
   addChatMessage = async (tableId: string, chatMessage: ChatMessage): Promise<Table> => {
-    const key = this.buildKey(tableId);
-    const table = await this.getByKey(key);
-    table.chatMessages.push(chatMessage);
-    await this.redisService.setJson(key, table, TableSchema);
+    const table = await this.getById(tableId);
 
-    return table;
+    const update: TableUpdate = {
+      set: {
+        [`chatMessages.${table.chatMessages.length}`]: chatMessage,
+      },
+    };
+
+    return this.update(table, update);
   };
 }

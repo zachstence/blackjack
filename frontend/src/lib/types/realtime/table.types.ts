@@ -24,5 +24,10 @@ export const TableSchema = z.object({
   players: z.record(z.string(), PlayerSchema),
   playerHands: z.record(z.string(), PlayerHandSchema),
 });
-
 export type Table = z.infer<typeof TableSchema>;
+
+export const TableUpdateSchema = z.object({
+  set: z.record(z.string(), z.unknown()).optional(),
+  unset: z.array(z.string()).optional(),
+});
+export type TableUpdate = z.infer<typeof TableUpdateSchema>;
