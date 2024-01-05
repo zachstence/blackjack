@@ -2,7 +2,6 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 import { sseService, tableService } from '$lib/server';
-import type { Player } from '$lib/types/realtime';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const session = await locals.auth.validate();
@@ -12,14 +11,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const { tableId } = params;
 
   const onConnect = async (clientId: string): Promise<void> => {
-    const player: Player = {
-      sseClientId: clientId,
-      tableId: tableId,
+    await tableService.addPlayer(tableId, {
       id: user.userId,
       name: user.username,
-    };
-
-    await tableService.addPlayer(tableId, player);
+      sseClientId: clientId,
+    });
   };
 
   const onDisconnect = async (): Promise<void> => {

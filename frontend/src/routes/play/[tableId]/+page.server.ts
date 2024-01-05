@@ -17,6 +17,14 @@ const SendChatSchema = zfd.formData({
 });
 
 export const actions: Actions = {
+  ready: async ({ locals, params }) => {
+    const session = await locals.auth.validate();
+    if (!session) throw error(401);
+
+    await tableService.readyPlayer(params.tableId, session.user.userId);
+    return { success: true };
+  },
+
   sendChat: async ({ request, locals, params }) => {
     const session = await locals.auth.validate();
     if (!session) throw error(401);

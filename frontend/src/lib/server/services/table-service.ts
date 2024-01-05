@@ -99,7 +99,14 @@ export class TableService {
     await this.redisService.remove(key);
   };
 
-  addPlayer = async (tableId: string, player: Player): Promise<Table> => {
+  addPlayer = async (tableId: string, playerInfo: Pick<Player, 'id' | 'sseClientId' | 'name'>): Promise<Table> => {
+    const player: Player = {
+      ...playerInfo,
+      tableId,
+      money: 1000,
+      ready: false,
+    };
+
     const hand: PlayerHand = {
       cards: [],
       value: {
@@ -150,5 +157,14 @@ export class TableService {
     };
 
     return this.update(table, update);
+  };
+
+  readyPlayer = async (tableId: string, playerId: string): Promise<Table> => {
+    const update: TableUpdate = {
+      set: {
+        [`players.${playerId}.ready`]: true,
+      },
+    };
+    return this.update(tableId, update);
   };
 }

@@ -14,11 +14,8 @@ export class TableStore implements Readable<Table> {
   }
 
   private handleTableUpdate = (update: TableUpdate): void => {
-    // TODO handle parse errors
     this._store.update((value) => {
-      console.log('before update', { value, update });
       applyTableUpdate(value, update);
-      console.log('after update', { value });
       return value;
     });
   };
